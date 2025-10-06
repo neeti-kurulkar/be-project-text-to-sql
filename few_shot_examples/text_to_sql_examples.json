@@ -1,0 +1,46 @@
+[
+  {
+    "question": "What was the total revenue and net income in 2023, and how do they compare to 2022?",
+    "sql": "SELECT fp.fiscal_year AS year, SUM(CASE WHEN li.normalized_code='REV' THEN ff.value END) AS total_revenue, SUM(CASE WHEN li.normalized_code='NI' THEN ff.value END) AS total_net_income FROM financial_fact ff JOIN line_item li ON ff.line_item_id = li.line_item_id JOIN statement s ON ff.statement_id = s.statement_id JOIN fiscal_period fp ON s.period_id = fp.period_id WHERE s.statement_type='income' AND fp.fiscal_year IN (2022, 2023) GROUP BY fp.fiscal_year;"
+  },
+  {
+    "question": "Which quarter in 2023 had the highest operating expenses and what was the value?",
+    "sql": "SELECT fp.fiscal_quarter AS quarter, SUM(ff.value) AS operating_expenses FROM financial_fact ff JOIN line_item li ON ff.line_item_id = li.line_item_id JOIN statement s ON ff.statement_id = s.statement_id JOIN fiscal_period fp ON s.period_id = fp.period_id WHERE li.normalized_code='OPEX' AND s.statement_type='income' AND fp.fiscal_year=2023 GROUP BY fp.fiscal_quarter ORDER BY operating_expenses DESC LIMIT 1;"
+  },
+  {
+    "question": "How did accounts receivable change quarter over quarter in 2023?",
+    "sql": "SELECT fp1.fiscal_quarter AS quarter1, fp2.fiscal_quarter AS quarter2, SUM(ff2.value)-SUM(ff1.value) AS ar_change FROM financial_fact ff1 JOIN line_item li ON ff1.line_item_id = li.line_item_id JOIN statement s1 ON ff1.statement_id = s1.statement_id JOIN fiscal_period fp1 ON s1.period_id = fp1.period_id JOIN financial_fact ff2 ON ff2.line_item_id = li.line_item_id JOIN statement s2 ON ff2.statement_id = s2.statement_id JOIN fiscal_period fp2 ON s2.period_id = fp2.period_id WHERE li.normalized_code='AR' AND s1.statement_type='balance' AND s2.statement_type='balance' AND fp2.fiscal_year=2023 AND fp2.fiscal_quarter > fp1.fiscal_quarter GROUP BY fp1.fiscal_quarter, fp2.fiscal_quarter ORDER BY ar_change DESC;"
+  },
+  {
+    "question": "What was the net income in each quarter of 2023 and the cumulative net income for the year?",
+    "sql": "SELECT fp.fiscal_quarter AS quarter, SUM(ff.value) AS net_income, SUM(SUM(ff.value)) OVER (ORDER BY fp.fiscal_quarter) AS cumulative_net_income FROM financial_fact ff JOIN line_item li ON ff.line_item_id = li.line_item_id JOIN statement s ON ff.statement_id = s.statement_id JOIN fiscal_period fp ON s.period_id = fp.period_id WHERE li.normalized_code='NI' AND s.statement_type='income' AND fp.fiscal_year=2023 GROUP BY fp.fiscal_quarter ORDER BY fp.fiscal_quarter;"
+  },
+  {
+    "question": "Compare total assets and total liabilities at the end of FY 2022 and FY 2023, and compute the equity ratio.",
+    "sql": "SELECT fp.fiscal_year AS year, SUM(CASE WHEN li.normalized_code='CASH' THEN ff.value END) AS total_assets, SUM(CASE WHEN li.normalized_code='AP' THEN ff.value END) AS total_liabilities, (SUM(CASE WHEN li.normalized_code='CASH' THEN ff.value END)-SUM(CASE WHEN li.normalized_code='AP' THEN ff.value END))*1.0/SUM(CASE WHEN li.normalized_code='CASH' THEN ff.value END) AS equity_ratio FROM financial_fact ff JOIN line_item li ON ff.line_item_id = li.line_item_id JOIN statement s ON ff.statement_id = s.statement_id JOIN fiscal_period fp ON s.period_id = fp.period_id WHERE s.statement_type='balance' AND fp.fiscal_year IN (2022,2023) GROUP BY fp.fiscal_year;"
+  },
+  {
+    "question": "Which quarter in 2023 had the largest increase in accounts payable?",
+    "sql": "SELECT fp1.fiscal_quarter AS quarter1, fp2.fiscal_quarter AS quarter2, SUM(ff2.value)-SUM(ff1.value) AS ap_change FROM financial_fact ff1 JOIN line_item li ON ff1.line_item_id = li.line_item_id JOIN statement s1 ON ff1.statement_id = s1.statement_id JOIN fiscal_period fp1 ON s1.period_id = fp1.period_id JOIN financial_fact ff2 ON ff2.line_item_id = li.line_item_id JOIN statement s2 ON ff2.statement_id = s2.statement_id JOIN fiscal_period fp2 ON s2.period_id = fp2.period_id WHERE li.normalized_code='AP' AND s1.statement_type='balance' AND s2.statement_type='balance' AND fp2.fiscal_year=2023 AND fp2.fiscal_quarter > fp1.fiscal_quarter GROUP BY fp1.fiscal_quarter, fp2.fiscal_quarter ORDER BY ap_change DESC LIMIT 1;"
+  },
+  {
+    "question": "How did net income vs operating expenses trend across quarters in 2023?",
+    "sql": "SELECT fp.fiscal_quarter AS quarter, SUM(CASE WHEN li.normalized_code='NI' THEN ff.value END) AS net_income, SUM(CASE WHEN li.normalized_code='OPEX' THEN ff.value END) AS operating_expenses FROM financial_fact ff JOIN line_item li ON ff.line_item_id = li.line_item_id JOIN statement s ON ff.statement_id = s.statement_id JOIN fiscal_period fp ON s.period_id = fp.period_id WHERE s.statement_type='income' AND fp.fiscal_year=2023 GROUP BY fp.fiscal_quarter ORDER BY fp.fiscal_quarter;"
+  },
+  {
+    "question": "Compare operating cash flow for 2022 and 2023 and calculate the growth percentage.",
+    "sql": "SELECT t2022.ocf AS ocf_2022, t2023.ocf AS ocf_2023, (t2023.ocf-t2022.ocf) AS difference, ((t2023.ocf-t2022.ocf)*1.0/t2022.ocf) AS growth_percentage FROM (SELECT SUM(ff.value) AS ocf FROM financial_fact ff JOIN line_item li ON ff.line_item_id = li.line_item_id JOIN statement s ON ff.statement_id = s.statement_id JOIN fiscal_period fp ON s.period_id = fp.period_id WHERE li.normalized_code='NI' AND s.statement_type='cashflow' AND fp.fiscal_year=2022) t2022, (SELECT SUM(ff.value) AS ocf FROM financial_fact ff JOIN line_item li ON ff.line_item_id = li.line_item_id JOIN statement s ON ff.statement_id = s.statement_id JOIN fiscal_period fp ON s.period_id = fp.period_id WHERE li.normalized_code='NI' AND s.statement_type='cashflow' AND fp.fiscal_year=2023) t2023;"
+  },
+  {
+    "question": "Which quarter had the lowest net income in 2023 and what was the value?",
+    "sql": "SELECT fp.fiscal_quarter AS quarter, SUM(ff.value) AS net_income FROM financial_fact ff JOIN line_item li ON ff.line_item_id = li.line_item_id JOIN statement s ON ff.statement_id = s.statement_id JOIN fiscal_period fp ON s.period_id = fp.period_id WHERE li.normalized_code='NI' AND s.statement_type='income' AND fp.fiscal_year=2023 GROUP BY fp.fiscal_quarter ORDER BY net_income ASC LIMIT 1;"
+  },
+  {
+    "question": "How did revenue vs cost of goods sold vary in each quarter of 2023?",
+    "sql": "SELECT fp.fiscal_quarter AS quarter, SUM(CASE WHEN li.normalized_code='REV' THEN ff.value END) AS revenue, SUM(CASE WHEN li.normalized_code='COGS' THEN ff.value END) AS cogs FROM financial_fact ff JOIN line_item li ON ff.line_item_id = li.line_item_id JOIN statement s ON ff.statement_id = s.statement_id JOIN fiscal_period fp ON s.period_id = fp.period_id WHERE s.statement_type='income' AND fp.fiscal_year=2023 GROUP BY fp.fiscal_quarter ORDER BY fp.fiscal_quarter;"
+  },
+  {
+  "question": "How far are we from meeting planned operating profit in Q4 2023?",
+  "sql": "SELECT SUM(CASE WHEN li.normalized_code='OP' THEN ff.value END) AS planned_operating_profit, SUM(CASE WHEN li.normalized_code='OPEX' THEN ff.value END) AS actual_operating_expenses, (SUM(CASE WHEN li.normalized_code='OP' THEN ff.value END)-SUM(CASE WHEN li.normalized_code='OPEX' THEN ff.value END)) AS shortfall FROM financial_fact ff JOIN line_item li ON ff.line_item_id = li.line_item_id JOIN statement s ON ff.statement_id = s.statement_id JOIN fiscal_period fp ON s.period_id = fp.period_id WHERE s.statement_type='income' AND fp.fiscal_year=2023 AND fp.fiscal_quarter='Q4';"
+  }
+]

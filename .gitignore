@@ -1,0 +1,49 @@
+# --- Python ---
+__pycache__/
+*.py[cod]
+*.egg
+*.egg-info/
+dist/
+build/
+.eggs/
+*.manifest
+*.spec
+
+# --- Virtual Environment ---
+.venv/
+env/
+venv/
+ENV/
+*.env
+
+# --- Database ---
+db/*.db
+db/*.sqlite3
+
+# --- VS Code ---
+.vscode/
+*.code-workspace
+
+# --- OS Files ---
+.DS_Store
+Thumbs.db
+
+# --- Logs / Cache ---
+*.log
+*.out
+*.err
+*.pid
+.cache/
+.mypy_cache/
+.pytest_cache/
+.hypothesis/
+
+# --- Jupyter ---
+.ipynb_checkpoints/
+*.ipynb
+
+# --- Coverage / Testing ---
+.coverage
+htmlcov/
+.tox/
+.nox/

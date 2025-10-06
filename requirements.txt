@@ -1,0 +1,11 @@
+langgraph
+langchain
+langchain-community
+langchain-groq
+python-dotenv
+pandas
+numpy
+psycopg2-binary
+sqlalchemy
+streamlit
+openpyxl
