@@ -24,7 +24,7 @@ app = graph.compile()
 # Run
 if __name__ == "__main__":
     #query = "Did the company's profit improve in 2023 as compared to 2022?"
-    query = "What was the net income in Q2 2023, and how does it compare to Q1 2023?"
+    query = "How has HUL's total shareholders' funds changed from 2021 to 2022?"
     output = app.invoke({"messages": [query]})
 
     # Pretty print

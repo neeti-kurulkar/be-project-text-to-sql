@@ -2,6 +2,14 @@ from agents.llm_client import llm
 import pandas as pd
 
 def insights_agent(state):
+    """
+    Generates natural language insights from a SQL query result.
+
+    Expects the state dictionary to contain:
+    - "query_result": the output of the SQL query (DataFrame, list of dicts, or None)
+    - "user_query": the original user question
+    - "sql_query": the SQL that produced the results
+    """
     result = state.get("query_result", None)
     query = state.get("user_query", "")
     sql = state.get("sql_query", "")
@@ -20,8 +28,8 @@ def insights_agent(state):
 
     # ---------------- Build prompt ----------------
     prompt = f"""
-You are a financial analyst looking at the company from a stakeholder's perspective.
-Use formal business language and clear, professional phrasing.
+You are a professional financial analyst reviewing company performance data.
+Your goal is to provide clear, concise insights for stakeholders based on the query result.
 
 User's business question:
 {query}
@@ -32,16 +40,17 @@ The SQL query executed:
 The query result (already processed and aggregated):
 {clean_result}
 
-Write a brief but impactful summary (5-10 lines) that captures the key insights from the result.
-Focus on what the numbers imply for the company's performance, without adding sections,
-recommendations, or repeating the data verbatim.
+Instructions:
+1. Summarize the key findings in 5-10 lines in formal business language.
+2. All numbers are in Indian Rupees (INR) crores, as returned by the query.
+3. Use commas for readability (e.g., 79880 → 79,880).
+4. Do NOT convert to other currencies or invent numbers.
+5. Interpret what the numbers imply for the company's performance.
+6. If the query result is blank, or an error, do not give any insights, just mention that an error occured.
+7. Do NOT provide recommendations.
+8. DO NOT INVENT ANYTHING.
 
-Format all numbers normally (e.g., 103000 → 103,000; 0.104 → 10.4%) and avoid splitting letters or characters.
-
-Do NOT explain the SQL itself or restate the raw numbers mechanically—interpret what they mean for the company.
-
-If the query does not return anything, state that no relevant data was found. Do not invent anything.
 """
 
     response = llm.invoke(prompt)
-    return {"insights": response.content}
+    return {"insights": response.content.strip()}
