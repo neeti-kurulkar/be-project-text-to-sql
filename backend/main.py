@@ -42,4 +42,4 @@ if __name__ == "__main__":
         print(f"   {result}\n")
 
     print("💡 Insights:")
-    print(f"   {output.get('insights', 'N/A')}\n")
+    #print(f"   {output.get('insights', 'N/A')}\n")
