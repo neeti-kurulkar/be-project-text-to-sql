@@ -37,10 +37,6 @@ An intelligent full-stack application for analyzing Hindustan Unilever Limited (
 ```bash
 be-project-text-to-sql/
 │
-├── start.sh                       # Quick start script
-├── stop.sh                        # Stop script
-├── README.md                      # This file
-│
 ├── backend/                       # FastAPI Backend
 │   ├── api.py                    # Main API server
 │   ├── requirements.txt          # Python dependencies
@@ -88,29 +84,12 @@ be-project-text-to-sql/
 - PostgreSQL 12+ (with HUL financial data loaded)
 - Groq API Key ([Get one free](https://console.groq.com))
 
-### Option 1: Automated Setup (Recommended)
+### Setup
 
 ```bash
 # 1. Clone/navigate to project
 cd be-project-text-to-sql
 
-# 2. Make scripts executable
-chmod +x start.sh stop.sh
-
-# 3. Configure environment (see below)
-# Create backend/.env with your credentials
-
-# 4. Start everything
-./start.sh
-
-# 5. Open browser to http://localhost:5173
-```
-
-### Option 2: Manual Setup
-
-#### Backend Setup
-
-```bash
 # Navigate to backend
 cd backend
 
@@ -475,35 +454,6 @@ npm run dev
 - vite - Build tool
 - tailwindcss - Styling
 - lucide-react - Icons
-
----
-
-## 🚀 Deployment
-
-### Backend Deployment
-
-```bash
-# Install production server
-pip install gunicorn
-
-# Run with gunicorn
-gunicorn api:app --workers 4 --worker-class uvicorn.workers.UvicornWorker --bind 0.0.0.0:8000
-```
-
-### Frontend Deployment
-
-```bash
-# Build for production
-npm run build
-
-# Output in dist/ folder
-# Deploy to Vercel, Netlify, or any static host
-```
-
-### Recommended Platforms
-
-- **Backend:** Railway, Render, AWS, Google Cloud
-- **Frontend:** Vercel, Netlify, AWS S3 + CloudFront
 
 ---
 
