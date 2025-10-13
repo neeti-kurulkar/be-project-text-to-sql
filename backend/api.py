@@ -11,6 +11,7 @@ import sys
 from pathlib import Path
 import uuid
 import json
+from datetime import datetime
 
 # Add agents to path
 sys.path.append(str(Path(__file__).parent))
@@ -19,6 +20,7 @@ from agents.sql_generator import SQLGeneratorAgent
 from agents.sql_executor import SQLExecutorAgent
 from agents.insights_generator import InsightsGeneratorAgent
 from agents.visualizer import VisualizerAgent
+from agents.summary_agent import SummaryAgent
 
 # Initialize FastAPI app
 app = FastAPI(
@@ -41,6 +43,7 @@ sql_generator = SQLGeneratorAgent()
 sql_executor = SQLExecutorAgent()
 insights_generator = InsightsGeneratorAgent()
 visualizer = VisualizerAgent()
+summary_agent = SummaryAgent()
 
 # In-memory storage for analysis results
 analysis_cache = {}
@@ -83,6 +86,9 @@ async def root():
             "health": "/health",
             "analyze": "/api/analyze",
             "sample_questions": "/api/sample-questions",
+            "summary": "/api/summary",
+            "documents": "/api/documents",
+            "document": "/api/documents/{filename}",
             "chart": "/api/chart/{filename}"
         }
     }
@@ -134,7 +140,7 @@ async def get_sample_questions():
             },
             {
                 "id": 6,
-                "question": "Analyze working capital efficiency over time",
+                "question": "Analyze inventory turnover and receivables efficiency",
                 "category": "Efficiency"
             },
             {
@@ -144,8 +150,8 @@ async def get_sample_questions():
             },
             {
                 "id": 8,
-                "question": "Compare debt equity ratio with return on net worth",
-                "category": "Leverage"
+                "question": "Show me all liquidity ratios and their trends",
+                "category": "Liquidity"
             }
         ]
     }
@@ -338,8 +344,97 @@ async def delete_analysis(analysis_id: str):
     if analysis_id in analysis_cache:
         del analysis_cache[analysis_id]
         return {"message": "Analysis deleted"}
-    
+
     raise HTTPException(status_code=404, detail="Analysis not found")
+
+
+@app.get("/api/summary")
+async def get_summary():
+    """
+    Generate and return a comprehensive financial summary of HUL
+    """
+    try:
+        result = summary_agent.generate_summary()
+
+        if result["error"]:
+            raise HTTPException(status_code=500, detail=result["error"])
+
+        return {
+            "summary": result["summary"],
+            "generated_at": datetime.now().isoformat(),
+            "status": "success"
+        }
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error generating summary: {str(e)}")
+
+
+@app.get("/api/documents")
+async def get_documents():
+    """
+    List all available financial statement documents
+    """
+    try:
+        # Documents are in backend/income_statements/money-control
+        docs_dir = Path("income_statements")
+
+        if not docs_dir.exists():
+            return {
+                "documents": [],
+                "count": 0,
+                "message": "Documents directory not found"
+            }
+
+        # List all PDF files
+        documents = []
+        for pdf_file in docs_dir.glob("*.pdf"):
+            stat = pdf_file.stat()
+            documents.append({
+                "filename": pdf_file.name,
+                "path": str(pdf_file),
+                "size": stat.st_size,
+                "modified": stat.st_mtime
+            })
+
+        # Sort by filename
+        documents.sort(key=lambda x: x["filename"])
+
+        return {
+            "documents": documents,
+            "count": len(documents),
+            "status": "success"
+        }
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error listing documents: {str(e)}")
+
+
+@app.get("/api/documents/{filename}")
+async def get_document(filename: str):
+    """
+    Serve a specific financial statement document
+    """
+    try:
+        # Security: prevent path traversal
+        if ".." in filename or "/" in filename or "\\" in filename:
+            raise HTTPException(status_code=400, detail="Invalid filename")
+
+        # Documents are in backend/income_statements
+        file_path = Path("income_statements") / filename
+
+        if not file_path.exists():
+            raise HTTPException(status_code=404, detail="Document not found")
+
+        return FileResponse(
+            file_path,
+            media_type="application/pdf",
+            filename=filename
+        )
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error serving document: {str(e)}")
 
 
 if __name__ == "__main__":
