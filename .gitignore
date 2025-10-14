@@ -52,3 +52,27 @@ htmlcov/
 # --- Outputs ---
 /output/
 backend/output/
+
+# --- Experiment Results & Analysis ---
+backend/experiments/results/*.csv
+backend/experiments/analysis/*.json
+backend/experiments/analysis/*.csv
+
+# --- Test Files ---
+backend/test_*.py
+backend/test_*.txt
+
+# --- Environment Variables (sensitive) ---
+backend/.env
+.env
+
+# --- Large Model Files ---
+*.gguf
+*.bin
+*.safetensors
+
+# --- Temporary Files ---
+*.tmp
+*.temp
+*.swp
+*~

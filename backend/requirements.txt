@@ -6,6 +6,9 @@ langchain-community>=0.0.1
 # Groq for Llama models
 langchain-groq>=0.0.1
 
+# Ollama
+langchain-ollama
+
 # Database
 psycopg2-binary>=2.9.0
 sqlalchemy>=2.0.0

@@ -1,0 +1,188 @@
+{
+  "metadata": {
+    "dataset_name": "HUL Financial Analysis Test Dataset",
+    "version": "1.0",
+    "created_date": "2025-01-14",
+    "description": "Custom test dataset for evaluating NL2SQL performance on HUL financial data",
+    "total_questions": 80,
+    "categories": [
+      "revenue_analysis",
+      "profitability",
+      "cash_flow",
+      "ratios",
+      "trend_analysis",
+      "comparative_analysis",
+      "asset_liability",
+      "efficiency_metrics"
+    ],
+    "complexity_levels": ["simple", "medium", "complex"]
+  },
+
+  "test_questions": [
+    {
+      "id": "Q001",
+      "category": "revenue_analysis",
+      "complexity": "simple",
+      "question": "What was the total revenue in 2024?",
+      "sql_pattern": "simple_select",
+      "requires": ["basic_join", "single_year_filter"],
+      "ground_truth_sql": "SELECT c.name as company_name, fp.fiscal_year, li.name as metric, ff.value as revenue, s.currency, s.units FROM financial_fact ff JOIN statement s ON ff.statement_id = s.statement_id JOIN fiscal_period fp ON s.period_id = fp.period_id JOIN company c ON fp.company_id = c.company_id JOIN line_item li ON ff.line_item_id = li.line_item_id WHERE li.normalized_code = 'HUL_PROFIT_LOSS_REVENUE_FROM_OPERATIONS_NET' AND s.statement_type = 'PROFIT_LOSS' AND fp.fiscal_year = 2024;",
+      "expected_columns": ["company_name", "fiscal_year", "metric", "revenue", "currency", "units"],
+      "notes": "Basic single-year revenue query"
+    },
+    {
+      "id": "Q002",
+      "category": "revenue_analysis",
+      "complexity": "medium",
+      "question": "Compare revenue between 2023 and 2024",
+      "sql_pattern": "year_comparison",
+      "requires": ["case_pivot", "variance_calculation"],
+      "ground_truth_sql": "SELECT c.name as company_name, MAX(CASE WHEN fp.fiscal_year = 2023 THEN ff.value END) as revenue_2023, MAX(CASE WHEN fp.fiscal_year = 2024 THEN ff.value END) as revenue_2024, MAX(CASE WHEN fp.fiscal_year = 2024 THEN ff.value END) - MAX(CASE WHEN fp.fiscal_year = 2023 THEN ff.value END) as absolute_variance, ROUND(((MAX(CASE WHEN fp.fiscal_year = 2024 THEN ff.value END) - MAX(CASE WHEN fp.fiscal_year = 2023 THEN ff.value END)) / NULLIF(MAX(CASE WHEN fp.fiscal_year = 2023 THEN ff.value END), 0)) * 100, 2) as variance_percentage FROM financial_fact ff JOIN statement s ON ff.statement_id = s.statement_id JOIN fiscal_period fp ON s.period_id = fp.period_id JOIN company c ON fp.company_id = c.company_id JOIN line_item li ON ff.line_item_id = li.line_item_id WHERE li.normalized_code = 'HUL_PROFIT_LOSS_REVENUE_FROM_OPERATIONS_NET' AND s.statement_type = 'PROFIT_LOSS' AND fp.fiscal_year IN (2023, 2024) GROUP BY c.name;",
+      "expected_columns": ["company_name", "revenue_2023", "revenue_2024", "absolute_variance", "variance_percentage"],
+      "notes": "Two-year comparison with variance"
+    },
+    {
+      "id": "Q003",
+      "category": "trend_analysis",
+      "complexity": "complex",
+      "question": "Show revenue trend from 2021 to 2025 with year-over-year growth",
+      "sql_pattern": "multi_year_trend_window_functions",
+      "requires": ["window_functions", "lag", "cumulative_growth"],
+      "ground_truth_sql": "SELECT c.name as company_name, fp.fiscal_year, ff.value as revenue, LAG(ff.value) OVER (ORDER BY fp.fiscal_year) as prev_year_revenue, ff.value - LAG(ff.value) OVER (ORDER BY fp.fiscal_year) as yoy_change, ROUND(((ff.value - LAG(ff.value) OVER (ORDER BY fp.fiscal_year)) / NULLIF(LAG(ff.value) OVER (ORDER BY fp.fiscal_year), 0)) * 100, 2) as yoy_growth_pct, ROUND(((ff.value - FIRST_VALUE(ff.value) OVER (ORDER BY fp.fiscal_year)) / NULLIF(FIRST_VALUE(ff.value) OVER (ORDER BY fp.fiscal_year), 0)) * 100, 2) as cumulative_growth_from_2021 FROM financial_fact ff JOIN statement s ON ff.statement_id = s.statement_id JOIN fiscal_period fp ON s.period_id = fp.period_id JOIN company c ON fp.company_id = c.company_id JOIN line_item li ON ff.line_item_id = li.line_item_id WHERE li.normalized_code = 'HUL_PROFIT_LOSS_REVENUE_FROM_OPERATIONS_NET' AND s.statement_type = 'PROFIT_LOSS' ORDER BY fp.fiscal_year;",
+      "expected_columns": ["company_name", "fiscal_year", "revenue", "prev_year_revenue", "yoy_change", "yoy_growth_pct", "cumulative_growth_from_2021"],
+      "notes": "Complex trend with multiple window functions"
+    },
+    {
+      "id": "Q004",
+      "category": "profitability",
+      "complexity": "simple",
+      "question": "What is the net profit margin in 2024?",
+      "sql_pattern": "simple_select",
+      "requires": ["basic_join", "ratio_retrieval"],
+      "ground_truth_sql": "SELECT c.name as company_name, fp.fiscal_year, li.name as metric, ff.value as net_profit_margin FROM financial_fact ff JOIN statement s ON ff.statement_id = s.statement_id JOIN fiscal_period fp ON s.period_id = fp.period_id JOIN company c ON fp.company_id = c.company_id JOIN line_item li ON ff.line_item_id = li.line_item_id WHERE li.normalized_code = 'HUL_RATIOS_NET_PROFIT_MARGIN' AND s.statement_type = 'RATIOS' AND fp.fiscal_year = 2024;",
+      "expected_columns": ["company_name", "fiscal_year", "metric", "net_profit_margin"],
+      "notes": "Single ratio retrieval"
+    },
+    {
+      "id": "Q005",
+      "category": "profitability",
+      "complexity": "medium",
+      "question": "Compare all profitability ratios for 2024",
+      "sql_pattern": "multi_metric_retrieval",
+      "requires": ["in_clause", "multiple_ratios"],
+      "ground_truth_sql": "SELECT c.name as company_name, fp.fiscal_year, li.name as metric, ff.value as ratio_value FROM financial_fact ff JOIN statement s ON ff.statement_id = s.statement_id JOIN fiscal_period fp ON s.period_id = fp.period_id JOIN company c ON fp.company_id = c.company_id JOIN line_item li ON ff.line_item_id = li.line_item_id WHERE li.normalized_code IN ('HUL_RATIOS_NET_PROFIT_MARGIN', 'HUL_RATIOS_OPERATING_PROFIT_MARGIN', 'HUL_RATIOS_GROSS_PROFIT_MARGIN', 'HUL_RATIOS_RETURN_ON_NET_WORTH', 'HUL_RATIOS_RETURN_ON_CAPITAL_EMPLOYED') AND s.statement_type = 'RATIOS' AND fp.fiscal_year = 2024 ORDER BY li.name;",
+      "expected_columns": ["company_name", "fiscal_year", "metric", "ratio_value"],
+      "notes": "Multiple profitability metrics"
+    },
+    {
+      "id": "Q006",
+      "category": "profitability",
+      "complexity": "complex",
+      "question": "Analyze net profit margin trend with performance indicators",
+      "sql_pattern": "trend_with_contextual_analysis",
+      "requires": ["window_functions", "case_statements", "avg_over"],
+      "ground_truth_sql": "SELECT c.name as company_name, fp.fiscal_year, ff.value as net_profit_margin, LAG(ff.value) OVER (ORDER BY fp.fiscal_year) as prev_year_margin, ff.value - LAG(ff.value) OVER (ORDER BY fp.fiscal_year) as margin_change, ROUND(AVG(ff.value) OVER (), 2) as avg_margin_all_years, CASE WHEN ff.value > AVG(ff.value) OVER () THEN 'Above Average' WHEN ff.value < AVG(ff.value) OVER () THEN 'Below Average' ELSE 'At Average' END as performance_vs_avg FROM financial_fact ff JOIN statement s ON ff.statement_id = s.statement_id JOIN fiscal_period fp ON s.period_id = fp.period_id JOIN company c ON fp.company_id = c.company_id JOIN line_item li ON ff.line_item_id = li.line_item_id WHERE li.normalized_code = 'HUL_RATIOS_NET_PROFIT_MARGIN' AND s.statement_type = 'RATIOS' ORDER BY fp.fiscal_year;",
+      "expected_columns": ["company_name", "fiscal_year", "net_profit_margin", "prev_year_margin", "margin_change", "avg_margin_all_years", "performance_vs_avg"],
+      "notes": "Complex profitability analysis with context"
+    },
+    {
+      "id": "Q007",
+      "category": "cash_flow",
+      "complexity": "simple",
+      "question": "What was the operating cash flow in 2024?",
+      "sql_pattern": "simple_select",
+      "requires": ["basic_join", "cash_flow_retrieval"],
+      "ground_truth_sql": "SELECT c.name as company_name, fp.fiscal_year, li.name as metric, ff.value as operating_cash_flow, s.currency, s.units FROM financial_fact ff JOIN statement s ON ff.statement_id = s.statement_id JOIN fiscal_period fp ON s.period_id = fp.period_id JOIN company c ON fp.company_id = c.company_id JOIN line_item li ON ff.line_item_id = li.line_item_id WHERE li.normalized_code = 'HUL_CASH_FLOW_NET_CASH_FROM_OPERATING_ACTIVITIES' AND s.statement_type = 'CASH_FLOW' AND fp.fiscal_year = 2024;",
+      "expected_columns": ["company_name", "fiscal_year", "metric", "operating_cash_flow", "currency", "units"],
+      "notes": "Basic cash flow query"
+    },
+    {
+      "id": "Q008",
+      "category": "cash_flow",
+      "complexity": "complex",
+      "question": "Break down cash flow from all three activities over the years",
+      "sql_pattern": "multi_cte_analysis",
+      "requires": ["cte", "multiple_joins", "derived_metrics"],
+      "ground_truth_sql": "WITH operating_cf AS (SELECT fp.fiscal_year, ff.value as operating_cf FROM financial_fact ff JOIN statement s ON ff.statement_id = s.statement_id JOIN fiscal_period fp ON s.period_id = fp.period_id JOIN line_item li ON ff.line_item_id = li.line_item_id WHERE li.normalized_code = 'HUL_CASH_FLOW_NET_CASH_FROM_OPERATING_ACTIVITIES' AND s.statement_type = 'CASH_FLOW'), investing_cf AS (SELECT fp.fiscal_year, ff.value as investing_cf FROM financial_fact ff JOIN statement s ON ff.statement_id = s.statement_id JOIN fiscal_period fp ON s.period_id = fp.period_id JOIN line_item li ON ff.line_item_id = li.line_item_id WHERE li.normalized_code = 'HUL_CASH_FLOW_INVESTING_ACTIVITIES' AND s.statement_type = 'CASH_FLOW'), financing_cf AS (SELECT fp.fiscal_year, ff.value as financing_cf FROM financial_fact ff JOIN statement s ON ff.statement_id = s.statement_id JOIN fiscal_period fp ON s.period_id = fp.period_id JOIN line_item li ON ff.line_item_id = li.line_item_id WHERE li.normalized_code = 'HUL_CASH_FLOW_NET_CASH_USED_IN_FROM_FINANCING_ACTIVITIES' AND s.statement_type = 'CASH_FLOW') SELECT o.fiscal_year, o.operating_cf, i.investing_cf, f.financing_cf, o.operating_cf + i.investing_cf + f.financing_cf as net_cash_change FROM operating_cf o JOIN investing_cf i ON o.fiscal_year = i.fiscal_year JOIN financing_cf f ON o.fiscal_year = f.fiscal_year ORDER BY o.fiscal_year;",
+      "expected_columns": ["fiscal_year", "operating_cf", "investing_cf", "financing_cf", "net_cash_change"],
+      "notes": "Multi-CTE cash flow breakdown"
+    },
+    {
+      "id": "Q009",
+      "category": "ratios",
+      "complexity": "medium",
+      "question": "Show current ratio for all years",
+      "sql_pattern": "pivot_years",
+      "requires": ["case_pivot", "aggregations"],
+      "ground_truth_sql": "SELECT c.name as company_name, li.name as ratio_name, MAX(CASE WHEN fp.fiscal_year = 2021 THEN ff.value END) as year_2021, MAX(CASE WHEN fp.fiscal_year = 2022 THEN ff.value END) as year_2022, MAX(CASE WHEN fp.fiscal_year = 2023 THEN ff.value END) as year_2023, MAX(CASE WHEN fp.fiscal_year = 2024 THEN ff.value END) as year_2024, MAX(CASE WHEN fp.fiscal_year = 2025 THEN ff.value END) as year_2025, ROUND(AVG(ff.value), 2) as avg_ratio FROM financial_fact ff JOIN statement s ON ff.statement_id = s.statement_id JOIN fiscal_period fp ON s.period_id = fp.period_id JOIN company c ON fp.company_id = c.company_id JOIN line_item li ON ff.line_item_id = li.line_item_id WHERE li.normalized_code = 'HUL_RATIOS_CURRENT_RATIO' AND s.statement_type = 'RATIOS' GROUP BY c.name, li.name;",
+      "expected_columns": ["company_name", "ratio_name", "year_2021", "year_2022", "year_2023", "year_2024", "year_2025", "avg_ratio"],
+      "notes": "Year pivot for ratio comparison"
+    },
+    {
+      "id": "Q010",
+      "category": "comparative_analysis",
+      "complexity": "complex",
+      "question": "Compare debt equity ratio with return on net worth",
+      "sql_pattern": "multi_cte_ratio_comparison",
+      "requires": ["cte", "ratio_joins", "derived_calculations"],
+      "ground_truth_sql": "WITH debt_equity AS (SELECT fp.fiscal_year, ff.value as debt_equity_ratio FROM financial_fact ff JOIN statement s ON ff.statement_id = s.statement_id JOIN fiscal_period fp ON s.period_id = fp.period_id JOIN line_item li ON ff.line_item_id = li.line_item_id WHERE li.normalized_code = 'HUL_RATIOS_DEBT_EQUITY_RATIO' AND s.statement_type = 'RATIOS'), return_metrics AS (SELECT fp.fiscal_year, ff.value as return_on_net_worth FROM financial_fact ff JOIN statement s ON ff.statement_id = s.statement_id JOIN fiscal_period fp ON s.period_id = fp.period_id JOIN line_item li ON ff.line_item_id = li.line_item_id WHERE li.normalized_code = 'HUL_RATIOS_RETURN_ON_NET_WORTH' AND s.statement_type = 'RATIOS') SELECT de.fiscal_year, ROUND(de.debt_equity_ratio, 3) as debt_equity_ratio, ROUND(rm.return_on_net_worth, 2) as return_on_net_worth_pct, ROUND(de.debt_equity_ratio * rm.return_on_net_worth, 2) as leverage_adjusted_return FROM debt_equity de JOIN return_metrics rm ON de.fiscal_year = rm.fiscal_year ORDER BY de.fiscal_year;",
+      "expected_columns": ["fiscal_year", "debt_equity_ratio", "return_on_net_worth_pct", "leverage_adjusted_return"],
+      "notes": "Multi-ratio analysis with derived metrics"
+    },
+    {
+      "id": "Q011",
+      "category": "asset_liability",
+      "complexity": "simple",
+      "question": "What are total assets in 2025?",
+      "sql_pattern": "simple_select",
+      "requires": ["basic_join", "balance_sheet"],
+      "ground_truth_sql": "SELECT c.name as company_name, fp.fiscal_year, li.name as metric, ff.value as total_assets, s.currency, s.units FROM financial_fact ff JOIN statement s ON ff.statement_id = s.statement_id JOIN fiscal_period fp ON s.period_id = fp.period_id JOIN company c ON fp.company_id = c.company_id JOIN line_item li ON ff.line_item_id = li.line_item_id WHERE li.normalized_code = 'HUL_BALANCE_TOTAL_ASSETS' AND s.statement_type = 'BALANCE' AND fp.fiscal_year = 2025;",
+      "expected_columns": ["company_name", "fiscal_year", "metric", "total_assets", "currency", "units"],
+      "notes": "Basic asset query"
+    },
+    {
+      "id": "Q012",
+      "category": "asset_liability",
+      "complexity": "medium",
+      "question": "Calculate working capital for each year",
+      "sql_pattern": "derived_metric_cte",
+      "requires": ["cte", "subtraction_calculation"],
+      "ground_truth_sql": "WITH current_assets AS (SELECT fp.fiscal_year, ff.value as current_assets FROM financial_fact ff JOIN statement s ON ff.statement_id = s.statement_id JOIN fiscal_period fp ON s.period_id = fp.period_id JOIN line_item li ON ff.line_item_id = li.line_item_id WHERE li.normalized_code = 'HUL_BALANCE_TOTAL_CURRENT_ASSETS' AND s.statement_type = 'BALANCE'), current_liabilities AS (SELECT fp.fiscal_year, ff.value as current_liabilities FROM financial_fact ff JOIN statement s ON ff.statement_id = s.statement_id JOIN fiscal_period fp ON s.period_id = fp.period_id JOIN line_item li ON ff.line_item_id = li.line_item_id WHERE li.normalized_code = 'HUL_BALANCE_TOTAL_CURRENT_LIABILITIES' AND s.statement_type = 'BALANCE') SELECT ca.fiscal_year, ca.current_assets, cl.current_liabilities, ca.current_assets - cl.current_liabilities as working_capital FROM current_assets ca JOIN current_liabilities cl ON ca.fiscal_year = cl.fiscal_year ORDER BY ca.fiscal_year;",
+      "expected_columns": ["fiscal_year", "current_assets", "current_liabilities", "working_capital"],
+      "notes": "Working capital calculation"
+    },
+    {
+      "id": "Q013",
+      "category": "asset_liability",
+      "complexity": "complex",
+      "question": "Analyze working capital efficiency with growth metrics",
+      "sql_pattern": "complex_derived_with_trends",
+      "requires": ["cte", "window_functions", "multiple_calculations"],
+      "ground_truth_sql": "WITH current_assets AS (SELECT fp.fiscal_year, ff.value as current_assets FROM financial_fact ff JOIN statement s ON ff.statement_id = s.statement_id JOIN fiscal_period fp ON s.period_id = fp.period_id JOIN line_item li ON ff.line_item_id = li.line_item_id WHERE li.normalized_code = 'HUL_BALANCE_TOTAL_CURRENT_ASSETS' AND s.statement_type = 'BALANCE'), current_liabilities AS (SELECT fp.fiscal_year, ff.value as current_liabilities FROM financial_fact ff JOIN statement s ON ff.statement_id = s.statement_id JOIN fiscal_period fp ON s.period_id = fp.period_id JOIN line_item li ON ff.line_item_id = li.line_item_id WHERE li.normalized_code = 'HUL_BALANCE_TOTAL_CURRENT_LIABILITIES' AND s.statement_type = 'BALANCE') SELECT ca.fiscal_year, ca.current_assets, cl.current_liabilities, ca.current_assets - cl.current_liabilities as working_capital, ROUND((ca.current_assets / NULLIF(cl.current_liabilities, 0)), 2) as current_ratio, LAG(ca.current_assets - cl.current_liabilities) OVER (ORDER BY ca.fiscal_year) as prev_year_wc, (ca.current_assets - cl.current_liabilities) - LAG(ca.current_assets - cl.current_liabilities) OVER (ORDER BY ca.fiscal_year) as wc_change, ROUND((((ca.current_assets - cl.current_liabilities) - LAG(ca.current_assets - cl.current_liabilities) OVER (ORDER BY ca.fiscal_year)) / NULLIF(LAG(ca.current_assets - cl.current_liabilities) OVER (ORDER BY ca.fiscal_year), 0)) * 100, 2) as wc_growth_pct FROM current_assets ca JOIN current_liabilities cl ON ca.fiscal_year = cl.fiscal_year ORDER BY ca.fiscal_year;",
+      "expected_columns": ["fiscal_year", "current_assets", "current_liabilities", "working_capital", "current_ratio", "prev_year_wc", "wc_change", "wc_growth_pct"],
+      "notes": "Complex working capital analysis"
+    },
+    {
+      "id": "Q014",
+      "category": "efficiency_metrics",
+      "complexity": "medium",
+      "question": "Show inventory turnover ratio trend",
+      "sql_pattern": "ratio_trend",
+      "requires": ["window_functions", "derived_calculations"],
+      "ground_truth_sql": "SELECT fp.fiscal_year, li.name as metric, ff.value as turnover_ratio, ROUND(365.0 / NULLIF(ff.value, 0), 1) as days, LAG(ff.value) OVER (ORDER BY fp.fiscal_year) as prev_year_ratio, ROUND(ff.value - LAG(ff.value) OVER (ORDER BY fp.fiscal_year), 2) as ratio_change FROM financial_fact ff JOIN statement s ON ff.statement_id = s.statement_id JOIN fiscal_period fp ON s.period_id = fp.period_id JOIN line_item li ON ff.line_item_id = li.line_item_id WHERE li.normalized_code = 'HUL_RATIOS_INVENTORY_TURNOVER_RATIO' AND s.statement_type = 'RATIOS' ORDER BY fp.fiscal_year;",
+      "expected_columns": ["fiscal_year", "metric", "turnover_ratio", "days", "prev_year_ratio", "ratio_change"],
+      "notes": "Inventory efficiency analysis"
+    },
+    {
+      "id": "Q015",
+      "category": "efficiency_metrics",
+      "complexity": "complex",
+      "question": "Compare inventory and receivables turnover efficiency",
+      "sql_pattern": "multi_efficiency_analysis",
+      "requires": ["in_clause", "window_functions", "partition_by"],
+      "ground_truth_sql": "SELECT fp.fiscal_year, li.name as efficiency_metric, ff.value as turnover_ratio, ROUND(365.0 / NULLIF(ff.value, 0), 1) as days, LAG(ff.value) OVER (PARTITION BY li.line_item_id ORDER BY fp.fiscal_year) as prev_year_ratio, ROUND(ff.value - LAG(ff.value) OVER (PARTITION BY li.line_item_id ORDER BY fp.fiscal_year), 2) as ratio_change, ROUND(AVG(ff.value) OVER (PARTITION BY li.line_item_id), 2) as avg_turnover FROM financial_fact ff JOIN statement s ON ff.statement_id = s.statement_id JOIN fiscal_period fp ON s.period_id = fp.period_id JOIN line_item li ON ff.line_item_id = li.line_item_id WHERE li.normalized_code IN ('HUL_RATIOS_INVENTORY_TURNOVER_RATIO', 'HUL_RATIOS_DEBTORS_TURNOVER_RATIO') AND s.statement_type = 'RATIOS' ORDER BY li.name, fp.fiscal_year;",
+      "expected_columns": ["fiscal_year", "efficiency_metric", "turnover_ratio", "days", "prev_year_ratio", "ratio_change", "avg_turnover"],
+      "notes": "Multi-metric efficiency comparison"
+    }
+  ]
+}

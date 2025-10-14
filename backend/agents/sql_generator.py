@@ -5,7 +5,7 @@ Converts natural language questions to SQL queries using few-shot prompting
 
 import os
 from langchain_core.prompts import FewShotPromptTemplate, PromptTemplate
-from langchain_groq import ChatGroq
+from langchain_ollama import OllamaLLM
 from dotenv import load_dotenv
 import sys
 from pathlib import Path
@@ -17,12 +17,22 @@ from few_shot_examples.examples import FEW_SHOT_EXAMPLES, SCHEMA_DESCRIPTION
 load_dotenv()
 
 class SQLGeneratorAgent:
-    def __init__(self):
-        """Initialize the SQL Generator Agent."""
-        self.llm = ChatGroq(
-            model="llama-3.3-70b-versatile",
+    def __init__(self, model_name: str = None):
+        """
+        Initialize the SQL Generator Agent.
+
+        Args:
+            model_name: Ollama model name (e.g., 'deepseek-coder:6.7b', 'llama3.1:8b', 'codellama:7b')
+                       If None, uses environment variable OLLAMA_MODEL or defaults to 'llama3.1:8b'
+        """
+        if model_name is None:
+            model_name = os.getenv('OLLAMA_MODEL', 'llama3.1:8b')
+
+        self.llm = OllamaLLM(
+            model=model_name,
             temperature=0,
-            api_key=os.getenv('GROQ_API_KEY')
+            format="",  # Disable JSON formatting
+            system=""   # Override default system prompt that restricts to CS questions
         )
         
         self.prompt = self._build_prompt()
@@ -37,11 +47,17 @@ class SQLGeneratorAgent:
         few_shot_prompt = FewShotPromptTemplate(
             examples=FEW_SHOT_EXAMPLES,
             example_prompt=example_prompt,
-            prefix=f"""You are an expert PostgreSQL query generator for HUL financial data.
+            prefix=f"""# TASK: Generate PostgreSQL SQL Query
 
+You are a SQL code generator. Your ONLY job is to output valid PostgreSQL SQL queries based on the question.
+DO NOT provide explanations, apologies, or conversational responses.
+DO NOT refuse to generate queries.
+ONLY output the SQL query code.
+
+## Database Schema:
 {SCHEMA_DESCRIPTION}
 
-CRITICAL RULES:
+## CRITICAL RULES:
 1. Return ONLY the SQL query, no explanations or markdown
 2. Use normalized_code from line_item table (starts with 'HUL_')
 3. Always join: financial_fact -> statement -> fiscal_period -> company -> line_item
@@ -77,19 +93,23 @@ Examples:
     def generate(self, question: str) -> dict:
         """
         Generate SQL query from natural language question.
-        
+
         Args:
             question: Natural language question about financial data
-            
+
         Returns:
             Dictionary with 'sql_query' and 'error' keys
         """
         try:
             prompt = self.prompt.format(question=question)
+
+            # Add explicit instruction suffix for code generation models
+            prompt = prompt + "\n\n### Instruction: Generate ONLY the SQL query code. Do not provide explanations or refuse. Output SQL directly."
+
             response = self.llm.invoke(prompt)
-            
-            # Clean SQL query
-            sql_query = response.content.strip()
+
+            # Clean SQL query - OllamaLLM returns string directly, not object with .content
+            sql_query = response.strip() if isinstance(response, str) else str(response).strip()
             sql_query = sql_query.replace("```sql", "").replace("```", "").strip()
             
             # Remove any explanatory text before SELECT/WITH
@@ -145,7 +165,8 @@ Corrected SQL:"""
         
         try:
             response = self.llm.invoke(fix_prompt)
-            fixed_query = response.content.strip().replace("```sql", "").replace("```", "").strip()
+            fixed_query = response.strip() if isinstance(response, str) else str(response).strip()
+            fixed_query = fixed_query.replace("```sql", "").replace("```", "").strip()
             
             # Extract SQL portion
             if "SELECT" in fixed_query.upper():
