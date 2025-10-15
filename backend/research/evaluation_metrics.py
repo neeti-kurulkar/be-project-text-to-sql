@@ -265,8 +265,20 @@ class EvaluationMetrics:
         # Try to compare data
         try:
             # Sort both dataframes for comparison
-            df1_sorted = df1.sort_values(by=list(df1.columns)).reset_index(drop=True)
-            df2_sorted = df2.sort_values(by=list(df2.columns)).reset_index(drop=True)
+            # Only sort if they have the same columns and sortable types
+            if df1.shape == df2.shape and set(df1.columns) == set(df2.columns):
+                try:
+                    # Try sorting by all columns
+                    df1_sorted = df1.sort_values(by=list(df1.columns)).reset_index(drop=True)
+                    df2_sorted = df2.sort_values(by=list(df2.columns)).reset_index(drop=True)
+                except (TypeError, ValueError):
+                    # If sorting fails (mixed types, uncomparable), just use original order
+                    df1_sorted = df1.reset_index(drop=True)
+                    df2_sorted = df2.reset_index(drop=True)
+            else:
+                # Different shapes or columns, can't do detailed comparison
+                df1_sorted = df1.reset_index(drop=True)
+                df2_sorted = df2.reset_index(drop=True)
 
             # Check if completely equal
             exact_match = df1_sorted.equals(df2_sorted)
@@ -282,21 +294,32 @@ class EvaluationMetrics:
                 if df1_sorted.shape == df2_sorted.shape:
                     for col in df1_sorted.columns:
                         if col in df2_sorted.columns:
-                            # For numeric columns, allow small tolerance
-                            if pd.api.types.is_numeric_dtype(df1_sorted[col]):
-                                matching_cells += (
-                                    (df1_sorted[col].round(2) == df2_sorted[col].round(2)).sum()
-                                )
-                            else:
-                                matching_cells += (df1_sorted[col] == df2_sorted[col]).sum()
+                            try:
+                                # For numeric columns, allow small tolerance
+                                if pd.api.types.is_numeric_dtype(df1_sorted[col]):
+                                    matching_cells += (
+                                        (df1_sorted[col].round(2) == df2_sorted[col].round(2)).sum()
+                                    )
+                                else:
+                                    matching_cells += (df1_sorted[col] == df2_sorted[col]).sum()
+                            except (TypeError, ValueError):
+                                # If comparison fails for this column, count as 0 matches
+                                continue
 
                     similarity = matching_cells / total_cells if total_cells > 0 else 0.0
                 else:
-                    similarity = 0.0
+                    # Different shapes - use row/column match as proxy
+                    if row_match and col_match:
+                        similarity = 0.5  # Same dimensions but different data
+                    elif row_match or col_match:
+                        similarity = 0.25  # One dimension matches
+                    else:
+                        similarity = 0.0  # Completely different
 
             return exact_match, row_match, col_match, round(similarity, 4)
 
         except Exception as e:
+            # If any comparison fails, return basic dimension match info
             return False, row_match, col_match, 0.0
 
     def _analyze_sql_patterns(

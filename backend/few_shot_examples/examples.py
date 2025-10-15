@@ -5,20 +5,16 @@ Comprehensive Few-Shot Examples for HUL Financial Data Text-to-SQL
 
 FEW_SHOT_EXAMPLES = [
     # ====================================================================================
-    # 1. REVENUE ANALYSIS WITH VARIANCE
+    # 1. SIMPLE SINGLE-YEAR REVENUE QUERY
     # ====================================================================================
     {
-        "question": "What is the revenue variance between 2022 and 2023?",
+        "question": "What was the total revenue in 2024?",
         "sql_query": """
-SELECT 
+SELECT
     c.name as company_name,
-    MAX(CASE WHEN fp.fiscal_year = 2022 THEN ff.value END) as revenue_2022,
-    MAX(CASE WHEN fp.fiscal_year = 2023 THEN ff.value END) as revenue_2023,
-    MAX(CASE WHEN fp.fiscal_year = 2023 THEN ff.value END) - 
-    MAX(CASE WHEN fp.fiscal_year = 2022 THEN ff.value END) as absolute_variance,
-    ROUND(((MAX(CASE WHEN fp.fiscal_year = 2023 THEN ff.value END) - 
-            MAX(CASE WHEN fp.fiscal_year = 2022 THEN ff.value END)) / 
-            NULLIF(MAX(CASE WHEN fp.fiscal_year = 2022 THEN ff.value END), 0)) * 100, 2) as variance_percentage,
+    fp.fiscal_year,
+    li.name as metric,
+    ff.value as revenue,
     s.currency,
     s.units
 FROM financial_fact ff
@@ -28,13 +24,109 @@ JOIN company c ON fp.company_id = c.company_id
 JOIN line_item li ON ff.line_item_id = li.line_item_id
 WHERE li.normalized_code = 'HUL_PROFIT_LOSS_REVENUE_FROM_OPERATIONS_NET'
     AND s.statement_type = 'PROFIT_LOSS'
-    AND fp.fiscal_year IN (2022, 2023)
-GROUP BY c.name, s.currency, s.units;
+    AND fp.fiscal_year = 2024;
+"""
+    },
+
+    # ====================================================================================
+    # 2. SIMPLE SINGLE-YEAR RATIO QUERY
+    # ====================================================================================
+    {
+        "question": "What is the net profit margin in 2024?",
+        "sql_query": """
+SELECT
+    c.name as company_name,
+    fp.fiscal_year,
+    li.name as metric,
+    ff.value as net_profit_margin
+FROM financial_fact ff
+JOIN statement s ON ff.statement_id = s.statement_id
+JOIN fiscal_period fp ON s.period_id = fp.period_id
+JOIN company c ON fp.company_id = c.company_id
+JOIN line_item li ON ff.line_item_id = li.line_item_id
+WHERE li.normalized_code = 'HUL_RATIOS_NET_PROFIT_MARGIN'
+    AND s.statement_type = 'RATIOS'
+    AND fp.fiscal_year = 2024;
+"""
+    },
+
+    # ====================================================================================
+    # 3. SIMPLE SINGLE-YEAR CASH FLOW QUERY
+    # ====================================================================================
+    {
+        "question": "What was the operating cash flow in 2024?",
+        "sql_query": """
+SELECT
+    c.name as company_name,
+    fp.fiscal_year,
+    li.name as metric,
+    ff.value as operating_cash_flow,
+    s.currency,
+    s.units
+FROM financial_fact ff
+JOIN statement s ON ff.statement_id = s.statement_id
+JOIN fiscal_period fp ON s.period_id = fp.period_id
+JOIN company c ON fp.company_id = c.company_id
+JOIN line_item li ON ff.line_item_id = li.line_item_id
+WHERE li.normalized_code = 'HUL_CASH_FLOW_NET_CASH_FROM_OPERATING_ACTIVITIES'
+    AND s.statement_type = 'CASH_FLOW'
+    AND fp.fiscal_year = 2024;
+"""
+    },
+
+    # ====================================================================================
+    # 4. SIMPLE SINGLE-YEAR BALANCE SHEET QUERY
+    # ====================================================================================
+    {
+        "question": "What are total assets in 2025?",
+        "sql_query": """
+SELECT
+    c.name as company_name,
+    fp.fiscal_year,
+    li.name as metric,
+    ff.value as total_assets,
+    s.currency,
+    s.units
+FROM financial_fact ff
+JOIN statement s ON ff.statement_id = s.statement_id
+JOIN fiscal_period fp ON s.period_id = fp.period_id
+JOIN company c ON fp.company_id = c.company_id
+JOIN line_item li ON ff.line_item_id = li.line_item_id
+WHERE li.normalized_code = 'HUL_BALANCE_TOTAL_ASSETS'
+    AND s.statement_type = 'BALANCE'
+    AND fp.fiscal_year = 2025;
+"""
+    },
+
+    # ====================================================================================
+    # 5. REVENUE ANALYSIS WITH VARIANCE (YEAR COMPARISON)
+    # ====================================================================================
+    {
+        "question": "Compare revenue between 2023 and 2024",
+        "sql_query": """
+SELECT
+    c.name as company_name,
+    MAX(CASE WHEN fp.fiscal_year = 2023 THEN ff.value END) as revenue_2023,
+    MAX(CASE WHEN fp.fiscal_year = 2024 THEN ff.value END) as revenue_2024,
+    MAX(CASE WHEN fp.fiscal_year = 2024 THEN ff.value END) -
+    MAX(CASE WHEN fp.fiscal_year = 2023 THEN ff.value END) as absolute_variance,
+    ROUND(((MAX(CASE WHEN fp.fiscal_year = 2024 THEN ff.value END) -
+            MAX(CASE WHEN fp.fiscal_year = 2023 THEN ff.value END)) /
+            NULLIF(MAX(CASE WHEN fp.fiscal_year = 2023 THEN ff.value END), 0)) * 100, 2) as variance_percentage
+FROM financial_fact ff
+JOIN statement s ON ff.statement_id = s.statement_id
+JOIN fiscal_period fp ON s.period_id = fp.period_id
+JOIN company c ON fp.company_id = c.company_id
+JOIN line_item li ON ff.line_item_id = li.line_item_id
+WHERE li.normalized_code = 'HUL_PROFIT_LOSS_REVENUE_FROM_OPERATIONS_NET'
+    AND s.statement_type = 'PROFIT_LOSS'
+    AND fp.fiscal_year IN (2023, 2024)
+GROUP BY c.name;
 """
     },
     
     # ====================================================================================
-    # 2. MULTI-YEAR TREND WITH YOY GROWTH
+    # 4. MULTI-YEAR TREND WITH YOY GROWTH
     # ====================================================================================
     {
         "question": "Show me the trend of net cash from operating activities over all years",
@@ -65,7 +157,7 @@ ORDER BY fp.fiscal_year;
     },
     
     # ====================================================================================
-    # 3. RATIO COMPARISON ACROSS YEARS (PIVOT STYLE)
+    # 5. RATIO COMPARISON ACROSS YEARS (PIVOT STYLE)
     # ====================================================================================
     {
         "question": "Compare the current ratio across all years",
@@ -273,34 +365,41 @@ ORDER BY li.name;
     },
     
     # ====================================================================================
-    # 9. EXPENSE BREAKDOWN ANALYSIS
+    # 9. SIMPLE WORKING CAPITAL CALCULATION
     # ====================================================================================
     {
-        "question": "How have operating expenses changed over the years?",
+        "question": "Calculate working capital for each year",
         "sql_query": """
-SELECT 
-    fp.fiscal_year,
-    li.name as expense_type,
-    ff.value as expense_amount,
-    s.units,
-    LAG(ff.value) OVER (PARTITION BY li.line_item_id ORDER BY fp.fiscal_year) as prev_year,
-    ff.value - LAG(ff.value) OVER (PARTITION BY li.line_item_id ORDER BY fp.fiscal_year) as yoy_change,
-    ROUND(((ff.value - LAG(ff.value) OVER (PARTITION BY li.line_item_id ORDER BY fp.fiscal_year)) / 
-           NULLIF(LAG(ff.value) OVER (PARTITION BY li.line_item_id ORDER BY fp.fiscal_year), 0)) * 100, 2) as yoy_change_pct,
-    ROUND((ff.value / SUM(ff.value) OVER (PARTITION BY fp.fiscal_year)) * 100, 2) as pct_of_total_expenses
-FROM financial_fact ff
-JOIN statement s ON ff.statement_id = s.statement_id
-JOIN fiscal_period fp ON s.period_id = fp.period_id
-JOIN line_item li ON ff.line_item_id = li.line_item_id
-WHERE li.statement_category = 'EXPENSE'
-    AND s.statement_type = 'PROFIT_LOSS'
-    AND li.normalized_code IN (
-        'HUL_PROFIT_LOSS_COST_OF_MATERIALS_CONSUMED',
-        'HUL_PROFIT_LOSS_EMPLOYEE_BENEFIT_EXPENSES',
-        'HUL_PROFIT_LOSS_DEPRECIATION_AND_AMORTISATION_EXPENSES',
-        'HUL_PROFIT_LOSS_OTHER_EXPENSES'
-    )
-ORDER BY fp.fiscal_year, expense_amount DESC;
+WITH current_assets AS (
+    SELECT
+        fp.fiscal_year,
+        ff.value as current_assets
+    FROM financial_fact ff
+    JOIN statement s ON ff.statement_id = s.statement_id
+    JOIN fiscal_period fp ON s.period_id = fp.period_id
+    JOIN line_item li ON ff.line_item_id = li.line_item_id
+    WHERE li.normalized_code = 'HUL_BALANCE_TOTAL_CURRENT_ASSETS'
+        AND s.statement_type = 'BALANCE'
+),
+current_liabilities AS (
+    SELECT
+        fp.fiscal_year,
+        ff.value as current_liabilities
+    FROM financial_fact ff
+    JOIN statement s ON ff.statement_id = s.statement_id
+    JOIN fiscal_period fp ON s.period_id = fp.period_id
+    JOIN line_item li ON ff.line_item_id = li.line_item_id
+    WHERE li.normalized_code = 'HUL_BALANCE_TOTAL_CURRENT_LIABILITIES'
+        AND s.statement_type = 'BALANCE'
+)
+SELECT
+    ca.fiscal_year,
+    ca.current_assets,
+    cl.current_liabilities,
+    ca.current_assets - cl.current_liabilities as working_capital
+FROM current_assets ca
+JOIN current_liabilities cl ON ca.fiscal_year = cl.fiscal_year
+ORDER BY ca.fiscal_year;
 """
     },
     
@@ -656,23 +755,25 @@ Key SQL Patterns Used in Examples:
 # ====================================================================================
 
 USAGE_NOTES = """
-These 15 examples cover:
+These 17 examples cover:
 
-1. Simple variance (2 years comparison)
-2. Multi-year trends with YoY analysis
-3. Ratio pivoting across all years
-4. Margin analysis with context
-5. Asset growth with cumulative metrics
-6. Multi-ratio comparison using CTEs
-7. Working capital efficiency
-8. Key metrics snapshot with ranking
-9. Expense breakdown and composition
-10. Cash flow components analysis
-11. Liquidity ratios with health indicators
-12. Operational efficiency metrics
-13. Asset composition analysis
-14. EPS and dividend trends
-15. Comprehensive scorecard
+1. Simple single-year revenue query
+2. Simple single-year ratio query
+3. Simple single-year cash flow query
+4. Simple single-year balance sheet query
+5. Year comparison with variance (2 years)
+6. Multi-year trends with YoY analysis and cumulative growth
+7. Ratio pivoting across all years
+8. Margin analysis with context and performance indicators
+9. Asset growth with cumulative metrics
+10. Multi-ratio comparison using CTEs
+11. Simple working capital calculation
+12. Working capital efficiency with trend analysis
+13. Key metrics snapshot with ranking
+14. Cash flow components analysis
+15. Liquidity ratios with health indicators
+16. Operational efficiency metrics
+17. Asset composition analysis
 
 Pattern Coverage:
 - Simple SELECT with JOINs

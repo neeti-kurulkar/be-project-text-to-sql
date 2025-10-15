@@ -53,7 +53,8 @@ class ExperimentRunner:
         self,
         num_examples_list: List[int] = [0, 3, 5, 10, 15],
         model_name: str = "llama-3.3-70b-versatile",
-        experiment_name: Optional[str] = None
+        experiment_name: Optional[str] = None,
+        random_seed: int = 42
     ) -> pd.DataFrame:
         """
         Experiment 1: Test impact of different numbers of few-shot examples
@@ -69,10 +70,14 @@ class ExperimentRunner:
         if experiment_name is None:
             experiment_name = f"few_shot_learning_curve_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
 
+        # Set random seed for reproducibility
+        random.seed(random_seed)
+
         print(f"\n{'='*80}")
         print(f"EXPERIMENT: Few-Shot Learning Curve")
         print(f"Testing with: {num_examples_list} examples")
         print(f"Model: {model_name}")
+        print(f"Random Seed: {random_seed}")
         print(f"{'='*80}\n")
 
         all_results = []
@@ -173,7 +178,8 @@ class ExperimentRunner:
         strategies: List[str] = ['random', 'pattern_based', 'similarity_based'],
         num_examples: int = 10,
         model_name: str = "llama-3.3-70b-versatile",
-        experiment_name: Optional[str] = None
+        experiment_name: Optional[str] = None,
+        random_seed: int = 42
     ) -> pd.DataFrame:
         """
         Experiment 2: Test different few-shot example selection strategies
@@ -190,11 +196,15 @@ class ExperimentRunner:
         if experiment_name is None:
             experiment_name = f"selection_strategy_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
 
+        # Set random seed for reproducibility
+        random.seed(random_seed)
+
         print(f"\n{'='*80}")
         print(f"EXPERIMENT: Example Selection Strategy")
         print(f"Strategies: {strategies}")
         print(f"Number of examples: {num_examples}")
         print(f"Model: {model_name}")
+        print(f"Random Seed: {random_seed}")
         print(f"{'='*80}\n")
 
         all_results = []
@@ -354,8 +364,8 @@ class ExperimentRunner:
             else:
                 examples.FEW_SHOT_EXAMPLES = FEW_SHOT_EXAMPLES[:n]
 
-            # Create agent with modified examples
-            agent = SQLGeneratorAgent()
+            # Create agent with specified model
+            agent = SQLGeneratorAgent(model_name=model_name)
 
             return agent
         finally:
@@ -373,8 +383,8 @@ class ExperimentRunner:
             # Set selected examples
             examples.FEW_SHOT_EXAMPLES = selected_examples
 
-            # Create agent with selected examples
-            agent = SQLGeneratorAgent()
+            # Create agent with specified model
+            agent = SQLGeneratorAgent(model_name=model_name)
 
             return agent
         finally:
@@ -388,11 +398,15 @@ class ExperimentRunner:
 
         elif strategy == 'pattern_based':
             # Select examples covering different patterns
-            # Simple heuristic: pick diverse examples
+            # Prioritize pattern diversity, then fill remaining slots
             selected = []
             patterns_seen = set()
 
+            # First pass: Select one example per unique pattern
             for example in FEW_SHOT_EXAMPLES:
+                if len(selected) >= n:
+                    break
+
                 # Identify pattern by keywords in SQL
                 sql = example['sql_query'].upper()
                 pattern = []
@@ -405,12 +419,18 @@ class ExperimentRunner:
 
                 pattern_key = '-'.join(pattern) if pattern else 'SIMPLE'
 
-                if pattern_key not in patterns_seen or len(selected) < n:
+                # Only add if pattern not seen yet
+                if pattern_key not in patterns_seen:
                     selected.append(example)
                     patterns_seen.add(pattern_key)
 
-                if len(selected) >= n:
-                    break
+            # Second pass: If we need more examples, add remaining ones
+            if len(selected) < n:
+                for example in FEW_SHOT_EXAMPLES:
+                    if len(selected) >= n:
+                        break
+                    if example not in selected:
+                        selected.append(example)
 
             return selected[:n]
 

@@ -59,26 +59,59 @@ ONLY output the SQL query code.
 
 ## CRITICAL RULES:
 1. Return ONLY the SQL query, no explanations or markdown
-2. Use normalized_code from line_item table (starts with 'HUL_')
-3. Always join: financial_fact -> statement -> fiscal_period -> company -> line_item
-4. Include contextual data: prior years, YoY changes, percentages, averages
-5. Use window functions (LAG, LEAD, FIRST_VALUE, AVG OVER, RANK) for trends and comparisons
-6. Use CASE statements with MAX/GROUP BY for year pivots
-7. Use CTEs for complex multi-metric analysis
-8. Handle NULLs with NULLIF in divisions
-9. Round percentages to 2 decimals, ratios to 2-3 decimals
-10. All years are ANNUAL (period_type = 'ANNUAL'), fiscal_year range: 2021-2025
-11. Values are in INR Crores
-12. For comparisons, include both absolute and percentage changes
-13. For trends, include cumulative growth from base year
-14. For composition analysis, include % of total
-15. Add derived metrics when relevant (e.g., working capital = current assets - current liabilities)
+2. ALWAYS use normalized_code from line_item table - these codes start with 'HUL_' prefix
+   - Revenue: 'HUL_PROFIT_LOSS_REVENUE_FROM_OPERATIONS_NET'
+   - Net Profit: 'HUL_PROFIT_LOSS_PROFIT_LOSS_FOR_THE_PERIOD'
+   - Operating Cash Flow: 'HUL_CASH_FLOW_NET_CASH_FROM_OPERATING_ACTIVITIES'
+   - Total Assets: 'HUL_BALANCE_TOTAL_ASSETS'
+   - Current Ratio: 'HUL_RATIOS_CURRENT_RATIO'
+   - Net Profit Margin: 'HUL_RATIOS_NET_PROFIT_MARGIN'
+3. REQUIRED JOIN PATTERN - use this exact join structure:
+   FROM financial_fact ff
+   JOIN statement s ON ff.statement_id = s.statement_id
+   JOIN fiscal_period fp ON s.period_id = fp.period_id
+   JOIN company c ON fp.company_id = c.company_id
+   JOIN line_item li ON ff.line_item_id = li.line_item_id
+4. ALWAYS add WHERE clause with:
+   - li.normalized_code = 'HUL_...' (the specific metric)
+   - s.statement_type = 'PROFIT_LOSS' or 'BALANCE' or 'CASH_FLOW' or 'RATIOS'
+   - fp.fiscal_year conditions (e.g., = 2024 or IN (2023, 2024) or BETWEEN 2021 AND 2025)
+5. Include contextual data: prior years, YoY changes, percentages, averages
+6. Use window functions (LAG, LEAD, FIRST_VALUE, AVG OVER, RANK) for trends and comparisons
+7. Use CASE statements with MAX/GROUP BY for year pivots
+8. Use CTEs for complex multi-metric analysis
+9. Handle NULLs with NULLIF in divisions to prevent division by zero
+10. Round percentages to 2 decimals, ratios to 2-3 decimals
+11. All years are ANNUAL (period_type = 'ANNUAL'), fiscal_year range: 2021-2025
+12. Values are in INR Crores
+13. For comparisons, include both absolute and percentage changes
+14. For trends, include cumulative growth from base year
+15. For composition analysis, include % of total
+16. Add derived metrics when relevant (e.g., working capital = current assets - current liabilities)
+
+## REQUIRED OUTPUT COLUMNS (ALWAYS INCLUDE THESE):
+For SIMPLE queries requesting a single metric:
+  SELECT c.name as company_name, fp.fiscal_year, li.name as metric,
+         ff.value as [descriptive_name], s.currency, s.units
+
+For COMPARISON queries (2 years):
+  SELECT c.name as company_name,
+         MAX(CASE WHEN fp.fiscal_year = YYYY THEN ff.value END) as [year1_name],
+         MAX(CASE WHEN fp.fiscal_year = YYYY THEN ff.value END) as [year2_name],
+         [variance calculations]
+  GROUP BY c.name
+
+For TREND queries (multiple years with YoY):
+  SELECT c.name as company_name, fp.fiscal_year, ff.value as [metric],
+         LAG(ff.value) OVER (ORDER BY fp.fiscal_year) as prev_year_value,
+         [YoY calculations using LAG]
+  ORDER BY fp.fiscal_year
 
 Common Query Patterns:
-- Year comparison: Use CASE with MAX(CASE WHEN fiscal_year = X THEN value END)
-- Trends: Use LAG() OVER (ORDER BY fiscal_year) for YoY
-- Cumulative: Use FIRST_VALUE() OVER (ORDER BY fiscal_year)
-- Multi-metric: Use CTEs to join different metrics
+- Year comparison: Use CASE with MAX(CASE WHEN fiscal_year = X THEN value END) + GROUP BY
+- Trends: Use LAG() OVER (ORDER BY fiscal_year) for YoY calculations
+- Cumulative: Use FIRST_VALUE() OVER (ORDER BY fiscal_year) for growth from base year
+- Multi-metric: Use CTEs to join different metrics, then combine in final SELECT
 - Composition: Calculate % using value / SUM(value) OVER (PARTITION BY...)
 - Ranking: Use RANK() OVER (ORDER BY value DESC)
 
