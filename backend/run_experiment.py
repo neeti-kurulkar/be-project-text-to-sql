@@ -8,7 +8,7 @@ from pathlib import Path
 from research.experiment_runner import ExperimentRunner
 
 
-def run_few_shot_experiment(num_examples=None, model='deepseek-coder:6.7b'):
+def run_few_shot_experiment(num_examples=None, model='meta-llama/Meta-Llama-3.1-70B-Instruct'):
     """Run few-shot learning curve experiment"""
     if num_examples is None:
         num_examples = [0, 5, 10, 15]
@@ -29,7 +29,7 @@ def run_few_shot_experiment(num_examples=None, model='deepseek-coder:6.7b'):
     return results
 
 
-def run_selection_strategy_experiment(num_examples=10, model='deepseek-coder:6.7b'):
+def run_selection_strategy_experiment(num_examples=10, model='meta-llama/Meta-Llama-3.1-70B-Instruct'):
     """Run example selection strategy experiment"""
     print("\n" + "="*80)
     print("RUNNING SELECTION STRATEGY EXPERIMENT")
@@ -48,7 +48,7 @@ def run_selection_strategy_experiment(num_examples=10, model='deepseek-coder:6.7
     return results
 
 
-def run_pattern_difficulty_experiment(num_examples=15, model='deepseek-coder:6.7b'):
+def run_pattern_difficulty_experiment(num_examples=15, model='meta-llama/Meta-Llama-3.1-70B-Instruct'):
     """Run SQL pattern difficulty experiment"""
     print("\n" + "="*80)
     print("RUNNING PATTERN DIFFICULTY EXPERIMENT")
@@ -66,7 +66,7 @@ def run_pattern_difficulty_experiment(num_examples=15, model='deepseek-coder:6.7
     return results
 
 
-def run_all_experiments(model='deepseek-coder:6.7b'):
+def run_all_experiments(model='meta-llama/Meta-Llama-3.1-70B-Instruct'):
     """Run all experiments sequentially"""
     print("\n" + "="*80)
     print("RUNNING ALL EXPERIMENTS")
@@ -154,8 +154,8 @@ Examples:
     parser.add_argument(
         '--model', '-m',
         type=str,
-        default='deepseek-coder:6.7b',
-        help='LLM model to use (default: deepseek-coder:6.7b)'
+        default='meta-llama/Meta-Llama-3.1-70B-Instruct',
+        help='LLM model to use (default: meta-llama/Meta-Llama-3.1-70B-Instruct for HuggingFace)'
     )
 
     args = parser.parse_args()

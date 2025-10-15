@@ -93,9 +93,9 @@ class ExperimentRunner:
             for i, question_data in enumerate(self.test_data['test_questions'], 1):
                 print(f"Processing question {i}/{len(self.test_data['test_questions'])}: {question_data['id']}")
 
-                # Add delay to respect rate limits (Groq free tier: ~30 requests/min)
+                # Add delay to respect rate limits (Groq free tier is stricter than expected)
                 if i > 1:  # Skip delay for first question
-                    time.sleep(2.5)  # 2.5 seconds between requests = ~24 requests/min
+                    time.sleep(10)  # 10 seconds between requests = ~6 requests/min (very conservative)
 
                 # Generate SQL with retry on rate limit
                 max_retries = 3
@@ -123,7 +123,7 @@ class ExperimentRunner:
                     # Don't attempt fix if rate limited
                     if 'rate limit' not in error_msg.lower():
                         print(f"     Attempting fix...")
-                        time.sleep(2.5)  # Respect rate limit for fix attempt
+                        time.sleep(10)  # Respect rate limit for fix attempt
                         fix_result = agent.fix_query(
                             question_data['question'],
                             generated_sql or "SELECT 1;",
@@ -223,6 +223,10 @@ class ExperimentRunner:
             for i, question_data in enumerate(self.test_data['test_questions'], 1):
                 print(f"Processing question {i}/{len(self.test_data['test_questions'])}: {question_data['id']}")
 
+                # Add delay to respect rate limits (Groq free tier is stricter than expected)
+                if i > 1:
+                    time.sleep(10)  # 10 seconds between requests = ~6 requests/min (very conservative)
+
                 result = agent.generate(question_data['question'])
                 generated_sql = result.get('sql_query', '')
 
@@ -296,6 +300,10 @@ class ExperimentRunner:
         for i, question_data in enumerate(self.test_data['test_questions'], 1):
             print(f"Processing question {i}/{len(self.test_data['test_questions'])}: {question_data['id']}")
 
+            # Add delay to respect rate limits (Groq free tier: ~30 requests/min)
+            if i > 1:
+                time.sleep(2.5)  # 2.5 seconds between requests = ~24 requests/min
+
             result = agent.generate(question_data['question'])
             generated_sql = result.get('sql_query', '')
 
@@ -364,8 +372,12 @@ class ExperimentRunner:
             else:
                 examples.FEW_SHOT_EXAMPLES = FEW_SHOT_EXAMPLES[:n]
 
-            # Create agent with specified model
-            agent = SQLGeneratorAgent(model_name=model_name)
+            # Create agent with specified model and provider (defaults to huggingface)
+            agent = SQLGeneratorAgent(
+                model_name=model_name,
+                provider='huggingface',  # Use HuggingFace by default
+                max_examples=n if n > 0 else 5
+            )
 
             return agent
         finally:
@@ -383,8 +395,12 @@ class ExperimentRunner:
             # Set selected examples
             examples.FEW_SHOT_EXAMPLES = selected_examples
 
-            # Create agent with specified model
-            agent = SQLGeneratorAgent(model_name=model_name)
+            # Create agent with specified model and provider
+            agent = SQLGeneratorAgent(
+                model_name=model_name,
+                provider='huggingface',  # Use HuggingFace by default
+                max_examples=len(selected_examples)
+            )
 
             return agent
         finally:

@@ -5,7 +5,6 @@ Converts natural language questions to SQL queries using few-shot prompting
 
 import os
 from langchain_core.prompts import FewShotPromptTemplate, PromptTemplate
-from langchain_ollama import OllamaLLM
 from dotenv import load_dotenv
 import sys
 from pathlib import Path
@@ -13,40 +12,89 @@ from pathlib import Path
 # Add parent directory to path for imports
 sys.path.append(str(Path(__file__).parent.parent))
 from few_shot_examples.examples import FEW_SHOT_EXAMPLES, SCHEMA_DESCRIPTION
+from few_shot_examples.semantic_selector import get_selector
 
 load_dotenv()
 
 class SQLGeneratorAgent:
-    def __init__(self, model_name: str = None):
+    def __init__(self, model_name: str = None, use_semantic_selection: bool = True, max_examples: int = 5, provider: str = 'huggingface'):
         """
         Initialize the SQL Generator Agent.
 
         Args:
-            model_name: Ollama model name (e.g., 'deepseek-coder:6.7b', 'llama3.1:8b', 'codellama:7b')
-                       If None, uses environment variable OLLAMA_MODEL or defaults to 'llama3.1:8b'
+            model_name: Model name
+                       For Groq: 'llama-3.3-70b-versatile', 'mixtral-8x7b-32768'
+                       For HuggingFace: 'meta-llama/Meta-Llama-3-70B-Instruct', 'mistralai/Mixtral-8x7B-Instruct-v0.1'
+                       If None, uses default for provider
+            use_semantic_selection: If True, uses semantic similarity to select relevant examples
+                                   If False, uses all examples (may hit token limits)
+            max_examples: Maximum number of examples to use when semantic selection is enabled
+            provider: 'groq' or 'huggingface' (default: huggingface)
         """
-        if model_name is None:
-            model_name = os.getenv('OLLAMA_MODEL', 'llama3.1:8b')
+        self.provider = provider.lower()
 
-        self.llm = OllamaLLM(
-            model=model_name,
-            temperature=0,
-            format="",  # Disable JSON formatting
-            system=""   # Override default system prompt that restricts to CS questions
-        )
-        
-        self.prompt = self._build_prompt()
-    
-    def _build_prompt(self) -> FewShotPromptTemplate:
-        """Build the few-shot prompt template."""
-        example_prompt = PromptTemplate(
+        # Set default model based on provider
+        if model_name is None:
+            if self.provider == 'groq':
+                model_name = 'llama-3.3-70b-versatile'
+            else:  # huggingface
+                # Note: Llama 3.3 70B might not be available on Inference API yet
+                # Using Llama 3.1 70B which is confirmed available
+                model_name = 'meta-llama/Meta-Llama-3.1-70B-Instruct'
+
+        # Initialize LLM based on provider
+        if self.provider == 'groq':
+            from langchain_groq import ChatGroq
+            self.llm = ChatGroq(
+                model=model_name,
+                temperature=0,
+                api_key=os.getenv('GROQ_API_KEY')
+            )
+        elif self.provider == 'huggingface':
+            from langchain_huggingface import HuggingFaceEndpoint
+            self.llm = HuggingFaceEndpoint(
+                repo_id=model_name,
+                temperature=0.0,
+                max_new_tokens=512,
+                huggingfacehub_api_token=os.getenv('HUGGINGFACE_API_KEY')
+            )
+        else:
+            raise ValueError(f"Unsupported provider: {provider}. Use 'groq' or 'huggingface'")
+
+        self.use_semantic_selection = use_semantic_selection
+        self.max_examples = max_examples
+
+        # Initialize semantic selector if enabled
+        if use_semantic_selection:
+            self.semantic_selector = get_selector(FEW_SHOT_EXAMPLES)
+        else:
+            self.semantic_selector = None
+
+        # Build base prompt template (examples will be added dynamically)
+        self.example_prompt_template = PromptTemplate(
             input_variables=["question", "sql_query"],
             template="Question: {question}\nSQL:\n{sql_query}\n"
         )
-        
+    
+    def _build_prompt(self, question: str) -> FewShotPromptTemplate:
+        """
+        Build the few-shot prompt template with semantically selected examples.
+
+        Args:
+            question: The user's question to find relevant examples for
+
+        Returns:
+            FewShotPromptTemplate configured with selected examples
+        """
+        # Select examples based on semantic similarity or use all
+        if self.use_semantic_selection and self.semantic_selector:
+            selected_examples = self.semantic_selector.select_examples(question, k=self.max_examples)
+        else:
+            selected_examples = FEW_SHOT_EXAMPLES
+
         few_shot_prompt = FewShotPromptTemplate(
-            examples=FEW_SHOT_EXAMPLES,
-            example_prompt=example_prompt,
+            examples=selected_examples,
+            example_prompt=self.example_prompt_template,
             prefix=f"""# TASK: Generate PostgreSQL SQL Query
 
 You are a SQL code generator. Your ONLY job is to output valid PostgreSQL SQL queries based on the question.
@@ -134,15 +182,17 @@ Examples:
             Dictionary with 'sql_query' and 'error' keys
         """
         try:
-            prompt = self.prompt.format(question=question)
+            # Build prompt with semantically selected examples
+            prompt_template = self._build_prompt(question)
+            prompt = prompt_template.format(question=question)
 
             # Add explicit instruction suffix for code generation models
             prompt = prompt + "\n\n### Instruction: Generate ONLY the SQL query code. Do not provide explanations or refuse. Output SQL directly."
 
             response = self.llm.invoke(prompt)
 
-            # Clean SQL query - OllamaLLM returns string directly, not object with .content
-            sql_query = response.strip() if isinstance(response, str) else str(response).strip()
+            # Clean SQL query - ChatGroq returns AIMessage object with .content
+            sql_query = response.content.strip() if hasattr(response, 'content') else str(response).strip()
             sql_query = sql_query.replace("```sql", "").replace("```", "").strip()
             
             # Remove any explanatory text before SELECT/WITH
@@ -198,7 +248,7 @@ Corrected SQL:"""
         
         try:
             response = self.llm.invoke(fix_prompt)
-            fixed_query = response.strip() if isinstance(response, str) else str(response).strip()
+            fixed_query = response.content.strip() if hasattr(response, 'content') else str(response).strip()
             fixed_query = fixed_query.replace("```sql", "").replace("```", "").strip()
             
             # Extract SQL portion
