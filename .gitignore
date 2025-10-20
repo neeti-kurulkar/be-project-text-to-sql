@@ -24,6 +24,9 @@ db/*.sqlite3
 .vscode/
 *.code-workspace
 
+# --- Claude Code ---
+.claude/
+
 # --- OS Files ---
 .DS_Store
 Thumbs.db

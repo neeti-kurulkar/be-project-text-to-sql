@@ -16,7 +16,7 @@ from datetime import datetime
 # Add agents to path
 sys.path.append(str(Path(__file__).parent))
 
-from agents.sql_generator import SQLGeneratorAgent
+from agents.sql_generator_v2 import SQLGeneratorAgent  # V2: Simplified 2-table schema
 from agents.sql_executor import SQLExecutorAgent
 from agents.insights_generator import InsightsGeneratorAgent
 from agents.visualizer import VisualizerAgent
