@@ -425,11 +425,13 @@ async def get_document(filename: str):
         if not file_path.exists():
             raise HTTPException(status_code=404, detail="Document not found")
 
-        return FileResponse(
+        # Return with inline disposition to view in browser
+        response = FileResponse(
             file_path,
-            media_type="application/pdf",
-            filename=filename
+            media_type="application/pdf"
         )
+        response.headers["Content-Disposition"] = f'inline; filename="{filename}"'
+        return response
 
     except HTTPException:
         raise
