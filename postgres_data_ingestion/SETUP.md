@@ -161,7 +161,6 @@ This script creates all the tables, relationships, and indexes in your database.
 **If you see error messages:**
 - Check if database name is correct (should be `financial_db`)
 - Make sure you're connected to the right database
-- Ask Neeti for help
 
 ---
 
@@ -490,7 +489,6 @@ TRUNCATE TABLE calendar CASCADE;
 **Fix:**
 1. Open Excel file manually to verify data exists
 2. Check sheet names match: 'GL', 'COA', 'Calendar', 'Territory'
-3. Ask Neeti for a fresh copy of the Excel file
 
 ---
 
@@ -544,7 +542,6 @@ If you're stuck:
 1. **Check troubleshooting section above** ☝️
 2. **Google the error message** - often has quick fixes
 3. **Ask in team WhatsApp/Slack group**
-4. **Contact Neeti** - she can help debug
 
 **When asking for help, share:**
 - Which step you're on
