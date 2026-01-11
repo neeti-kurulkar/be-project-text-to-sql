@@ -31,3 +31,30 @@ export interface SampleQuestion {
   question: string;
   category: string;
 }
+
+// Authentication Types
+export type UserRole = 'Admin' | 'Analyst';
+
+export interface User {
+  id: string;
+  email: string;
+  name: string;
+  role: UserRole;
+  company: string;
+}
+
+export interface AuthContextType {
+  user: User | null;
+  isAuthenticated: boolean;
+  loading: boolean;
+  login: (email: string, password: string) => Promise<void>;
+  logout: () => void;
+}
+
+// Theme Types
+export type Theme = 'light' | 'dark';
+
+export interface ThemeContextType {
+  theme: Theme;
+  toggleTheme: () => void;
+}

@@ -1,1 +1,43 @@
 @import "tailwindcss";
+
+@variant dark (.dark &);
+
+@theme {
+  /* Custom Color Palette - Ocean Blues & Electric Accents */
+  --color-ocean-950: #020617;
+  --color-ocean-900: #0F172A;
+  --color-ocean-800: #1E293B;
+  --color-ocean-700: #334155;
+  --color-ocean-600: #475569;
+  --color-ocean-500: #64748B;
+
+  --color-electric-600: #2563EB;
+  --color-electric-500: #3B82F6;
+  --color-electric-400: #60A5FA;
+  --color-electric-100: #DBEAFE;
+
+  --color-emerald-600: #059669;
+  --color-emerald-500: #10B981;
+  --color-emerald-400: #34D399;
+
+  /* Typography */
+  --font-sans: "IBM Plex Sans", system-ui, -apple-system, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, monospace;
+}
+
+/* Base Styles */
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  @apply font-sans antialiased;
+  @apply text-ocean-900 dark:text-slate-100;
+  @apply bg-white dark:bg-ocean-950;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Dark Mode */
+.dark {
+  color-scheme: dark;
+}
