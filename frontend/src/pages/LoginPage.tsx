@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Zap, Quote } from 'lucide-react';
+import { useNavigate, Link } from 'react-router-dom';
+import { Zap, Quote, ArrowLeft } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { LoginForm } from '../components/auth/LoginForm';
 
@@ -26,6 +26,15 @@ export function LoginPage() {
         }} />
 
         <div className="relative z-10">
+          {/* Back to Home Link */}
+          <Link
+            to="/"
+            className="inline-flex items-center gap-2 text-white/80 hover:text-white transition-colors mb-8 group"
+          >
+            <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
+            <span>Back to Home</span>
+          </Link>
+
           {/* Logo */}
           <div className="flex items-center gap-3 mb-12">
             <div className="p-3 bg-white/20 backdrop-blur-sm rounded-xl">
@@ -56,7 +65,16 @@ export function LoginPage() {
       </div>
 
       {/* Right Side - Login Form */}
-      <div className="flex-1 flex items-center justify-center p-6 bg-white dark:bg-ocean-950 transition-colors duration-300">
+      <div className="flex-1 flex flex-col items-center justify-center p-6 bg-white dark:bg-ocean-950 transition-colors duration-300 relative">
+        {/* Back link for mobile (hidden on desktop since left panel has it) */}
+        <Link
+          to="/"
+          className="lg:hidden absolute top-6 left-6 inline-flex items-center gap-2 text-ocean-600 dark:text-slate-400 hover:text-ocean-900 dark:hover:text-slate-200 transition-colors group"
+        >
+          <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
+          <span>Back to Home</span>
+        </Link>
+
         <LoginForm />
       </div>
     </div>

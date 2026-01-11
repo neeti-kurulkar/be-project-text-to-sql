@@ -10,7 +10,7 @@ export function Dashboard() {
 
   const handleLogout = () => {
     logout();
-    navigate('/');
+    navigate('/', { replace: true });
   };
 
   if (!user) return null;
