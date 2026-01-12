@@ -1,0 +1,541 @@
+question_id,question,category,complexity,execution_success,execution_time,execution_error,sql_similarity_score,exact_match,bleu_score,results_match,row_count_match,column_count_match,data_similarity_score,pattern_correctness,missing_components,extra_components,generated_sql,ground_truth_sql,num_few_shot_examples,model_name,timestamp,experiment_name
+Q001,What was the total revenue in 2024?,revenue_analysis,simple,True,0.08868288993835449,,0.7294,False,0.6797,False,True,False,0.25,"{'has_select': True, 'has_from': True, 'has_join': True, 'has_where': True, 'has_group_by': True, 'has_order_by': True, 'has_cte': True, 'has_window_func': True, 'has_case': True, 'has_subquery': True, 'has_aggregate': True}",[],[],SELECT value FROM financial_fact ff JOIN statement s ON ff.statement_id = s.statement_id JOIN fiscal_period fp ON s.period_id = fp.period_id JOIN line_item li ON ff.line_item_id = li.line_item_id WHERE li.normalized_code = 'HUL_PROFIT_LOSS_TOTAL_REVENUE' AND fp.fiscal_year = 2024;,"SELECT c.name as company_name, fp.fiscal_year, li.name as metric, ff.value as revenue, s.currency, s.units FROM financial_fact ff JOIN statement s ON ff.statement_id = s.statement_id JOIN fiscal_period fp ON s.period_id = fp.period_id JOIN company c ON fp.company_id = c.company_id JOIN line_item li ON ff.line_item_id = li.line_item_id WHERE li.normalized_code = 'HUL_PROFIT_LOSS_REVENUE_FROM_OPERATIONS_NET' AND s.statement_type = 'PROFIT_LOSS' AND fp.fiscal_year = 2024;",0,deepseek-coder:6.7b,2025-10-15T15:19:14.261428,few_shot_learning_curve_20251015_151304
+Q002,Compare revenue between 2023 and 2024,revenue_analysis,medium,True,0.023221492767333984,,0.0696,False,0.4884,False,False,False,0.0,"{'has_select': True, 'has_from': True, 'has_join': True, 'has_where': True, 'has_group_by': False, 'has_order_by': False, 'has_cte': True, 'has_window_func': True, 'has_case': False, 'has_subquery': True, 'has_aggregate': False}","['has_group_by', 'has_case', 'has_aggregate']",['has_order_by'],"SELECT fp.fiscal_year, li.normalized_code, ff.value
+FROM financial_fact ff
+JOIN statement s ON ff.statement_id = s.statement_id
+JOIN fiscal_period fp ON s.period_id = fp.period_id
+JOIN line_item li ON ff.line_item_id = li.line_item_id
+WHERE li.normalized_code IN ('HUL_BALANCE_REVENUE', 'HUL_PROFIT_LOSS_GROSS_REVENUE') AND fp.fiscal_year IN (2023, 2024)
+ORDER BY li.normalized_code, fp.fiscal_year;","SELECT c.name as company_name, MAX(CASE WHEN fp.fiscal_year = 2023 THEN ff.value END) as revenue_2023, MAX(CASE WHEN fp.fiscal_year = 2024 THEN ff.value END) as revenue_2024, MAX(CASE WHEN fp.fiscal_year = 2024 THEN ff.value END) - MAX(CASE WHEN fp.fiscal_year = 2023 THEN ff.value END) as absolute_variance, ROUND(((MAX(CASE WHEN fp.fiscal_year = 2024 THEN ff.value END) - MAX(CASE WHEN fp.fiscal_year = 2023 THEN ff.value END)) / NULLIF(MAX(CASE WHEN fp.fiscal_year = 2023 THEN ff.value END), 0)) * 100, 2) as variance_percentage FROM financial_fact ff JOIN statement s ON ff.statement_id = s.statement_id JOIN fiscal_period fp ON s.period_id = fp.period_id JOIN company c ON fp.company_id = c.company_id JOIN line_item li ON ff.line_item_id = li.line_item_id WHERE li.normalized_code = 'HUL_PROFIT_LOSS_REVENUE_FROM_OPERATIONS_NET' AND s.statement_type = 'PROFIT_LOSS' AND fp.fiscal_year IN (2023, 2024) GROUP BY c.name;",0,deepseek-coder:6.7b,2025-10-15T15:19:14.424097,few_shot_learning_curve_20251015_151304
+Q003,Show revenue trend from 2021 to 2025 with year-over-year growth,trend_analysis,complex,True,0.017954111099243164,,0.2297,False,0.609,False,False,False,0.0,"{'has_select': True, 'has_from': True, 'has_join': True, 'has_where': True, 'has_group_by': True, 'has_order_by': True, 'has_cte': True, 'has_window_func': True, 'has_case': True, 'has_subquery': True, 'has_aggregate': True}",[],[],"SELECT fiscal_year, value as revenue, 
+       ROUND((value - LAG(value) OVER (ORDER BY fiscal_year)) / 
+             NULLIF(LAG(value) OVER (ORDER BY fiscal_year), 0), 2) as yoy_growth_pct
+FROM financial_fact ff
+JOIN statement s ON ff.statement_id = s.statement_id
+JOIN fiscal_period fp ON s.period_id = fp.period_id
+JOIN line_item li ON ff.line_item_id = li.line_item_id
+WHERE li.normalized_code = 'HUL_BALANCE_REVENUE' AND s.statement_type = 'PROFIT_LOSS' 
+      AND fp.fiscal_year BETWEEN 2021 AND 2025
+ORDER BY fiscal_year;","SELECT c.name as company_name, fp.fiscal_year, ff.value as revenue, LAG(ff.value) OVER (ORDER BY fp.fiscal_year) as prev_year_revenue, ff.value - LAG(ff.value) OVER (ORDER BY fp.fiscal_year) as yoy_change, ROUND(((ff.value - LAG(ff.value) OVER (ORDER BY fp.fiscal_year)) / NULLIF(LAG(ff.value) OVER (ORDER BY fp.fiscal_year), 0)) * 100, 2) as yoy_growth_pct, ROUND(((ff.value - FIRST_VALUE(ff.value) OVER (ORDER BY fp.fiscal_year)) / NULLIF(FIRST_VALUE(ff.value) OVER (ORDER BY fp.fiscal_year), 0)) * 100, 2) as cumulative_growth_from_2021 FROM financial_fact ff JOIN statement s ON ff.statement_id = s.statement_id JOIN fiscal_period fp ON s.period_id = fp.period_id JOIN company c ON fp.company_id = c.company_id JOIN line_item li ON ff.line_item_id = li.line_item_id WHERE li.normalized_code = 'HUL_PROFIT_LOSS_REVENUE_FROM_OPERATIONS_NET' AND s.statement_type = 'PROFIT_LOSS' ORDER BY fp.fiscal_year;",0,deepseek-coder:6.7b,2025-10-15T15:19:14.572570,few_shot_learning_curve_20251015_151304
+Q004,What is the net profit margin in 2024?,profitability,simple,True,0.010001182556152344,,0.7756,False,0.731,False,True,False,0.25,"{'has_select': True, 'has_from': True, 'has_join': True, 'has_where': True, 'has_group_by': True, 'has_order_by': True, 'has_cte': True, 'has_window_func': True, 'has_case': True, 'has_subquery': True, 'has_aggregate': True}",[],[],SELECT value FROM financial_fact ff JOIN statement s ON ff.statement_id = s.statement_id JOIN fiscal_period fp ON s.period_id = fp.period_id JOIN line_item li ON ff.line_item_id = li.line_item_id WHERE li.normalized_code = 'HUL_RATIOS_NET_PROFIT_MARGIN' AND fp.fiscal_year = 2024;,"SELECT c.name as company_name, fp.fiscal_year, li.name as metric, ff.value as net_profit_margin FROM financial_fact ff JOIN statement s ON ff.statement_id = s.statement_id JOIN fiscal_period fp ON s.period_id = fp.period_id JOIN company c ON fp.company_id = c.company_id JOIN line_item li ON ff.line_item_id = li.line_item_id WHERE li.normalized_code = 'HUL_RATIOS_NET_PROFIT_MARGIN' AND s.statement_type = 'RATIOS' AND fp.fiscal_year = 2024;",0,deepseek-coder:6.7b,2025-10-15T15:19:14.706237,few_shot_learning_curve_20251015_151304
+Q005,Compare all profitability ratios for 2024,profitability,medium,True,0.014733076095581055,,0.3752,False,0.6926,False,False,False,0.0,"{'has_select': True, 'has_from': True, 'has_join': True, 'has_where': True, 'has_group_by': True, 'has_order_by': False, 'has_cte': False, 'has_window_func': True, 'has_case': True, 'has_subquery': False, 'has_aggregate': False}",['has_order_by'],"['has_cte', 'has_subquery', 'has_aggregate']","WITH latest_year AS (
+    SELECT MAX(fiscal_year) as max_year FROM fiscal_period
+),
+metrics AS (
+    SELECT 
+        fp.fiscal_year,
+        li.normalized_code,
+        ff.value
+    FROM financial_fact ff
+    JOIN statement s ON ff.statement_id = s.statement_id
+    JOIN fiscal_period fp ON s.period_id = fp.period_id
+    JOIN line_item li ON ff.line_item_id = li.line_item_id
+    WHERE fp.fiscal_year = (SELECT max_year FROM latest_year)
+        AND li.normalized_code IN (
+            'HUL_RATIOS_NET_PROFIT_MARGIN',
+            'HUL_RATIOS_RETURN_ON_EBITDA',
+            'HUL_RATIOS_ROIC',
+            'HUL_RATIOS_DEBT_EQUITY_RATIO'
+        )
+)
+SELECT 
+    m.normalized_code as metric,
+    m.value as current_value
+FROM metrics m;","SELECT c.name as company_name, fp.fiscal_year, li.name as metric, ff.value as ratio_value FROM financial_fact ff JOIN statement s ON ff.statement_id = s.statement_id JOIN fiscal_period fp ON s.period_id = fp.period_id JOIN company c ON fp.company_id = c.company_id JOIN line_item li ON ff.line_item_id = li.line_item_id WHERE li.normalized_code IN ('HUL_RATIOS_NET_PROFIT_MARGIN', 'HUL_RATIOS_OPERATING_PROFIT_MARGIN', 'HUL_RATIOS_GROSS_PROFIT_MARGIN', 'HUL_RATIOS_RETURN_ON_NET_WORTH', 'HUL_RATIOS_RETURN_ON_CAPITAL_EMPLOYED') AND s.statement_type = 'RATIOS' AND fp.fiscal_year = 2024 ORDER BY li.name;",0,deepseek-coder:6.7b,2025-10-15T15:19:14.843267,few_shot_learning_curve_20251015_151304
+Q006,Analyze net profit margin trend with performance indicators,profitability,complex,True,0.014196634292602539,,0.1494,False,0.6976,False,True,False,0.25,"{'has_select': True, 'has_from': True, 'has_join': True, 'has_where': True, 'has_group_by': True, 'has_order_by': False, 'has_cte': True, 'has_window_func': False, 'has_case': True, 'has_subquery': False, 'has_aggregate': True}","['has_order_by', 'has_window_func']",['has_subquery'],"SELECT 
+    fp.fiscal_year,
+    li.name as metric,
+    ff.value as current_value,
+    AVG(ff_hist.value) over (partition by li.line_item_id) as historical_avg,
+    ROUND((ff.value - AVG(ff_hist.value) over (partition by li.line_item_id)) * 100 / NULLIF(AVG(ff_hist.value) over (partition by li.line_item_id), 0), 2) as variance_from_avg,
+    CASE 
+        WHEN li.normalized_code LIKE '%MARGIN%' AND ff.value > AVG(ff_hist.value) over (partition by li.line_item_id) THEN 'Strong'
+        ELSE 'Review'
+    END as assessment
+FROM financial_fact ff
+JOIN statement s ON ff.statement_id = s.statement_id
+JOIN fiscal_period fp ON s.period_id = fp.period_id
+JOIN line_item li ON ff.line_item_id = li.line_item_id
+LEFT JOIN financial_fact ff_hist ON ff_hist.line_item_id = li.line_item_id
+LEFT JOIN statement s_hist ON ff_hist.statement_id = s_hist.statement_id
+LEFT JOIN fiscal_period fp_hist ON s_hist.period_id = fp_hist.period_id
+WHERE li.normalized_code IN ('HUL_RATIOS_NET_PROFIT_MARGIN') AND fp.fiscal_year = (SELECT MAX(fiscal_year) FROM fiscal_period);","SELECT c.name as company_name, fp.fiscal_year, ff.value as net_profit_margin, LAG(ff.value) OVER (ORDER BY fp.fiscal_year) as prev_year_margin, ff.value - LAG(ff.value) OVER (ORDER BY fp.fiscal_year) as margin_change, ROUND(AVG(ff.value) OVER (), 2) as avg_margin_all_years, CASE WHEN ff.value > AVG(ff.value) OVER () THEN 'Above Average' WHEN ff.value < AVG(ff.value) OVER () THEN 'Below Average' ELSE 'At Average' END as performance_vs_avg FROM financial_fact ff JOIN statement s ON ff.statement_id = s.statement_id JOIN fiscal_period fp ON s.period_id = fp.period_id JOIN company c ON fp.company_id = c.company_id JOIN line_item li ON ff.line_item_id = li.line_item_id WHERE li.normalized_code = 'HUL_RATIOS_NET_PROFIT_MARGIN' AND s.statement_type = 'RATIOS' ORDER BY fp.fiscal_year;",0,deepseek-coder:6.7b,2025-10-15T15:19:14.974103,few_shot_learning_curve_20251015_151304
+Q007,What was the operating cash flow in 2024?,cash_flow,simple,True,0.0103912353515625,,0.1302,False,0.7196,False,False,False,0.0,"{'has_select': True, 'has_from': True, 'has_join': True, 'has_where': True, 'has_group_by': True, 'has_order_by': True, 'has_cte': False, 'has_window_func': True, 'has_case': True, 'has_subquery': False, 'has_aggregate': True}",[],"['has_cte', 'has_subquery']","WITH forecast AS (
+    SELECT 
+        fp.fiscal_year,
+        ff.value as operating_cashflow
+    FROM financial_fact ff
+    JOIN statement s ON ff.statement_id = s.statement_id
+    JOIN fiscal_period fp ON s.period_id = fp.period_id
+    JOIN line_item li ON ff.line_item_id = li.line_item_id
+    WHERE li.normalized_code = 'HUL_CASHFLOW_OPERATING'
+        AND s.statement_type = 'CASH_FLOW'
+)
+SELECT 
+    f.operating_cashflow as ""Operating Cash Flow in 2024""
+FROM forecast f
+WHERE f.fiscal_year = 2024;","SELECT c.name as company_name, fp.fiscal_year, li.name as metric, ff.value as operating_cash_flow, s.currency, s.units FROM financial_fact ff JOIN statement s ON ff.statement_id = s.statement_id JOIN fiscal_period fp ON s.period_id = fp.period_id JOIN company c ON fp.company_id = c.company_id JOIN line_item li ON ff.line_item_id = li.line_item_id WHERE li.normalized_code = 'HUL_CASH_FLOW_NET_CASH_FROM_OPERATING_ACTIVITIES' AND s.statement_type = 'CASH_FLOW' AND fp.fiscal_year = 2024;",0,deepseek-coder:6.7b,2025-10-15T15:19:15.215552,few_shot_learning_curve_20251015_151304
+Q008,Break down cash flow from all three activities over the years,cash_flow,complex,True,0.02004694938659668,,0.0679,False,0.5234,False,False,False,0.0,"{'has_select': True, 'has_from': True, 'has_join': True, 'has_where': True, 'has_group_by': False, 'has_order_by': True, 'has_cte': True, 'has_window_func': True, 'has_case': False, 'has_subquery': True, 'has_aggregate': False}",[],"['has_group_by', 'has_case', 'has_aggregate']","WITH latest_year AS 
+(
+    SELECT MAX(fiscal_year) as max_year FROM fiscal_period
+),
+metrics AS 
+(
+    SELECT 
+        fp.fiscal_year,
+        li.normalized_code,
+        ff.value,
+        li.statement_category
+    FROM financial_fact ff
+    JOIN statement s ON ff.statement_id = s.statement_id
+    JOIN fiscal_period fp ON s.period_id = fp.period_id
+    JOIN line_item li ON ff.line_item_id = li.line_item_id
+    WHERE fp.fiscal_year = (SELECT max_year FROM latest_year)
+        AND li.normalized_code IN 
+        (
+             'HUL_RATIOS_NET_PROFIT_MARGIN',
+             'HUL_RATIOS_RETURN_ON_NET_WORTH',
+             'HUL_RATIOS_CURRENT_RATIO',
+             'HUL_RATIOS_DEBT_EQUITY_RATIO',
+             'HUL_RATIOS_INVENTORY_TURNOVER_RATIO',
+             'HUL_PROFIT_LOSS_BASIC_EPS_RS'
+         )
+)
+SELECT 
+    m.fiscal_year,
+    m.normalized_code as metric,
+    m.value as current_value,
+    ROUND(AVG(ff_hist.value), 2) as historical_avg,
+    ROUND(m.value - AVG(ff_hist.value), 2) as variance_from_avg,
+    CASE 
+        WHEN m.normalized_code LIKE '%MARGIN%' AND m.value > AVG(ff_hist.value) THEN 'Strong'
+        WHEN m.normalized_code LIKE '%RETURN%' AND m.value > AVG(ff_hist.value) THEN 'Strong'
+        WHEN m.normalized_code LIKE '%CURRENT_RATIO%' AND m.value >= 1.5 THEN 'Healthy'
+        WHEN m.normalized_code LIKE '%DEBT_EQUITY%' AND m.value < 0.5 THEN 'Low Risk'
+        WHEN m.normalized_code LIKE '%TURNOVER%' AND m.value > AVG(ff_hist.value) THEN 'Efficient'
+        ELSE 'Review'
+    END as assessment
+FROM metrics m
+LEFT JOIN financial_fact ff_hist ON ff_hist.line_item_id = (
+    SELECT line_item_id FROM line_item WHERE normalized_code = m.normalized_code
+)
+LEFT JOIN statement s_hist ON ff_hist.statement_id = s_hist.statement_id
+LEFT JOIN fiscal_period fp_hist ON s_hist.period_id = fp_hist.period_id
+GROUP BY m.fiscal_year, m.normalized_code, m.value
+ORDER BY m.normalized_code;","WITH operating_cf AS (SELECT fp.fiscal_year, ff.value as operating_cf FROM financial_fact ff JOIN statement s ON ff.statement_id = s.statement_id JOIN fiscal_period fp ON s.period_id = fp.period_id JOIN line_item li ON ff.line_item_id = li.line_item_id WHERE li.normalized_code = 'HUL_CASH_FLOW_NET_CASH_FROM_OPERATING_ACTIVITIES' AND s.statement_type = 'CASH_FLOW'), investing_cf AS (SELECT fp.fiscal_year, ff.value as investing_cf FROM financial_fact ff JOIN statement s ON ff.statement_id = s.statement_id JOIN fiscal_period fp ON s.period_id = fp.period_id JOIN line_item li ON ff.line_item_id = li.line_item_id WHERE li.normalized_code = 'HUL_CASH_FLOW_INVESTING_ACTIVITIES' AND s.statement_type = 'CASH_FLOW'), financing_cf AS (SELECT fp.fiscal_year, ff.value as financing_cf FROM financial_fact ff JOIN statement s ON ff.statement_id = s.statement_id JOIN fiscal_period fp ON s.period_id = fp.period_id JOIN line_item li ON ff.line_item_id = li.line_item_id WHERE li.normalized_code = 'HUL_CASH_FLOW_NET_CASH_USED_IN_FROM_FINANCING_ACTIVITIES' AND s.statement_type = 'CASH_FLOW') SELECT o.fiscal_year, o.operating_cf, i.investing_cf, f.financing_cf, o.operating_cf + i.investing_cf + f.financing_cf as net_cash_change FROM operating_cf o JOIN investing_cf i ON o.fiscal_year = i.fiscal_year JOIN financing_cf f ON o.fiscal_year = f.fiscal_year ORDER BY o.fiscal_year;",0,deepseek-coder:6.7b,2025-10-15T15:19:15.371687,few_shot_learning_curve_20251015_151304
+Q009,Show current ratio for all years,ratios,medium,True,0.011226177215576172,,0.513,False,0.5116,False,False,False,0.0,"{'has_select': True, 'has_from': True, 'has_join': True, 'has_where': True, 'has_group_by': False, 'has_order_by': True, 'has_cte': True, 'has_window_func': True, 'has_case': False, 'has_subquery': True, 'has_aggregate': False}","['has_group_by', 'has_case', 'has_aggregate']",[],"SELECT 
+    fp.fiscal_year,
+    li.name as metric,
+    ff.value as current_value
+FROM financial_fact ff
+JOIN statement s ON ff.statement_id = s.statement_id
+JOIN fiscal_period fp ON s.period_id = fp.period_id
+JOIN line_item li ON ff.line_item_id = li.line_item_id
+WHERE li.normalized_code = 'HUL_RATIOS_CURRENT_RATIO' AND s.statement_type = 'BALANCE';","SELECT c.name as company_name, li.name as ratio_name, MAX(CASE WHEN fp.fiscal_year = 2021 THEN ff.value END) as year_2021, MAX(CASE WHEN fp.fiscal_year = 2022 THEN ff.value END) as year_2022, MAX(CASE WHEN fp.fiscal_year = 2023 THEN ff.value END) as year_2023, MAX(CASE WHEN fp.fiscal_year = 2024 THEN ff.value END) as year_2024, MAX(CASE WHEN fp.fiscal_year = 2025 THEN ff.value END) as year_2025, ROUND(AVG(ff.value), 2) as avg_ratio FROM financial_fact ff JOIN statement s ON ff.statement_id = s.statement_id JOIN fiscal_period fp ON s.period_id = fp.period_id JOIN company c ON fp.company_id = c.company_id JOIN line_item li ON ff.line_item_id = li.line_item_id WHERE li.normalized_code = 'HUL_RATIOS_CURRENT_RATIO' AND s.statement_type = 'RATIOS' GROUP BY c.name, li.name;",0,deepseek-coder:6.7b,2025-10-15T15:19:15.501372,few_shot_learning_curve_20251015_151304
+Q010,Compare debt equity ratio with return on net worth,comparative_analysis,complex,False,0.0,"Execution failed on sql 'SELECT 
+    fp.fiscal_year,
+    li1.value as debt_equity_ratio,
+    li2.value as return_on_net_worth
+FROM financial_fact ff
+JOIN statement s ON ff.statement_id = s.statement_id
+JOIN fiscal_period fp ON s.period_id = fp.period_id
+JOIN line_item li1 ON ff.line_item_id = li1.line_item_id AND li1.normalized_code = 'HUL_RATIOS_DEBT_EQUITY_RATIO'
+JOIN line_item li2 ON ff.line_item_id = li2.line_item_id AND li2.normalized_code = 'HUL_RATIOS_RETURN_ON_NET_WORTH'
+WHERE s.statement_type = 'RATIOS';': column li1.value does not exist
+LINE 3:     li1.value as debt_equity_ratio,
+            ^
+HINT:  Perhaps you meant to reference the column ""ff.value"".
+",0.2277,False,0.5654,False,False,False,0.0,"{'has_select': True, 'has_from': True, 'has_join': True, 'has_where': True, 'has_group_by': True, 'has_order_by': False, 'has_cte': False, 'has_window_func': True, 'has_case': True, 'has_subquery': False, 'has_aggregate': True}","['has_order_by', 'has_cte', 'has_subquery']",[],"SELECT 
+    fp.fiscal_year,
+    li1.value as debt_equity_ratio,
+    li2.value as return_on_net_worth
+FROM financial_fact ff
+JOIN statement s ON ff.statement_id = s.statement_id
+JOIN fiscal_period fp ON s.period_id = fp.period_id
+JOIN line_item li1 ON ff.line_item_id = li1.line_item_id AND li1.normalized_code = 'HUL_RATIOS_DEBT_EQUITY_RATIO'
+JOIN line_item li2 ON ff.line_item_id = li2.line_item_id AND li2.normalized_code = 'HUL_RATIOS_RETURN_ON_NET_WORTH'
+WHERE s.statement_type = 'RATIOS';","WITH debt_equity AS (SELECT fp.fiscal_year, ff.value as debt_equity_ratio FROM financial_fact ff JOIN statement s ON ff.statement_id = s.statement_id JOIN fiscal_period fp ON s.period_id = fp.period_id JOIN line_item li ON ff.line_item_id = li.line_item_id WHERE li.normalized_code = 'HUL_RATIOS_DEBT_EQUITY_RATIO' AND s.statement_type = 'RATIOS'), return_metrics AS (SELECT fp.fiscal_year, ff.value as return_on_net_worth FROM financial_fact ff JOIN statement s ON ff.statement_id = s.statement_id JOIN fiscal_period fp ON s.period_id = fp.period_id JOIN line_item li ON ff.line_item_id = li.line_item_id WHERE li.normalized_code = 'HUL_RATIOS_RETURN_ON_NET_WORTH' AND s.statement_type = 'RATIOS') SELECT de.fiscal_year, ROUND(de.debt_equity_ratio, 3) as debt_equity_ratio, ROUND(rm.return_on_net_worth, 2) as return_on_net_worth_pct, ROUND(de.debt_equity_ratio * rm.return_on_net_worth, 2) as leverage_adjusted_return FROM debt_equity de JOIN return_metrics rm ON de.fiscal_year = rm.fiscal_year ORDER BY de.fiscal_year;",0,deepseek-coder:6.7b,2025-10-15T15:19:15.637558,few_shot_learning_curve_20251015_151304
+Q011,What are total assets in 2025?,asset_liability,simple,True,0.0077915191650390625,,0.7551,False,0.6928,False,True,False,0.25,"{'has_select': True, 'has_from': True, 'has_join': True, 'has_where': True, 'has_group_by': True, 'has_order_by': True, 'has_cte': True, 'has_window_func': True, 'has_case': True, 'has_subquery': True, 'has_aggregate': True}",[],[],SELECT value FROM financial_fact ff JOIN statement s ON ff.statement_id = s.statement_id JOIN fiscal_period fp ON s.period_id = fp.period_id JOIN line_item li ON ff.line_item_id = li.line_item_id WHERE li.normalized_code = 'HUL_BALANCE_TOTAL_ASSETS' AND fp.fiscal_year = 2025;,"SELECT c.name as company_name, fp.fiscal_year, li.name as metric, ff.value as total_assets, s.currency, s.units FROM financial_fact ff JOIN statement s ON ff.statement_id = s.statement_id JOIN fiscal_period fp ON s.period_id = fp.period_id JOIN company c ON fp.company_id = c.company_id JOIN line_item li ON ff.line_item_id = li.line_item_id WHERE li.normalized_code = 'HUL_BALANCE_TOTAL_ASSETS' AND s.statement_type = 'BALANCE' AND fp.fiscal_year = 2025;",0,deepseek-coder:6.7b,2025-10-15T15:19:15.765974,few_shot_learning_curve_20251015_151304
+Q012,Calculate working capital for each year,asset_liability,medium,True,0.006992816925048828,,0.4083,False,0.5775,False,False,True,0.25,"{'has_select': True, 'has_from': True, 'has_join': True, 'has_where': True, 'has_group_by': True, 'has_order_by': True, 'has_cte': True, 'has_window_func': False, 'has_case': True, 'has_subquery': True, 'has_aggregate': True}",[],['has_window_func'],"WITH wc_data AS (
+    SELECT 
+        fp.fiscal_year,
+        ff.value as working_capital
+    FROM financial_fact ff
+    JOIN statement s ON ff.statement_id = s.statement_id
+    JOIN fiscal_period fp ON s.period_id = fp.period_id
+    JOIN line_item li ON ff.line_item_id = li.line_item_id
+    WHERE li.normalized_code = 'HUL_BALANCE_WORKING_CAPITAL'
+        AND s.statement_type = 'BALANCE'
+)
+SELECT 
+    wc.fiscal_year,
+    wc.working_capital,
+    LAG(wc.working_capital) OVER (ORDER BY wc.fiscal_year) as prev_year_wc,
+    ROUND(((wc.working_capital - LAG(wc.working_capital) OVER (ORDER BY wc.fiscal_year)) / 
+           NULLIF(LAG(wc.working_capital) OVER (ORDER BY wc.fiscal_year), 0)) * 100, 2) as yoy_growth_pct
+FROM wc_data wc
+ORDER BY wc.fiscal_year;","WITH current_assets AS (SELECT fp.fiscal_year, ff.value as current_assets FROM financial_fact ff JOIN statement s ON ff.statement_id = s.statement_id JOIN fiscal_period fp ON s.period_id = fp.period_id JOIN line_item li ON ff.line_item_id = li.line_item_id WHERE li.normalized_code = 'HUL_BALANCE_TOTAL_CURRENT_ASSETS' AND s.statement_type = 'BALANCE'), current_liabilities AS (SELECT fp.fiscal_year, ff.value as current_liabilities FROM financial_fact ff JOIN statement s ON ff.statement_id = s.statement_id JOIN fiscal_period fp ON s.period_id = fp.period_id JOIN line_item li ON ff.line_item_id = li.line_item_id WHERE li.normalized_code = 'HUL_BALANCE_TOTAL_CURRENT_LIABILITIES' AND s.statement_type = 'BALANCE') SELECT ca.fiscal_year, ca.current_assets, cl.current_liabilities, ca.current_assets - cl.current_liabilities as working_capital FROM current_assets ca JOIN current_liabilities cl ON ca.fiscal_year = cl.fiscal_year ORDER BY ca.fiscal_year;",0,deepseek-coder:6.7b,2025-10-15T15:19:15.889372,few_shot_learning_curve_20251015_151304
+Q013,Analyze working capital efficiency with growth metrics,asset_liability,complex,False,0.0,"Execution failed on sql 'WITH eps_data AS 
+(
+    SELECT 
+        fp.fiscal_year,
+        ff.value as basic_eps
+    FROM financial_fact ff
+    JOIN statement s ON ff.statement_id = s.statement_id
+    JOIN fiscal_period fp ON s.period_id = fp.period_id
+    JOIN line_item li ON ff.line_item_id = li.line_item_id
+    WHERE li.normalized_code = 'HUL_PROFIT_LOSS_BASIC_EPS_RS'
+        AND s.statement_type = 'PROFIT_LOSS'
+),
+dividend_data AS 
+(
+    SELECT 
+        fp.fiscal_year,
+        ff.value as dividend_per_share
+    FROM financial_fact ff
+    JOIN statement s ON ff.statement<｜begin▁of▁sentence｜>_id = s.statement_id
+    JOIN fiscal_period fp ON s.period_id = fp.period_id
+    JOIN line_item li ON ff.line_item_id = li.line_item_id
+    WHERE li.normalized_code = 'HUL_RATIOS_DIVIDEND_PER_SHARE'
+        AND s.statement_type = 'RATIOS'
+)
+SELECT 
+    e.fiscal_year,
+    e.basic_eps,
+    d.dividend_per_share,
+    ROUND((d.dividend_per_share / NULLIF(e.basic_eps, 0)) * 100, 2) as dividend_payout_ratio,
+    LAG(e.basic_eps) OVER (ORDER BY e.fiscal_year) as prev_year_eps,
+    ROUND(((e.basic_eps - LAG(e.basic_eps) OVER (ORDER BY e.fiscal_year)) / 
+           NULLIF(LAG(e.basic_eps) OVER (ORDER BY e.fiscal_year), 0)) * 100, 2) as eps_growth_pct,
+    e.basic_eps - d.dividend_per_share as retained_earnings_per_share
+FROM eps_data e
+JOIN dividend_data d ON e.fiscal_year = d.fiscal_year
+ORDER BY e.fiscal_year;': syntax error at or near "">""
+LINE 19: ... statement s ON ff.statement<｜begin▁of▁sentence｜>_id = s.s...
+                                                              ^
+",0.4141,False,0.7496,False,False,False,0.0,"{'has_select': True, 'has_from': True, 'has_join': True, 'has_where': True, 'has_group_by': True, 'has_order_by': True, 'has_cte': True, 'has_window_func': True, 'has_case': True, 'has_subquery': True, 'has_aggregate': True}",[],[],"WITH eps_data AS 
+(
+    SELECT 
+        fp.fiscal_year,
+        ff.value as basic_eps
+    FROM financial_fact ff
+    JOIN statement s ON ff.statement_id = s.statement_id
+    JOIN fiscal_period fp ON s.period_id = fp.period_id
+    JOIN line_item li ON ff.line_item_id = li.line_item_id
+    WHERE li.normalized_code = 'HUL_PROFIT_LOSS_BASIC_EPS_RS'
+        AND s.statement_type = 'PROFIT_LOSS'
+),
+dividend_data AS 
+(
+    SELECT 
+        fp.fiscal_year,
+        ff.value as dividend_per_share
+    FROM financial_fact ff
+    JOIN statement s ON ff.statement<｜begin▁of▁sentence｜>_id = s.statement_id
+    JOIN fiscal_period fp ON s.period_id = fp.period_id
+    JOIN line_item li ON ff.line_item_id = li.line_item_id
+    WHERE li.normalized_code = 'HUL_RATIOS_DIVIDEND_PER_SHARE'
+        AND s.statement_type = 'RATIOS'
+)
+SELECT 
+    e.fiscal_year,
+    e.basic_eps,
+    d.dividend_per_share,
+    ROUND((d.dividend_per_share / NULLIF(e.basic_eps, 0)) * 100, 2) as dividend_payout_ratio,
+    LAG(e.basic_eps) OVER (ORDER BY e.fiscal_year) as prev_year_eps,
+    ROUND(((e.basic_eps - LAG(e.basic_eps) OVER (ORDER BY e.fiscal_year)) / 
+           NULLIF(LAG(e.basic_eps) OVER (ORDER BY e.fiscal_year), 0)) * 100, 2) as eps_growth_pct,
+    e.basic_eps - d.dividend_per_share as retained_earnings_per_share
+FROM eps_data e
+JOIN dividend_data d ON e.fiscal_year = d.fiscal_year
+ORDER BY e.fiscal_year;","WITH current_assets AS (SELECT fp.fiscal_year, ff.value as current_assets FROM financial_fact ff JOIN statement s ON ff.statement_id = s.statement_id JOIN fiscal_period fp ON s.period_id = fp.period_id JOIN line_item li ON ff.line_item_id = li.line_item_id WHERE li.normalized_code = 'HUL_BALANCE_TOTAL_CURRENT_ASSETS' AND s.statement_type = 'BALANCE'), current_liabilities AS (SELECT fp.fiscal_year, ff.value as current_liabilities FROM financial_fact ff JOIN statement s ON ff.statement_id = s.statement_id JOIN fiscal_period fp ON s.period_id = fp.period_id JOIN line_item li ON ff.line_item_id = li.line_item_id WHERE li.normalized_code = 'HUL_BALANCE_TOTAL_CURRENT_LIABILITIES' AND s.statement_type = 'BALANCE') SELECT ca.fiscal_year, ca.current_assets, cl.current_liabilities, ca.current_assets - cl.current_liabilities as working_capital, ROUND((ca.current_assets / NULLIF(cl.current_liabilities, 0)), 2) as current_ratio, LAG(ca.current_assets - cl.current_liabilities) OVER (ORDER BY ca.fiscal_year) as prev_year_wc, (ca.current_assets - cl.current_liabilities) - LAG(ca.current_assets - cl.current_liabilities) OVER (ORDER BY ca.fiscal_year) as wc_change, ROUND((((ca.current_assets - cl.current_liabilities) - LAG(ca.current_assets - cl.current_liabilities) OVER (ORDER BY ca.fiscal_year)) / NULLIF(LAG(ca.current_assets - cl.current_liabilities) OVER (ORDER BY ca.fiscal_year), 0)) * 100, 2) as wc_growth_pct FROM current_assets ca JOIN current_liabilities cl ON ca.fiscal_year = cl.fiscal_year ORDER BY ca.fiscal_year;",0,deepseek-coder:6.7b,2025-10-15T15:19:16.022392,few_shot_learning_curve_20251015_151304
+Q014,Show inventory turnover ratio trend,efficiency_metrics,medium,True,0.009953737258911133,,0.6638,False,0.6373,False,True,False,0.25,"{'has_select': True, 'has_from': True, 'has_join': True, 'has_where': True, 'has_group_by': True, 'has_order_by': False, 'has_cte': True, 'has_window_func': False, 'has_case': True, 'has_subquery': True, 'has_aggregate': True}","['has_order_by', 'has_window_func']",[],"SELECT 
+    fp.fiscal_year,
+    li.normalized_code,
+    ff.value as inventory_turnover_ratio
+FROM financial_fact ff
+JOIN statement s ON ff.statement_id = s.statement_id
+JOIN fiscal_period fp ON s.period_id = fp.period_id
+JOIN line_item li ON ff.line_item_id = li.line_item_id
+WHERE li.normalized_code = 'HUL_RATIOS_INVENTORY_TURNOVER_RATIO' AND s.statement_type = 'RATIOS';","SELECT fp.fiscal_year, li.name as metric, ff.value as turnover_ratio, ROUND(365.0 / NULLIF(ff.value, 0), 1) as days, LAG(ff.value) OVER (ORDER BY fp.fiscal_year) as prev_year_ratio, ROUND(ff.value - LAG(ff.value) OVER (ORDER BY fp.fiscal_year), 2) as ratio_change FROM financial_fact ff JOIN statement s ON ff.statement_id = s.statement_id JOIN fiscal_period fp ON s.period_id = fp.period_id JOIN line_item li ON ff.line_item_id = li.line_item_id WHERE li.normalized_code = 'HUL_RATIOS_INVENTORY_TURNOVER_RATIO' AND s.statement_type = 'RATIOS' ORDER BY fp.fiscal_year;",0,deepseek-coder:6.7b,2025-10-15T15:19:16.148317,few_shot_learning_curve_20251015_151304
+Q015,Compare inventory and receivables turnover efficiency,efficiency_metrics,complex,True,0.010465145111083984,,0.5878,False,0.6054,False,False,False,0.0,"{'has_select': True, 'has_from': True, 'has_join': True, 'has_where': True, 'has_group_by': True, 'has_order_by': True, 'has_cte': True, 'has_window_func': False, 'has_case': True, 'has_subquery': True, 'has_aggregate': False}","['has_window_func', 'has_aggregate']",[],"SELECT 
+    fp.fiscal_year,
+    li.normalized_code,
+    ff.value as turnover_ratio
+FROM financial_fact ff
+JOIN statement s ON ff.statement_id = s.statement_id
+JOIN fiscal_period fp ON s.period_id = fp.period_id
+JOIN line_item li ON ff.line_item_id = li.line_item_id
+WHERE li.normalized_code IN ('HUL_RATIOS_INVENTORY_TURNOVER_RATIO', 'HUL_RATIOS_RECEIVABLES_TURNOVER_RATIO') 
+AND s.statement_type = 'RATIOS'
+ORDER BY fp.fiscal_year, li.normalized_code;","SELECT fp.fiscal_year, li.name as efficiency_metric, ff.value as turnover_ratio, ROUND(365.0 / NULLIF(ff.value, 0), 1) as days, LAG(ff.value) OVER (PARTITION BY li.line_item_id ORDER BY fp.fiscal_year) as prev_year_ratio, ROUND(ff.value - LAG(ff.value) OVER (PARTITION BY li.line_item_id ORDER BY fp.fiscal_year), 2) as ratio_change, ROUND(AVG(ff.value) OVER (PARTITION BY li.line_item_id), 2) as avg_turnover FROM financial_fact ff JOIN statement s ON ff.statement_id = s.statement_id JOIN fiscal_period fp ON s.period_id = fp.period_id JOIN line_item li ON ff.line_item_id = li.line_item_id WHERE li.normalized_code IN ('HUL_RATIOS_INVENTORY_TURNOVER_RATIO', 'HUL_RATIOS_DEBTORS_TURNOVER_RATIO') AND s.statement_type = 'RATIOS' ORDER BY li.name, fp.fiscal_year;",0,deepseek-coder:6.7b,2025-10-15T15:19:16.281488,few_shot_learning_curve_20251015_151304
+Q001,What was the total revenue in 2024?,revenue_analysis,simple,True,0.007997274398803711,,0.7294,False,0.6797,False,True,False,0.25,"{'has_select': True, 'has_from': True, 'has_join': True, 'has_where': True, 'has_group_by': True, 'has_order_by': True, 'has_cte': True, 'has_window_func': True, 'has_case': True, 'has_subquery': True, 'has_aggregate': True}",[],[],SELECT value FROM financial_fact ff JOIN statement s ON ff.statement_id = s.statement_id JOIN fiscal_period fp ON s.period_id = fp.period_id JOIN line_item li ON ff.line_item_id = li.line_item_id WHERE li.normalized_code = 'HUL_PROFIT_LOSS_TOTAL_REVENUE' AND fp.fiscal_year = 2024;,"SELECT c.name as company_name, fp.fiscal_year, li.name as metric, ff.value as revenue, s.currency, s.units FROM financial_fact ff JOIN statement s ON ff.statement_id = s.statement_id JOIN fiscal_period fp ON s.period_id = fp.period_id JOIN company c ON fp.company_id = c.company_id JOIN line_item li ON ff.line_item_id = li.line_item_id WHERE li.normalized_code = 'HUL_PROFIT_LOSS_REVENUE_FROM_OPERATIONS_NET' AND s.statement_type = 'PROFIT_LOSS' AND fp.fiscal_year = 2024;",10,deepseek-coder:6.7b,2025-10-15T15:25:21.904637,few_shot_learning_curve_20251015_151304
+Q002,Compare revenue between 2023 and 2024,revenue_analysis,medium,True,0.0,,0.0696,False,0.4884,False,False,False,0.0,"{'has_select': True, 'has_from': True, 'has_join': True, 'has_where': True, 'has_group_by': False, 'has_order_by': False, 'has_cte': True, 'has_window_func': True, 'has_case': False, 'has_subquery': True, 'has_aggregate': False}","['has_group_by', 'has_case', 'has_aggregate']",['has_order_by'],"SELECT fp.fiscal_year, li.normalized_code, ff.value
+FROM financial_fact ff
+JOIN statement s ON ff.statement_id = s.statement_id
+JOIN fiscal_period fp ON s.period_id = fp.period_id
+JOIN line_item li ON ff.line_item_id = li.line_item_id
+WHERE li.normalized_code IN ('HUL_BALANCE_REVENUE', 'HUL_PROFIT_LOSS_GROSS_REVENUE') AND fp.fiscal_year IN (2023, 2024)
+ORDER BY li.normalized_code, fp.fiscal_year;","SELECT c.name as company_name, MAX(CASE WHEN fp.fiscal_year = 2023 THEN ff.value END) as revenue_2023, MAX(CASE WHEN fp.fiscal_year = 2024 THEN ff.value END) as revenue_2024, MAX(CASE WHEN fp.fiscal_year = 2024 THEN ff.value END) - MAX(CASE WHEN fp.fiscal_year = 2023 THEN ff.value END) as absolute_variance, ROUND(((MAX(CASE WHEN fp.fiscal_year = 2024 THEN ff.value END) - MAX(CASE WHEN fp.fiscal_year = 2023 THEN ff.value END)) / NULLIF(MAX(CASE WHEN fp.fiscal_year = 2023 THEN ff.value END), 0)) * 100, 2) as variance_percentage FROM financial_fact ff JOIN statement s ON ff.statement_id = s.statement_id JOIN fiscal_period fp ON s.period_id = fp.period_id JOIN company c ON fp.company_id = c.company_id JOIN line_item li ON ff.line_item_id = li.line_item_id WHERE li.normalized_code = 'HUL_PROFIT_LOSS_REVENUE_FROM_OPERATIONS_NET' AND s.statement_type = 'PROFIT_LOSS' AND fp.fiscal_year IN (2023, 2024) GROUP BY c.name;",10,deepseek-coder:6.7b,2025-10-15T15:25:21.982709,few_shot_learning_curve_20251015_151304
+Q003,Show revenue trend from 2021 to 2025 with year-over-year growth,trend_analysis,complex,True,0.004387617111206055,,0.2297,False,0.609,False,False,False,0.0,"{'has_select': True, 'has_from': True, 'has_join': True, 'has_where': True, 'has_group_by': True, 'has_order_by': True, 'has_cte': True, 'has_window_func': True, 'has_case': True, 'has_subquery': True, 'has_aggregate': True}",[],[],"SELECT fiscal_year, value as revenue, 
+       ROUND((value - LAG(value) OVER (ORDER BY fiscal_year)) / 
+             NULLIF(LAG(value) OVER (ORDER BY fiscal_year), 0), 2) as yoy_growth_pct
+FROM financial_fact ff
+JOIN statement s ON ff.statement_id = s.statement_id
+JOIN fiscal_period fp ON s.period_id = fp.period_id
+JOIN line_item li ON ff.line_item_id = li.line_item_id
+WHERE li.normalized_code = 'HUL_BALANCE_REVENUE' AND s.statement_type = 'PROFIT_LOSS' 
+      AND fp.fiscal_year BETWEEN 2021 AND 2025
+ORDER BY fiscal_year;","SELECT c.name as company_name, fp.fiscal_year, ff.value as revenue, LAG(ff.value) OVER (ORDER BY fp.fiscal_year) as prev_year_revenue, ff.value - LAG(ff.value) OVER (ORDER BY fp.fiscal_year) as yoy_change, ROUND(((ff.value - LAG(ff.value) OVER (ORDER BY fp.fiscal_year)) / NULLIF(LAG(ff.value) OVER (ORDER BY fp.fiscal_year), 0)) * 100, 2) as yoy_growth_pct, ROUND(((ff.value - FIRST_VALUE(ff.value) OVER (ORDER BY fp.fiscal_year)) / NULLIF(FIRST_VALUE(ff.value) OVER (ORDER BY fp.fiscal_year), 0)) * 100, 2) as cumulative_growth_from_2021 FROM financial_fact ff JOIN statement s ON ff.statement_id = s.statement_id JOIN fiscal_period fp ON s.period_id = fp.period_id JOIN company c ON fp.company_id = c.company_id JOIN line_item li ON ff.line_item_id = li.line_item_id WHERE li.normalized_code = 'HUL_PROFIT_LOSS_REVENUE_FROM_OPERATIONS_NET' AND s.statement_type = 'PROFIT_LOSS' ORDER BY fp.fiscal_year;",10,deepseek-coder:6.7b,2025-10-15T15:25:22.171283,few_shot_learning_curve_20251015_151304
+Q004,What is the net profit margin in 2024?,profitability,simple,True,0.0077784061431884766,,0.7756,False,0.731,False,True,False,0.25,"{'has_select': True, 'has_from': True, 'has_join': True, 'has_where': True, 'has_group_by': True, 'has_order_by': True, 'has_cte': True, 'has_window_func': True, 'has_case': True, 'has_subquery': True, 'has_aggregate': True}",[],[],SELECT value FROM financial_fact ff JOIN statement s ON ff.statement_id = s.statement_id JOIN fiscal_period fp ON s.period_id = fp.period_id JOIN line_item li ON ff.line_item_id = li.line_item_id WHERE li.normalized_code = 'HUL_RATIOS_NET_PROFIT_MARGIN' AND fp.fiscal_year = 2024;,"SELECT c.name as company_name, fp.fiscal_year, li.name as metric, ff.value as net_profit_margin FROM financial_fact ff JOIN statement s ON ff.statement_id = s.statement_id JOIN fiscal_period fp ON s.period_id = fp.period_id JOIN company c ON fp.company_id = c.company_id JOIN line_item li ON ff.line_item_id = li.line_item_id WHERE li.normalized_code = 'HUL_RATIOS_NET_PROFIT_MARGIN' AND s.statement_type = 'RATIOS' AND fp.fiscal_year = 2024;",10,deepseek-coder:6.7b,2025-10-15T15:25:22.241222,few_shot_learning_curve_20251015_151304
+Q005,Compare all profitability ratios for 2024,profitability,medium,True,0.00444483757019043,,0.3752,False,0.6926,False,False,False,0.0,"{'has_select': True, 'has_from': True, 'has_join': True, 'has_where': True, 'has_group_by': True, 'has_order_by': False, 'has_cte': False, 'has_window_func': True, 'has_case': True, 'has_subquery': False, 'has_aggregate': False}",['has_order_by'],"['has_cte', 'has_subquery', 'has_aggregate']","WITH latest_year AS (
+    SELECT MAX(fiscal_year) as max_year FROM fiscal_period
+),
+metrics AS (
+    SELECT 
+        fp.fiscal_year,
+        li.normalized_code,
+        ff.value
+    FROM financial_fact ff
+    JOIN statement s ON ff.statement_id = s.statement_id
+    JOIN fiscal_period fp ON s.period_id = fp.period_id
+    JOIN line_item li ON ff.line_item_id = li.line_item_id
+    WHERE fp.fiscal_year = (SELECT max_year FROM latest_year)
+        AND li.normalized_code IN (
+            'HUL_RATIOS_NET_PROFIT_MARGIN',
+            'HUL_RATIOS_RETURN_ON_EBITDA',
+            'HUL_RATIOS_ROIC',
+            'HUL_RATIOS_DEBT_EQUITY_RATIO'
+        )
+)
+SELECT 
+    m.normalized_code as metric,
+    m.value as current_value
+FROM metrics m;","SELECT c.name as company_name, fp.fiscal_year, li.name as metric, ff.value as ratio_value FROM financial_fact ff JOIN statement s ON ff.statement_id = s.statement_id JOIN fiscal_period fp ON s.period_id = fp.period_id JOIN company c ON fp.company_id = c.company_id JOIN line_item li ON ff.line_item_id = li.line_item_id WHERE li.normalized_code IN ('HUL_RATIOS_NET_PROFIT_MARGIN', 'HUL_RATIOS_OPERATING_PROFIT_MARGIN', 'HUL_RATIOS_GROSS_PROFIT_MARGIN', 'HUL_RATIOS_RETURN_ON_NET_WORTH', 'HUL_RATIOS_RETURN_ON_CAPITAL_EMPLOYED') AND s.statement_type = 'RATIOS' AND fp.fiscal_year = 2024 ORDER BY li.name;",10,deepseek-coder:6.7b,2025-10-15T15:25:22.336318,few_shot_learning_curve_20251015_151304
+Q006,Analyze net profit margin trend with performance indicators,profitability,complex,True,0.006059408187866211,,0.1494,False,0.6976,False,True,False,0.25,"{'has_select': True, 'has_from': True, 'has_join': True, 'has_where': True, 'has_group_by': True, 'has_order_by': False, 'has_cte': True, 'has_window_func': False, 'has_case': True, 'has_subquery': False, 'has_aggregate': True}","['has_order_by', 'has_window_func']",['has_subquery'],"SELECT 
+    fp.fiscal_year,
+    li.name as metric,
+    ff.value as current_value,
+    AVG(ff_hist.value) over (partition by li.line_item_id) as historical_avg,
+    ROUND((ff.value - AVG(ff_hist.value) over (partition by li.line_item_id)) * 100 / NULLIF(AVG(ff_hist.value) over (partition by li.line_item_id), 0), 2) as variance_from_avg,
+    CASE 
+        WHEN li.normalized_code LIKE '%MARGIN%' AND ff.value > AVG(ff_hist.value) over (partition by li.line_item_id) THEN 'Strong'
+        ELSE 'Review'
+    END as assessment
+FROM financial_fact ff
+JOIN statement s ON ff.statement_id = s.statement_id
+JOIN fiscal_period fp ON s.period_id = fp.period_id
+JOIN line_item li ON ff.line_item_id = li.line_item_id
+LEFT JOIN financial_fact ff_hist ON ff_hist.line_item_id = li.line_item_id
+LEFT JOIN statement s_hist ON ff_hist.statement_id = s_hist.statement_id
+LEFT JOIN fiscal_period fp_hist ON s_hist.period_id = fp_hist.period_id
+WHERE li.normalized_code IN ('HUL_RATIOS_NET_PROFIT_MARGIN') AND fp.fiscal_year = (SELECT MAX(fiscal_year) FROM fiscal_period);","SELECT c.name as company_name, fp.fiscal_year, ff.value as net_profit_margin, LAG(ff.value) OVER (ORDER BY fp.fiscal_year) as prev_year_margin, ff.value - LAG(ff.value) OVER (ORDER BY fp.fiscal_year) as margin_change, ROUND(AVG(ff.value) OVER (), 2) as avg_margin_all_years, CASE WHEN ff.value > AVG(ff.value) OVER () THEN 'Above Average' WHEN ff.value < AVG(ff.value) OVER () THEN 'Below Average' ELSE 'At Average' END as performance_vs_avg FROM financial_fact ff JOIN statement s ON ff.statement_id = s.statement_id JOIN fiscal_period fp ON s.period_id = fp.period_id JOIN company c ON fp.company_id = c.company_id JOIN line_item li ON ff.line_item_id = li.line_item_id WHERE li.normalized_code = 'HUL_RATIOS_NET_PROFIT_MARGIN' AND s.statement_type = 'RATIOS' ORDER BY fp.fiscal_year;",10,deepseek-coder:6.7b,2025-10-15T15:25:22.472627,few_shot_learning_curve_20251015_151304
+Q007,What was the operating cash flow in 2024?,cash_flow,simple,True,0.01210331916809082,,0.1302,False,0.7196,False,False,False,0.0,"{'has_select': True, 'has_from': True, 'has_join': True, 'has_where': True, 'has_group_by': True, 'has_order_by': True, 'has_cte': False, 'has_window_func': True, 'has_case': True, 'has_subquery': False, 'has_aggregate': True}",[],"['has_cte', 'has_subquery']","WITH forecast AS (
+    SELECT 
+        fp.fiscal_year,
+        ff.value as operating_cashflow
+    FROM financial_fact ff
+    JOIN statement s ON ff.statement_id = s.statement_id
+    JOIN fiscal_period fp ON s.period_id = fp.period_id
+    JOIN line_item li ON ff.line_item_id = li.line_item_id
+    WHERE li.normalized_code = 'HUL_CASHFLOW_OPERATING'
+        AND s.statement_type = 'CASH_FLOW'
+)
+SELECT 
+    f.operating_cashflow as ""Operating Cash Flow in 2024""
+FROM forecast f
+WHERE f.fiscal_year = 2024;","SELECT c.name as company_name, fp.fiscal_year, li.name as metric, ff.value as operating_cash_flow, s.currency, s.units FROM financial_fact ff JOIN statement s ON ff.statement_id = s.statement_id JOIN fiscal_period fp ON s.period_id = fp.period_id JOIN company c ON fp.company_id = c.company_id JOIN line_item li ON ff.line_item_id = li.line_item_id WHERE li.normalized_code = 'HUL_CASH_FLOW_NET_CASH_FROM_OPERATING_ACTIVITIES' AND s.statement_type = 'CASH_FLOW' AND fp.fiscal_year = 2024;",10,deepseek-coder:6.7b,2025-10-15T15:25:22.593664,few_shot_learning_curve_20251015_151304
+Q008,Break down cash flow from all three activities over the years,cash_flow,complex,True,0.00612640380859375,,0.0679,False,0.5234,False,False,False,0.0,"{'has_select': True, 'has_from': True, 'has_join': True, 'has_where': True, 'has_group_by': False, 'has_order_by': True, 'has_cte': True, 'has_window_func': True, 'has_case': False, 'has_subquery': True, 'has_aggregate': False}",[],"['has_group_by', 'has_case', 'has_aggregate']","WITH latest_year AS 
+(
+    SELECT MAX(fiscal_year) as max_year FROM fiscal_period
+),
+metrics AS 
+(
+    SELECT 
+        fp.fiscal_year,
+        li.normalized_code,
+        ff.value,
+        li.statement_category
+    FROM financial_fact ff
+    JOIN statement s ON ff.statement_id = s.statement_id
+    JOIN fiscal_period fp ON s.period_id = fp.period_id
+    JOIN line_item li ON ff.line_item_id = li.line_item_id
+    WHERE fp.fiscal_year = (SELECT max_year FROM latest_year)
+        AND li.normalized_code IN 
+        (
+             'HUL_RATIOS_NET_PROFIT_MARGIN',
+             'HUL_RATIOS_RETURN_ON_NET_WORTH',
+             'HUL_RATIOS_CURRENT_RATIO',
+             'HUL_RATIOS_DEBT_EQUITY_RATIO',
+             'HUL_RATIOS_INVENTORY_TURNOVER_RATIO',
+             'HUL_PROFIT_LOSS_BASIC_EPS_RS'
+         )
+)
+SELECT 
+    m.fiscal_year,
+    m.normalized_code as metric,
+    m.value as current_value,
+    ROUND(AVG(ff_hist.value), 2) as historical_avg,
+    ROUND(m.value - AVG(ff_hist.value), 2) as variance_from_avg,
+    CASE 
+        WHEN m.normalized_code LIKE '%MARGIN%' AND m.value > AVG(ff_hist.value) THEN 'Strong'
+        WHEN m.normalized_code LIKE '%RETURN%' AND m.value > AVG(ff_hist.value) THEN 'Strong'
+        WHEN m.normalized_code LIKE '%CURRENT_RATIO%' AND m.value >= 1.5 THEN 'Healthy'
+        WHEN m.normalized_code LIKE '%DEBT_EQUITY%' AND m.value < 0.5 THEN 'Low Risk'
+        WHEN m.normalized_code LIKE '%TURNOVER%' AND m.value > AVG(ff_hist.value) THEN 'Efficient'
+        ELSE 'Review'
+    END as assessment
+FROM metrics m
+LEFT JOIN financial_fact ff_hist ON ff_hist.line_item_id = (
+    SELECT line_item_id FROM line_item WHERE normalized_code = m.normalized_code
+)
+LEFT JOIN statement s_hist ON ff_hist.statement_id = s_hist.statement_id
+LEFT JOIN fiscal_period fp_hist ON s_hist.period_id = fp_hist.period_id
+GROUP BY m.fiscal_year, m.normalized_code, m.value
+ORDER BY m.normalized_code;","WITH operating_cf AS (SELECT fp.fiscal_year, ff.value as operating_cf FROM financial_fact ff JOIN statement s ON ff.statement_id = s.statement_id JOIN fiscal_period fp ON s.period_id = fp.period_id JOIN line_item li ON ff.line_item_id = li.line_item_id WHERE li.normalized_code = 'HUL_CASH_FLOW_NET_CASH_FROM_OPERATING_ACTIVITIES' AND s.statement_type = 'CASH_FLOW'), investing_cf AS (SELECT fp.fiscal_year, ff.value as investing_cf FROM financial_fact ff JOIN statement s ON ff.statement_id = s.statement_id JOIN fiscal_period fp ON s.period_id = fp.period_id JOIN line_item li ON ff.line_item_id = li.line_item_id WHERE li.normalized_code = 'HUL_CASH_FLOW_INVESTING_ACTIVITIES' AND s.statement_type = 'CASH_FLOW'), financing_cf AS (SELECT fp.fiscal_year, ff.value as financing_cf FROM financial_fact ff JOIN statement s ON ff.statement_id = s.statement_id JOIN fiscal_period fp ON s.period_id = fp.period_id JOIN line_item li ON ff.line_item_id = li.line_item_id WHERE li.normalized_code = 'HUL_CASH_FLOW_NET_CASH_USED_IN_FROM_FINANCING_ACTIVITIES' AND s.statement_type = 'CASH_FLOW') SELECT o.fiscal_year, o.operating_cf, i.investing_cf, f.financing_cf, o.operating_cf + i.investing_cf + f.financing_cf as net_cash_change FROM operating_cf o JOIN investing_cf i ON o.fiscal_year = i.fiscal_year JOIN financing_cf f ON o.fiscal_year = f.fiscal_year ORDER BY o.fiscal_year;",10,deepseek-coder:6.7b,2025-10-15T15:25:22.673554,few_shot_learning_curve_20251015_151304
+Q009,Show current ratio for all years,ratios,medium,True,0.003998279571533203,,0.513,False,0.5116,False,False,False,0.0,"{'has_select': True, 'has_from': True, 'has_join': True, 'has_where': True, 'has_group_by': False, 'has_order_by': True, 'has_cte': True, 'has_window_func': True, 'has_case': False, 'has_subquery': True, 'has_aggregate': False}","['has_group_by', 'has_case', 'has_aggregate']",[],"SELECT 
+    fp.fiscal_year,
+    li.name as metric,
+    ff.value as current_value
+FROM financial_fact ff
+JOIN statement s ON ff.statement_id = s.statement_id
+JOIN fiscal_period fp ON s.period_id = fp.period_id
+JOIN line_item li ON ff.line_item_id = li.line_item_id
+WHERE li.normalized_code = 'HUL_RATIOS_CURRENT_RATIO' AND s.statement_type = 'BALANCE';","SELECT c.name as company_name, li.name as ratio_name, MAX(CASE WHEN fp.fiscal_year = 2021 THEN ff.value END) as year_2021, MAX(CASE WHEN fp.fiscal_year = 2022 THEN ff.value END) as year_2022, MAX(CASE WHEN fp.fiscal_year = 2023 THEN ff.value END) as year_2023, MAX(CASE WHEN fp.fiscal_year = 2024 THEN ff.value END) as year_2024, MAX(CASE WHEN fp.fiscal_year = 2025 THEN ff.value END) as year_2025, ROUND(AVG(ff.value), 2) as avg_ratio FROM financial_fact ff JOIN statement s ON ff.statement_id = s.statement_id JOIN fiscal_period fp ON s.period_id = fp.period_id JOIN company c ON fp.company_id = c.company_id JOIN line_item li ON ff.line_item_id = li.line_item_id WHERE li.normalized_code = 'HUL_RATIOS_CURRENT_RATIO' AND s.statement_type = 'RATIOS' GROUP BY c.name, li.name;",10,deepseek-coder:6.7b,2025-10-15T15:25:22.747064,few_shot_learning_curve_20251015_151304
+Q010,Compare debt equity ratio with return on net worth,comparative_analysis,complex,False,0.0,"Execution failed on sql 'SELECT 
+    fp.fiscal_year,
+    li1.value as debt_equity_ratio,
+    li2.value as return_on_net_worth
+FROM financial_fact ff
+JOIN statement s ON ff.statement_id = s.statement_id
+JOIN fiscal_period fp ON s.period_id = fp.period_id
+JOIN line_item li1 ON ff.line_item_id = li1.line_item_id AND li1.normalized_code = 'HUL_RATIOS_DEBT_EQUITY_RATIO'
+JOIN line_item li2 ON ff.line_item_id = li2.line_item_id AND li2.normalized_code = 'HUL_RATIOS_RETURN_ON_NET_WORTH'
+WHERE s.statement_type = 'RATIOS';': column li1.value does not exist
+LINE 3:     li1.value as debt_equity_ratio,
+            ^
+HINT:  Perhaps you meant to reference the column ""ff.value"".
+",0.2277,False,0.5654,False,False,False,0.0,"{'has_select': True, 'has_from': True, 'has_join': True, 'has_where': True, 'has_group_by': True, 'has_order_by': False, 'has_cte': False, 'has_window_func': True, 'has_case': True, 'has_subquery': False, 'has_aggregate': True}","['has_order_by', 'has_cte', 'has_subquery']",[],"SELECT 
+    fp.fiscal_year,
+    li1.value as debt_equity_ratio,
+    li2.value as return_on_net_worth
+FROM financial_fact ff
+JOIN statement s ON ff.statement_id = s.statement_id
+JOIN fiscal_period fp ON s.period_id = fp.period_id
+JOIN line_item li1 ON ff.line_item_id = li1.line_item_id AND li1.normalized_code = 'HUL_RATIOS_DEBT_EQUITY_RATIO'
+JOIN line_item li2 ON ff.line_item_id = li2.line_item_id AND li2.normalized_code = 'HUL_RATIOS_RETURN_ON_NET_WORTH'
+WHERE s.statement_type = 'RATIOS';","WITH debt_equity AS (SELECT fp.fiscal_year, ff.value as debt_equity_ratio FROM financial_fact ff JOIN statement s ON ff.statement_id = s.statement_id JOIN fiscal_period fp ON s.period_id = fp.period_id JOIN line_item li ON ff.line_item_id = li.line_item_id WHERE li.normalized_code = 'HUL_RATIOS_DEBT_EQUITY_RATIO' AND s.statement_type = 'RATIOS'), return_metrics AS (SELECT fp.fiscal_year, ff.value as return_on_net_worth FROM financial_fact ff JOIN statement s ON ff.statement_id = s.statement_id JOIN fiscal_period fp ON s.period_id = fp.period_id JOIN line_item li ON ff.line_item_id = li.line_item_id WHERE li.normalized_code = 'HUL_RATIOS_RETURN_ON_NET_WORTH' AND s.statement_type = 'RATIOS') SELECT de.fiscal_year, ROUND(de.debt_equity_ratio, 3) as debt_equity_ratio, ROUND(rm.return_on_net_worth, 2) as return_on_net_worth_pct, ROUND(de.debt_equity_ratio * rm.return_on_net_worth, 2) as leverage_adjusted_return FROM debt_equity de JOIN return_metrics rm ON de.fiscal_year = rm.fiscal_year ORDER BY de.fiscal_year;",10,deepseek-coder:6.7b,2025-10-15T15:25:22.823126,few_shot_learning_curve_20251015_151304
+Q011,What are total assets in 2025?,asset_liability,simple,True,0.006934642791748047,,0.7551,False,0.6928,False,True,False,0.25,"{'has_select': True, 'has_from': True, 'has_join': True, 'has_where': True, 'has_group_by': True, 'has_order_by': True, 'has_cte': True, 'has_window_func': True, 'has_case': True, 'has_subquery': True, 'has_aggregate': True}",[],[],SELECT value FROM financial_fact ff JOIN statement s ON ff.statement_id = s.statement_id JOIN fiscal_period fp ON s.period_id = fp.period_id JOIN line_item li ON ff.line_item_id = li.line_item_id WHERE li.normalized_code = 'HUL_BALANCE_TOTAL_ASSETS' AND fp.fiscal_year = 2025;,"SELECT c.name as company_name, fp.fiscal_year, li.name as metric, ff.value as total_assets, s.currency, s.units FROM financial_fact ff JOIN statement s ON ff.statement_id = s.statement_id JOIN fiscal_period fp ON s.period_id = fp.period_id JOIN company c ON fp.company_id = c.company_id JOIN line_item li ON ff.line_item_id = li.line_item_id WHERE li.normalized_code = 'HUL_BALANCE_TOTAL_ASSETS' AND s.statement_type = 'BALANCE' AND fp.fiscal_year = 2025;",10,deepseek-coder:6.7b,2025-10-15T15:25:22.903269,few_shot_learning_curve_20251015_151304
+Q012,Calculate working capital for each year,asset_liability,medium,True,0.012039899826049805,,0.4083,False,0.5775,False,False,True,0.25,"{'has_select': True, 'has_from': True, 'has_join': True, 'has_where': True, 'has_group_by': True, 'has_order_by': True, 'has_cte': True, 'has_window_func': False, 'has_case': True, 'has_subquery': True, 'has_aggregate': True}",[],['has_window_func'],"WITH wc_data AS (
+    SELECT 
+        fp.fiscal_year,
+        ff.value as working_capital
+    FROM financial_fact ff
+    JOIN statement s ON ff.statement_id = s.statement_id
+    JOIN fiscal_period fp ON s.period_id = fp.period_id
+    JOIN line_item li ON ff.line_item_id = li.line_item_id
+    WHERE li.normalized_code = 'HUL_BALANCE_WORKING_CAPITAL'
+        AND s.statement_type = 'BALANCE'
+)
+SELECT 
+    wc.fiscal_year,
+    wc.working_capital,
+    LAG(wc.working_capital) OVER (ORDER BY wc.fiscal_year) as prev_year_wc,
+    ROUND(((wc.working_capital - LAG(wc.working_capital) OVER (ORDER BY wc.fiscal_year)) / 
+           NULLIF(LAG(wc.working_capital) OVER (ORDER BY wc.fiscal_year), 0)) * 100, 2) as yoy_growth_pct
+FROM wc_data wc
+ORDER BY wc.fiscal_year;","WITH current_assets AS (SELECT fp.fiscal_year, ff.value as current_assets FROM financial_fact ff JOIN statement s ON ff.statement_id = s.statement_id JOIN fiscal_period fp ON s.period_id = fp.period_id JOIN line_item li ON ff.line_item_id = li.line_item_id WHERE li.normalized_code = 'HUL_BALANCE_TOTAL_CURRENT_ASSETS' AND s.statement_type = 'BALANCE'), current_liabilities AS (SELECT fp.fiscal_year, ff.value as current_liabilities FROM financial_fact ff JOIN statement s ON ff.statement_id = s.statement_id JOIN fiscal_period fp ON s.period_id = fp.period_id JOIN line_item li ON ff.line_item_id = li.line_item_id WHERE li.normalized_code = 'HUL_BALANCE_TOTAL_CURRENT_LIABILITIES' AND s.statement_type = 'BALANCE') SELECT ca.fiscal_year, ca.current_assets, cl.current_liabilities, ca.current_assets - cl.current_liabilities as working_capital FROM current_assets ca JOIN current_liabilities cl ON ca.fiscal_year = cl.fiscal_year ORDER BY ca.fiscal_year;",10,deepseek-coder:6.7b,2025-10-15T15:25:22.985077,few_shot_learning_curve_20251015_151304
+Q013,Analyze working capital efficiency with growth metrics,asset_liability,complex,False,0.0,"Execution failed on sql 'WITH eps_data AS 
+(
+    SELECT 
+        fp.fiscal_year,
+        ff.value as basic_eps
+    FROM financial_fact ff
+    JOIN statement s ON ff.statement_id = s.statement_id
+    JOIN fiscal_period fp ON s.period_id = fp.period_id
+    JOIN line_item li ON ff.line_item_id = li.line_item_id
+    WHERE li.normalized_code = 'HUL_PROFIT_LOSS_BASIC_EPS_RS'
+        AND s.statement_type = 'PROFIT_LOSS'
+),
+dividend_data AS 
+(
+    SELECT 
+        fp.fiscal_year,
+        ff.value as dividend_per_share
+    FROM financial_fact ff
+    JOIN statement s ON ff.statement<｜begin▁of▁sentence｜>_id = s.statement_id
+    JOIN fiscal_period fp ON s.period_id = fp.period_id
+    JOIN line_item li ON ff.line_item_id = li.line_item_id
+    WHERE li.normalized_code = 'HUL_RATIOS_DIVIDEND_PER_SHARE'
+        AND s.statement_type = 'RATIOS'
+)
+SELECT 
+    e.fiscal_year,
+    e.basic_eps,
+    d.dividend_per_share,
+    ROUND((d.dividend_per_share / NULLIF(e.basic_eps, 0)) * 100, 2) as dividend_payout_ratio,
+    LAG(e.basic_eps) OVER (ORDER BY e.fiscal_year) as prev_year_eps,
+    ROUND(((e.basic_eps - LAG(e.basic_eps) OVER (ORDER BY e.fiscal_year)) / 
+           NULLIF(LAG(e.basic_eps) OVER (ORDER BY e.fiscal_year), 0)) * 100, 2) as eps_growth_pct,
+    e.basic_eps - d.dividend_per_share as retained_earnings_per_share
+FROM eps_data e
+JOIN dividend_data d ON e.fiscal_year = d.fiscal_year
+ORDER BY e.fiscal_year;': syntax error at or near "">""
+LINE 19: ... statement s ON ff.statement<｜begin▁of▁sentence｜>_id = s.s...
+                                                              ^
+",0.4141,False,0.7496,False,False,False,0.0,"{'has_select': True, 'has_from': True, 'has_join': True, 'has_where': True, 'has_group_by': True, 'has_order_by': True, 'has_cte': True, 'has_window_func': True, 'has_case': True, 'has_subquery': True, 'has_aggregate': True}",[],[],"WITH eps_data AS 
+(
+    SELECT 
+        fp.fiscal_year,
+        ff.value as basic_eps
+    FROM financial_fact ff
+    JOIN statement s ON ff.statement_id = s.statement_id
+    JOIN fiscal_period fp ON s.period_id = fp.period_id
+    JOIN line_item li ON ff.line_item_id = li.line_item_id
+    WHERE li.normalized_code = 'HUL_PROFIT_LOSS_BASIC_EPS_RS'
+        AND s.statement_type = 'PROFIT_LOSS'
+),
+dividend_data AS 
+(
+    SELECT 
+        fp.fiscal_year,
+        ff.value as dividend_per_share
+    FROM financial_fact ff
+    JOIN statement s ON ff.statement<｜begin▁of▁sentence｜>_id = s.statement_id
+    JOIN fiscal_period fp ON s.period_id = fp.period_id
+    JOIN line_item li ON ff.line_item_id = li.line_item_id
+    WHERE li.normalized_code = 'HUL_RATIOS_DIVIDEND_PER_SHARE'
+        AND s.statement_type = 'RATIOS'
+)
+SELECT 
+    e.fiscal_year,
+    e.basic_eps,
+    d.dividend_per_share,
+    ROUND((d.dividend_per_share / NULLIF(e.basic_eps, 0)) * 100, 2) as dividend_payout_ratio,
+    LAG(e.basic_eps) OVER (ORDER BY e.fiscal_year) as prev_year_eps,
+    ROUND(((e.basic_eps - LAG(e.basic_eps) OVER (ORDER BY e.fiscal_year)) / 
+           NULLIF(LAG(e.basic_eps) OVER (ORDER BY e.fiscal_year), 0)) * 100, 2) as eps_growth_pct,
+    e.basic_eps - d.dividend_per_share as retained_earnings_per_share
+FROM eps_data e
+JOIN dividend_data d ON e.fiscal_year = d.fiscal_year
+ORDER BY e.fiscal_year;","WITH current_assets AS (SELECT fp.fiscal_year, ff.value as current_assets FROM financial_fact ff JOIN statement s ON ff.statement_id = s.statement_id JOIN fiscal_period fp ON s.period_id = fp.period_id JOIN line_item li ON ff.line_item_id = li.line_item_id WHERE li.normalized_code = 'HUL_BALANCE_TOTAL_CURRENT_ASSETS' AND s.statement_type = 'BALANCE'), current_liabilities AS (SELECT fp.fiscal_year, ff.value as current_liabilities FROM financial_fact ff JOIN statement s ON ff.statement_id = s.statement_id JOIN fiscal_period fp ON s.period_id = fp.period_id JOIN line_item li ON ff.line_item_id = li.line_item_id WHERE li.normalized_code = 'HUL_BALANCE_TOTAL_CURRENT_LIABILITIES' AND s.statement_type = 'BALANCE') SELECT ca.fiscal_year, ca.current_assets, cl.current_liabilities, ca.current_assets - cl.current_liabilities as working_capital, ROUND((ca.current_assets / NULLIF(cl.current_liabilities, 0)), 2) as current_ratio, LAG(ca.current_assets - cl.current_liabilities) OVER (ORDER BY ca.fiscal_year) as prev_year_wc, (ca.current_assets - cl.current_liabilities) - LAG(ca.current_assets - cl.current_liabilities) OVER (ORDER BY ca.fiscal_year) as wc_change, ROUND((((ca.current_assets - cl.current_liabilities) - LAG(ca.current_assets - cl.current_liabilities) OVER (ORDER BY ca.fiscal_year)) / NULLIF(LAG(ca.current_assets - cl.current_liabilities) OVER (ORDER BY ca.fiscal_year), 0)) * 100, 2) as wc_growth_pct FROM current_assets ca JOIN current_liabilities cl ON ca.fiscal_year = cl.fiscal_year ORDER BY ca.fiscal_year;",10,deepseek-coder:6.7b,2025-10-15T15:25:23.058638,few_shot_learning_curve_20251015_151304
+Q014,Show inventory turnover ratio trend,efficiency_metrics,medium,True,0.011786937713623047,,0.6638,False,0.6373,False,True,False,0.25,"{'has_select': True, 'has_from': True, 'has_join': True, 'has_where': True, 'has_group_by': True, 'has_order_by': False, 'has_cte': True, 'has_window_func': False, 'has_case': True, 'has_subquery': True, 'has_aggregate': True}","['has_order_by', 'has_window_func']",[],"SELECT 
+    fp.fiscal_year,
+    li.normalized_code,
+    ff.value as inventory_turnover_ratio
+FROM financial_fact ff
+JOIN statement s ON ff.statement_id = s.statement_id
+JOIN fiscal_period fp ON s.period_id = fp.period_id
+JOIN line_item li ON ff.line_item_id = li.line_item_id
+WHERE li.normalized_code = 'HUL_RATIOS_INVENTORY_TURNOVER_RATIO' AND s.statement_type = 'RATIOS';","SELECT fp.fiscal_year, li.name as metric, ff.value as turnover_ratio, ROUND(365.0 / NULLIF(ff.value, 0), 1) as days, LAG(ff.value) OVER (ORDER BY fp.fiscal_year) as prev_year_ratio, ROUND(ff.value - LAG(ff.value) OVER (ORDER BY fp.fiscal_year), 2) as ratio_change FROM financial_fact ff JOIN statement s ON ff.statement_id = s.statement_id JOIN fiscal_period fp ON s.period_id = fp.period_id JOIN line_item li ON ff.line_item_id = li.line_item_id WHERE li.normalized_code = 'HUL_RATIOS_INVENTORY_TURNOVER_RATIO' AND s.statement_type = 'RATIOS' ORDER BY fp.fiscal_year;",10,deepseek-coder:6.7b,2025-10-15T15:25:23.238801,few_shot_learning_curve_20251015_151304
+Q015,Compare inventory and receivables turnover efficiency,efficiency_metrics,complex,True,0.0,,0.5878,False,0.6054,False,False,False,0.0,"{'has_select': True, 'has_from': True, 'has_join': True, 'has_where': True, 'has_group_by': True, 'has_order_by': True, 'has_cte': True, 'has_window_func': False, 'has_case': True, 'has_subquery': True, 'has_aggregate': False}","['has_window_func', 'has_aggregate']",[],"SELECT 
+    fp.fiscal_year,
+    li.normalized_code,
+    ff.value as turnover_ratio
+FROM financial_fact ff
+JOIN statement s ON ff.statement_id = s.statement_id
+JOIN fiscal_period fp ON s.period_id = fp.period_id
+JOIN line_item li ON ff.line_item_id = li.line_item_id
+WHERE li.normalized_code IN ('HUL_RATIOS_INVENTORY_TURNOVER_RATIO', 'HUL_RATIOS_RECEIVABLES_TURNOVER_RATIO') 
+AND s.statement_type = 'RATIOS'
+ORDER BY fp.fiscal_year, li.normalized_code;","SELECT fp.fiscal_year, li.name as efficiency_metric, ff.value as turnover_ratio, ROUND(365.0 / NULLIF(ff.value, 0), 1) as days, LAG(ff.value) OVER (PARTITION BY li.line_item_id ORDER BY fp.fiscal_year) as prev_year_ratio, ROUND(ff.value - LAG(ff.value) OVER (PARTITION BY li.line_item_id ORDER BY fp.fiscal_year), 2) as ratio_change, ROUND(AVG(ff.value) OVER (PARTITION BY li.line_item_id), 2) as avg_turnover FROM financial_fact ff JOIN statement s ON ff.statement_id = s.statement_id JOIN fiscal_period fp ON s.period_id = fp.period_id JOIN line_item li ON ff.line_item_id = li.line_item_id WHERE li.normalized_code IN ('HUL_RATIOS_INVENTORY_TURNOVER_RATIO', 'HUL_RATIOS_DEBTORS_TURNOVER_RATIO') AND s.statement_type = 'RATIOS' ORDER BY li.name, fp.fiscal_year;",10,deepseek-coder:6.7b,2025-10-15T15:25:23.317961,few_shot_learning_curve_20251015_151304

@@ -1,0 +1,6 @@
+fiscal_year,debt_equity_ratio,return_on_net_worth_pct,leverage_adjusted_return,prev_year_de_ratio,prev_year_ronw,de_ratio_change_pct,ronw_change_pct
+2021,,16.77,,,,,
+2022,,18.09,,,16.77,,7.87
+2023,,20.11,,,18.09,,11.17
+2024,,20.06,,,20.11,,-0.25
+2025,,21.55,,,20.06,,7.43

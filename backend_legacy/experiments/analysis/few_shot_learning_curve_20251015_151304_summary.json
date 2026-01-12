@@ -1,0 +1,27 @@
+{
+  "experiment_name": "few_shot_learning_curve_20251015_151304",
+  "timestamp": "2025-10-15T15:25:23.341910",
+  "total_questions": 30,
+  "overall_metrics": {
+    "execution_accuracy": 86.66666666666667,
+    "avg_execution_time": 0.012665922825153057,
+    "exact_match_rate": 0.0,
+    "results_match_rate": 0.0,
+    "semantic_correctness": 10.0,
+    "avg_sql_similarity": 40.64533333333334,
+    "avg_bleu_score": 63.205999999999996,
+    "simple_accuracy": 100.0,
+    "medium_accuracy": 100.0,
+    "complex_accuracy": 66.66666666666666,
+    "category_breakdown": {
+      "revenue_analysis": 100.0,
+      "trend_analysis": 100.0,
+      "profitability": 100.0,
+      "cash_flow": 100.0,
+      "ratios": 100.0,
+      "comparative_analysis": 0.0,
+      "asset_liability": 66.67,
+      "efficiency_metrics": 100.0
+    }
+  }
+}

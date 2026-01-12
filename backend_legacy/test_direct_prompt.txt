@@ -1,0 +1,15 @@
+# TASK: Generate PostgreSQL SQL Query
+
+You are a SQL code generator. Your ONLY job is to output valid PostgreSQL SQL queries.
+
+Database Schema:
+- Table: financial_fact (contains value, line_item_id, statement_id)
+- Table: line_item (contains normalized_code like 'HUL_PROFIT_LOSS_REVENUE_FROM_OPERATIONS_NET')
+- Table: statement (contains statement_type, period_id)
+- Table: fiscal_period (contains fiscal_year, company_id)
+- Table: company (contains name)
+
+Generate ONLY SQL code, no explanations.
+
+Question: What was the revenue in 2024?
+SQL:
