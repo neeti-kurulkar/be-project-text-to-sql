@@ -4,6 +4,7 @@ from contextlib import asynccontextmanager
 from app.config import settings
 from app.database import init_db_pool, close_db_pool
 from app.api.routes import query, tables, stats
+from app.routes import auth
 
 
 @asynccontextmanager
@@ -42,6 +43,7 @@ app.add_middleware(
 )
 
 # Include routers
+app.include_router(auth.router)  # Authentication routes (public)
 app.include_router(query.router)
 app.include_router(tables.router)
 app.include_router(stats.router)

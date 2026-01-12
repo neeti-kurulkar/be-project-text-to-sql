@@ -15,6 +15,11 @@ class Settings(BaseSettings):
     API_PORT: int = 8000
     CORS_ORIGINS: List[str] = ["http://localhost:5173"]
 
+    # Authentication
+    JWT_SECRET: str
+    JWT_ALGORITHM: str = "HS256"
+    JWT_EXPIRATION_MINUTES: int = 60
+
     class Config:
         env_file = ".env"
 

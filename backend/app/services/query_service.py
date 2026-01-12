@@ -7,9 +7,11 @@ from app.database import get_db_connection
 class QueryService:
 
     @staticmethod
-    def execute_sql(sql: str) -> Tuple[List[str], List[Dict[str, Any]], int, float]:
+    def execute_sql(sql: str, organization_id: int = None) -> Tuple[List[str], List[Dict[str, Any]], int, float]:
         """
         Execute SQL query and return results
+
+        If organization_id is provided, wraps the query to filter by organization
 
         Returns:
             columns: List of column names
@@ -23,6 +25,24 @@ class QueryService:
             cursor = conn.cursor()
 
             try:
+                # Wrap SQL with organization filter if provided
+                if organization_id:
+                    # Create filtered views for each table
+                    wrapped_sql = f"""
+                    WITH
+                    general_ledger AS (
+                        SELECT * FROM general_ledger WHERE organization_id = {organization_id}
+                    ),
+                    chart_of_accounts AS (
+                        SELECT * FROM chart_of_accounts WHERE organization_id = {organization_id}
+                    ),
+                    territory AS (
+                        SELECT * FROM territory WHERE organization_id = {organization_id}
+                    )
+                    {sql}
+                    """
+                    sql = wrapped_sql
+
                 # Execute query
                 cursor.execute(sql)
 
