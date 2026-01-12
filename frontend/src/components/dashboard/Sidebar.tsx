@@ -5,8 +5,8 @@ import { useSidebar } from '../../hooks/useSidebar';
 const navItems = [
   { to: '/dashboard', icon: LayoutDashboard, label: 'Home', end: true },
   { to: '/dashboard/query', icon: MessageSquare, label: 'Ask Questions' },
-  { to: '/dashboard/data', icon: Database, label: 'View Data' },
-  { to: '/dashboard/charts', icon: BarChart3, label: 'Charts' }
+  { to: '/dashboard/charts', icon: BarChart3, label: 'Charts' },
+  { to: '/dashboard/data', icon: Database, label: 'View Data' }
 ];
 
 export function Sidebar() {

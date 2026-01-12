@@ -59,6 +59,7 @@ export function UserMenu() {
           <Menu.Item>
             {({ active }) => (
               <button
+                onClick={() => navigate('/dashboard/profile')}
                 className={`${
                   active ? 'bg-slate-100 dark:bg-ocean-700' : ''
                 } group flex w-full items-center gap-2 px-4 py-2 text-sm text-ocean-900 dark:text-slate-100`}
@@ -71,6 +72,7 @@ export function UserMenu() {
           <Menu.Item>
             {({ active }) => (
               <button
+                onClick={() => navigate('/dashboard/settings')}
                 className={`${
                   active ? 'bg-slate-100 dark:bg-ocean-700' : ''
                 } group flex w-full items-center gap-2 px-4 py-2 text-sm text-ocean-900 dark:text-slate-100`}

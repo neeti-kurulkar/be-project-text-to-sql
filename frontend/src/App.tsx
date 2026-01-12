@@ -5,6 +5,8 @@ import { DashboardHome } from './pages/DashboardHome';
 import { QueryPage } from './pages/QueryPage';
 import { DataPage } from './pages/DataPage';
 import { ChartsPage } from './pages/ChartsPage';
+import { ProfilePage } from './pages/ProfilePage';
+import { SettingsPage } from './pages/SettingsPage';
 import { ProtectedRoute } from './components/auth/ProtectedRoute';
 
 function App() {
@@ -42,6 +44,22 @@ function App() {
           element={
             <ProtectedRoute>
               <ChartsPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/dashboard/profile"
+          element={
+            <ProtectedRoute>
+              <ProfilePage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/dashboard/settings"
+          element={
+            <ProtectedRoute>
+              <SettingsPage />
             </ProtectedRoute>
           }
         />

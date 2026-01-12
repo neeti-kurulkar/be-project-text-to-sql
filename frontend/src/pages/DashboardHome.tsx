@@ -2,6 +2,7 @@ import { useAuth } from '../context/AuthContext';
 import { DashboardLayout } from '../components/dashboard/DashboardLayout';
 import { QuickStats } from '../components/dashboard/QuickStats';
 import { SuggestedQuestions } from '../components/query/SuggestedQuestions';
+import { QueryHistory } from '../components/data/QueryHistory';
 
 export function DashboardHome() {
   const { user } = useAuth();
@@ -23,6 +24,9 @@ export function DashboardHome() {
 
         {/* Quick Stats */}
         <QuickStats />
+
+        {/* Query History */}
+        <QueryHistory />
 
         {/* Suggested Questions */}
         <SuggestedQuestions />
