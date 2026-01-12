@@ -39,8 +39,8 @@ export function ProfilePage() {
               <p className="text-ocean-600 dark:text-slate-400 mb-3">
                 {user.email}
               </p>
-              <Badge variant={user.role === 'Admin' ? 'blue' : 'green'}>
-                {user.role}
+              <Badge variant={user.role === 'admin' ? 'blue' : 'green'}>
+                {user.role.charAt(0).toUpperCase() + user.role.slice(1)}
               </Badge>
             </div>
           </div>
@@ -92,7 +92,7 @@ export function ProfilePage() {
                   Role & Permissions
                 </div>
                 <div className="text-sm text-ocean-600 dark:text-slate-400 mt-1">
-                  {user.role} - {user.role === 'Admin' ? 'Full access to all features' : 'Read and query access'}
+                  {user.role.charAt(0).toUpperCase() + user.role.slice(1)} - {user.role === 'admin' ? 'Full access to all features' : 'Read and query access'}
                 </div>
               </div>
             </div>

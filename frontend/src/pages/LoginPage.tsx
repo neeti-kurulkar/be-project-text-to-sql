@@ -53,7 +53,7 @@ export function LoginPage() {
             </blockquote>
             <cite className="text-white/80 not-italic">
               <p className="font-semibold">Sarah Chen</p>
-              <p className="text-sm">CFO, Acme Corp</p>
+              <p className="text-sm">CFO, Kuvalis Inc.</p>
             </cite>
           </div>
         </div>

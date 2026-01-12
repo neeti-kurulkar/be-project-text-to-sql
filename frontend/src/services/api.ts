@@ -9,6 +9,34 @@ const apiClient = axios.create({
   },
 });
 
+// Add token to all requests
+apiClient.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem('finq_token');
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
+  }
+);
+
+// Handle 401 errors (token expired)
+apiClient.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 401) {
+      // Token expired or invalid - clear auth and redirect to login
+      localStorage.removeItem('finq_token');
+      localStorage.removeItem('finq_user');
+      window.location.href = '/login';
+    }
+    return Promise.reject(error);
+  }
+);
+
 // Query API
 export const executeQuery = async (sql: string) => {
   const response = await apiClient.post('/api/query/execute', { sql });

@@ -55,7 +55,7 @@ export function LoginForm() {
           type="email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          placeholder="admin@finq.com"
+          placeholder="Enter your company email"
           required
         />
 
@@ -126,13 +126,6 @@ export function LoginForm() {
           )}
         </Button>
       </form>
-
-      {/* Helper Text */}
-      <div className="mt-6 text-center text-sm text-ocean-600 dark:text-slate-400">
-        <p>Test credentials:</p>
-        <p className="font-mono text-xs mt-1">admin@finq.com / admin123</p>
-        <p className="font-mono text-xs">analyst@finq.com / analyst123</p>
-      </div>
 
       {/* Shake Animation */}
       <style>{`

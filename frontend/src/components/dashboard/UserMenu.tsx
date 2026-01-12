@@ -48,8 +48,8 @@ export function UserMenu() {
             {user.email}
           </div>
           <div className="mt-2">
-            <Badge variant={user.role === 'Admin' ? 'blue' : 'green'}>
-              {user.role}
+            <Badge variant={user.role === 'admin' ? 'blue' : 'green'}>
+              {user.role.charAt(0).toUpperCase() + user.role.slice(1)}
             </Badge>
           </div>
         </div>
