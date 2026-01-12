@@ -1,7 +1,8 @@
 import { useState, useEffect, useRef } from 'react';
 import { useLocation } from 'react-router-dom';
 import { type QueryMessage as QueryMessageType } from '../../types/query';
-import { getMockQueryResponse, getMockSQL } from '../../utils/mockData';
+import { getMockSQL } from '../../utils/mockData';
+import { executeQuery } from '../../services/api';
 import { QueryMessage } from './QueryMessage';
 import { QueryInput } from './QueryInput';
 import { SuggestedQuestions } from './SuggestedQuestions';
@@ -43,29 +44,67 @@ export function QueryInterface() {
     setMessages((prev) => [...prev, userMessage]);
     setIsLoading(true);
 
-    // Simulate API call delay
-    await new Promise((resolve) => setTimeout(resolve, 800));
+    try {
+      // Generate SQL from question (mock for now - Phase 4 will use NL2SQL agents)
+      const generatedSQL = getMockSQL(question);
 
-    // Get mock response
-    const mockResponse = getMockQueryResponse(question);
-    const mockSQL = getMockSQL(question);
+      // Execute SQL using real API
+      const apiResponse = await executeQuery(generatedSQL);
 
-    // Add assistant message
-    const assistantMessage: QueryMessageType = {
-      id: (Date.now() + 1).toString(),
-      type: 'assistant',
-      content: mockResponse.explanation,
-      timestamp: new Date(),
-      sql: mockSQL,
-      results: mockResponse
-    };
+      // Generate explanation (mock for now - Phase 4 will use AI)
+      const explanation = generateExplanation(question, apiResponse);
 
-    setMessages((prev) => [...prev, assistantMessage]);
-    setIsLoading(false);
+      // Add assistant message with real data
+      const assistantMessage: QueryMessageType = {
+        id: (Date.now() + 1).toString(),
+        type: 'assistant',
+        content: explanation,
+        timestamp: new Date(),
+        sql: generatedSQL,
+        results: {
+          columns: apiResponse.columns,
+          rows: apiResponse.rows,
+          rowCount: apiResponse.row_count,
+          explanation: explanation
+        }
+      };
 
-    // Add to query history
-    const executionTime = Date.now() - startTime;
-    addQuery(question, executionTime);
+      setMessages((prev) => [...prev, assistantMessage]);
+
+      // Add to query history
+      const executionTime = Date.now() - startTime;
+      addQuery(question, executionTime);
+
+    } catch (error: any) {
+      // Handle error
+      const errorMessage: QueryMessageType = {
+        id: (Date.now() + 1).toString(),
+        type: 'assistant',
+        content: `Error: ${error.message || 'Failed to execute query'}. Please try rephrasing your question.`,
+        timestamp: new Date()
+      };
+
+      setMessages((prev) => [...prev, errorMessage]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Generate a simple explanation based on the question and results
+  const generateExplanation = (question: string, results: any): string => {
+    const rowCount = results.row_count;
+    const hasData = rowCount > 0;
+
+    if (!hasData) {
+      return `No results found for your question: "${question}". The query executed successfully but returned no data.`;
+    }
+
+    // Simple explanation based on row count
+    if (rowCount === 1) {
+      return `Found 1 result for your question. The data shows the specific information you requested.`;
+    } else {
+      return `Found ${rowCount} results for your question. The table below shows all matching records from the database.`;
+    }
   };
 
   const handleSuggestedQuestion = (question: string) => {

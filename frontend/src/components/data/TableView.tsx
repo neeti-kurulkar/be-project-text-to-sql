@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import { Download, ChevronLeft, ChevronRight } from 'lucide-react';
 import { exportToCSV } from '../../utils/exportCSV';
 import { Button } from '../common/Button';
@@ -7,13 +6,14 @@ interface TableViewProps {
   tableName: string;
   data: any[];
   totalRows: number;
+  currentPage: number;
+  totalPages: number;
+  onPageChange: (page: number) => void;
 }
 
 const ROWS_PER_PAGE = 50;
 
-export function TableView({ tableName, data, totalRows }: TableViewProps) {
-  const [currentPage, setCurrentPage] = useState(1);
-
+export function TableView({ tableName, data, totalRows, currentPage, totalPages, onPageChange }: TableViewProps) {
   if (data.length === 0) {
     return (
       <div className="text-center py-12 text-ocean-600 dark:text-slate-400">
@@ -23,9 +23,8 @@ export function TableView({ tableName, data, totalRows }: TableViewProps) {
   }
 
   const columns = Object.keys(data[0]);
-  const totalPages = Math.ceil(totalRows / ROWS_PER_PAGE);
   const startRow = (currentPage - 1) * ROWS_PER_PAGE + 1;
-  const endRow = Math.min(currentPage * ROWS_PER_PAGE, totalRows);
+  const endRow = Math.min(startRow + data.length - 1, totalRows);
 
   const handleExport = () => {
     exportToCSV(data, `${tableName}-${Date.now()}`);
@@ -90,7 +89,7 @@ export function TableView({ tableName, data, totalRows }: TableViewProps) {
           <Button
             variant="outline"
             size="sm"
-            onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+            onClick={() => onPageChange(Math.max(1, currentPage - 1))}
             disabled={currentPage === 1}
             className="flex items-center gap-2"
           >
@@ -103,7 +102,7 @@ export function TableView({ tableName, data, totalRows }: TableViewProps) {
           <Button
             variant="outline"
             size="sm"
-            onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+            onClick={() => onPageChange(Math.min(totalPages, currentPage + 1))}
             disabled={currentPage === totalPages}
             className="flex items-center gap-2"
           >

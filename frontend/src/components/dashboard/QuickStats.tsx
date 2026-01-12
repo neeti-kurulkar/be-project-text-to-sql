@@ -1,33 +1,7 @@
-import { TrendingUp, Database, Globe, Calendar } from 'lucide-react';
-import { QUICK_STATS } from '../../utils/mockData';
+import { useState, useEffect } from 'react';
+import { TrendingUp, Database, Globe, Calendar, Loader2 } from 'lucide-react';
+import { getQuickStats } from '../../services/api';
 import { Card } from '../common/Card';
-
-const stats = [
-  {
-    label: 'Total Revenue',
-    value: `$${QUICK_STATS.totalRevenue}M`,
-    icon: TrendingUp,
-    color: 'electric'
-  },
-  {
-    label: 'Total Transactions',
-    value: QUICK_STATS.totalTransactions,
-    icon: Database,
-    color: 'emerald'
-  },
-  {
-    label: 'Countries',
-    value: QUICK_STATS.countries,
-    icon: Globe,
-    color: 'amber'
-  },
-  {
-    label: 'Date Range',
-    value: QUICK_STATS.dateRange,
-    icon: Calendar,
-    color: 'blue'
-  }
-];
 
 const colorClasses = {
   electric: 'bg-electric-100 dark:bg-electric-900/30 text-electric-600 dark:text-electric-400',
@@ -37,9 +11,80 @@ const colorClasses = {
 };
 
 export function QuickStats() {
+  const [stats, setStats] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        setLoading(true);
+        const data = await getQuickStats();
+        setStats(data);
+      } catch (err: any) {
+        setError(err.message || 'Failed to load statistics');
+        console.error('Error fetching stats:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchStats();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        {[1, 2, 3, 4].map((i) => (
+          <Card key={i} className="h-28 flex items-center justify-center">
+            <Loader2 className="w-6 h-6 animate-spin text-electric-500" />
+          </Card>
+        ))}
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <Card className="p-6">
+        <p className="text-red-600 dark:text-red-400">Error: {error}</p>
+      </Card>
+    );
+  }
+
+  if (!stats) {
+    return null;
+  }
+
+  const statsConfig = [
+    {
+      label: 'Total Revenue',
+      value: `$${(stats.total_revenue / 1000000).toFixed(1)}M`,
+      icon: TrendingUp,
+      color: 'electric' as const
+    },
+    {
+      label: 'Total Transactions',
+      value: stats.total_transactions.toLocaleString(),
+      icon: Database,
+      color: 'emerald' as const
+    },
+    {
+      label: 'Countries',
+      value: stats.countries_count.toString(),
+      icon: Globe,
+      color: 'amber' as const
+    },
+    {
+      label: 'Date Range',
+      value: stats.date_range,
+      icon: Calendar,
+      color: 'blue' as const
+    }
+  ];
+
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-      {stats.map((stat) => (
+      {statsConfig.map((stat) => (
         <Card key={stat.label} className="hover:shadow-md transition-shadow duration-200">
           <div className="flex items-start justify-between">
             <div>
@@ -50,7 +95,7 @@ export function QuickStats() {
                 {stat.value}
               </p>
             </div>
-            <div className={`p-3 rounded-lg ${colorClasses[stat.color as keyof typeof colorClasses]}`}>
+            <div className={`p-3 rounded-lg ${colorClasses[stat.color]}`}>
               <stat.icon className="w-6 h-6" />
             </div>
           </div>

@@ -142,84 +142,87 @@ export function getMockSQL(question: string): string {
   const lowerQuestion = question.toLowerCase();
 
   if (lowerQuestion.includes('total revenue') && lowerQuestion.includes('2020')) {
-    return `SELECT SUM(amount) AS total_revenue
-FROM general_ledger
-WHERE YEAR(date) = 2020
-  AND account_type = 'Revenue';`;
+    return `SELECT SUM(gl.amount) AS total_revenue
+FROM general_ledger gl
+JOIN chart_of_accounts coa ON gl.account_key = coa.account_key
+WHERE EXTRACT(YEAR FROM gl.date) = 2020
+  AND coa.class = 'Trading account' AND coa.subclass = 'Sales'`;
   }
 
   if (lowerQuestion.includes('revenue by country')) {
     return `SELECT t.country, SUM(gl.amount) AS revenue
 FROM general_ledger gl
-JOIN territory t ON gl.territory_id = t.territory_id
-WHERE gl.account_type = 'Revenue'
+JOIN chart_of_accounts coa ON gl.account_key = coa.account_key
+JOIN territory t ON gl.territory_key = t.territory_key
+WHERE coa.class = 'Trading account' AND coa.subclass = 'Sales'
 GROUP BY t.country
-ORDER BY revenue DESC;`;
+ORDER BY revenue DESC`;
   }
 
   if (lowerQuestion.includes('highest sales') || lowerQuestion.includes('quarter')) {
     return `SELECT c.quarter, c.year, SUM(gl.amount) AS sales
 FROM general_ledger gl
+JOIN chart_of_accounts coa ON gl.account_key = coa.account_key
 JOIN calendar c ON gl.date = c.date
-WHERE gl.account_type = 'Revenue'
+WHERE coa.class = 'Trading account' AND coa.subclass = 'Sales'
 GROUP BY c.quarter, c.year
 ORDER BY sales DESC
-LIMIT 1;`;
+LIMIT 1`;
   }
 
   if (lowerQuestion.includes('top') && lowerQuestion.includes('expense')) {
-    return `SELECT coa.account_name, SUM(gl.amount) AS total_expenses
+    return `SELECT coa.account, SUM(ABS(gl.amount)) AS total_expenses
 FROM general_ledger gl
-JOIN chart_of_accounts coa ON gl.account_id = coa.account_id
-WHERE coa.account_type = 'Expense'
-GROUP BY coa.account_name
+JOIN chart_of_accounts coa ON gl.account_key = coa.account_key
+WHERE coa.class IN ('Operating account', 'Trading account')
+  AND gl.amount < 0
+GROUP BY coa.account
 ORDER BY total_expenses DESC
-LIMIT 5;`;
+LIMIT 5`;
   }
 
   if (lowerQuestion.includes('compare') && lowerQuestion.includes('2019') && lowerQuestion.includes('2020')) {
-    return `SELECT YEAR(date) AS year,
-       SUM(amount) AS revenue,
-       CONCAT(ROUND((SUM(amount) - LAG(SUM(amount)) OVER (ORDER BY YEAR(date))) /
-              LAG(SUM(amount)) OVER (ORDER BY YEAR(date)) * 100, 1), '%') AS growth_rate
-FROM general_ledger
-WHERE YEAR(date) IN (2019, 2020)
-  AND account_type = 'Revenue'
-GROUP BY YEAR(date);`;
+    return `SELECT EXTRACT(YEAR FROM gl.date) AS year, SUM(gl.amount) AS revenue
+FROM general_ledger gl
+JOIN chart_of_accounts coa ON gl.account_key = coa.account_key
+WHERE EXTRACT(YEAR FROM gl.date) IN (2019, 2020)
+  AND coa.class = 'Trading account' AND coa.subclass = 'Sales'
+GROUP BY EXTRACT(YEAR FROM gl.date)
+ORDER BY year`;
   }
 
   if (lowerQuestion.includes('quarterly') && lowerQuestion.includes('trend')) {
     return `SELECT c.year, c.quarter, SUM(gl.amount) AS revenue
 FROM general_ledger gl
+JOIN chart_of_accounts coa ON gl.account_key = coa.account_key
 JOIN calendar c ON gl.date = c.date
-WHERE gl.account_type = 'Revenue'
+WHERE coa.class = 'Trading account' AND coa.subclass = 'Sales'
 GROUP BY c.year, c.quarter
-ORDER BY c.year, c.quarter;`;
+ORDER BY c.year, c.quarter`;
   }
 
   if (lowerQuestion.includes('usa') || lowerQuestion.includes('united states')) {
     return `SELECT t.country, SUM(gl.amount) AS revenue
 FROM general_ledger gl
-JOIN territory t ON gl.territory_id = t.territory_id
+JOIN chart_of_accounts coa ON gl.account_key = coa.account_key
+JOIN territory t ON gl.territory_key = t.territory_key
 WHERE t.country = 'USA'
-  AND gl.account_type = 'Revenue'
-GROUP BY t.country;`;
+  AND coa.class = 'Trading account' AND coa.subclass = 'Sales'
+GROUP BY t.country`;
   }
 
-  if (lowerQuestion.includes('all countries') || lowerQuestion.includes('list') && lowerQuestion.includes('countries')) {
-    return `SELECT country, territory_code
+  if (lowerQuestion.includes('all countries') || (lowerQuestion.includes('list') && lowerQuestion.includes('countries'))) {
+    return `SELECT country, region
 FROM territory
-ORDER BY country;`;
+ORDER BY country`;
   }
 
-  // Default SQL for unknown queries
-  return `-- This is a mock SQL query
--- In production, the multi-agent system would generate
--- the appropriate SQL based on your natural language question
-
-SELECT *
-FROM information_schema.tables
-WHERE table_schema = 'public';`;
+  // Default SQL for unknown queries - show sample data from general ledger
+  return `SELECT gl.entry_no, gl.date, t.country, coa.class, coa.account, gl.amount
+FROM general_ledger gl
+JOIN chart_of_accounts coa ON gl.account_key = coa.account_key
+JOIN territory t ON gl.territory_key = t.territory_key
+LIMIT 10`;
 }
 
 // Table Information
