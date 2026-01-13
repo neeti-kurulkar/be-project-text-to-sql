@@ -16,7 +16,13 @@ class TableService:
     }
 
     # Tables that have organization_id column
-    ORG_FILTERED_TABLES = ['general_ledger', 'chart_of_accounts', 'territory']
+    ORG_FILTERED_TABLES = [
+        'general_ledger',
+        'chart_of_accounts',
+        'territory',
+        'cashflow_statement_structure',
+        'statement_of_equity_structure'
+    ]
 
     @staticmethod
     def list_tables(organization_id: int = None) -> List[Dict[str, Any]]:
