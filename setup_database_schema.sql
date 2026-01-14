@@ -280,13 +280,13 @@ FROM organizations WHERE slug = 'vandervort'
 ON CONFLICT (organization_id, domain) DO NOTHING;
 
 -- Sample Users (password is 'password123' for all users)
--- Password hash: $2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewY5NU7RqTk0p.lW
+-- Password hash: $2b$12$SZuGmXY4xrmKJiEb/K2lmOBK/HH3vOdQVBTRsVWTKu2h41NcJpWJ2
 
 INSERT INTO users (organization_id, email, password_hash, name, role, email_verified)
 SELECT
     o.organization_id,
     'sarah.chen@kuvalis.com',
-    '"$2b$12$SZuGmXY4xrmKJiEb/K2lmOBK/HH3vOdQVBTRsVWTKu2h41NcJpWJ2"',
+    '$2b$12$SZuGmXY4xrmKJiEb/K2lmOBK/HH3vOdQVBTRsVWTKu2h41NcJpWJ2',
     'Sarah Chen',
     'admin',
     true
@@ -297,7 +297,7 @@ INSERT INTO users (organization_id, email, password_hash, name, role, email_veri
 SELECT
     o.organization_id,
     'mike.rodriguez@kuvalis.com',
-    '"$2b$12$SZuGmXY4xrmKJiEb/K2lmOBK/HH3vOdQVBTRsVWTKu2h41NcJpWJ2"',
+    '$2b$12$SZuGmXY4xrmKJiEb/K2lmOBK/HH3vOdQVBTRsVWTKu2h41NcJpWJ2',
     'Mike Rodriguez',
     'analyst',
     true
@@ -308,7 +308,7 @@ INSERT INTO users (organization_id, email, password_hash, name, role, email_veri
 SELECT
     o.organization_id,
     'john.smith@vandervort.com',
-    '"$2b$12$SZuGmXY4xrmKJiEb/K2lmOBK/HH3vOdQVBTRsVWTKu2h41NcJpWJ2"',
+    '$2b$12$SZuGmXY4xrmKJiEb/K2lmOBK/HH3vOdQVBTRsVWTKu2h41NcJpWJ2',
     'John Smith',
     'admin',
     true
