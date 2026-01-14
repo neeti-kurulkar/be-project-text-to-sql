@@ -1,15 +1,19 @@
 import { XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Area, AreaChart } from 'recharts';
-import { REVENUE_TREND_DATA } from '../../utils/mockData';
 import { ChartContainer } from './ChartContainer';
+import type { RevenueTrendData } from '../../types/charts';
 
-export function RevenueTrend() {
+interface RevenueTrendProps {
+  data: RevenueTrendData[];
+}
+
+export function RevenueTrend({ data }: RevenueTrendProps) {
   return (
     <ChartContainer
       title="Revenue Trend"
-      description="Quarterly revenue from 2018 to 2020"
+      description="Monthly revenue over time"
     >
       <ResponsiveContainer width="100%" height="100%">
-        <AreaChart data={REVENUE_TREND_DATA} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+        <AreaChart data={data} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
           <defs>
             <linearGradient id="revenueGradient" x1="0" y1="0" x2="0" y2="1">
               <stop offset="5%" stopColor="#10B981" stopOpacity={0.3} />
@@ -19,8 +23,9 @@ export function RevenueTrend() {
           <CartesianGrid strokeDasharray="3 3" className="stroke-slate-200 dark:stroke-ocean-700" />
           <XAxis
             dataKey="month"
-            tick={{ fontSize: 12 }}
+            tick={{ fontSize: 10 }}
             className="fill-ocean-600 dark:fill-slate-400"
+            interval="preserveStartEnd"
           />
           <YAxis
             tick={{ fontSize: 12 }}

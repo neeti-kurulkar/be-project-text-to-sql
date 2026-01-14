@@ -1,15 +1,19 @@
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { REVENUE_BY_COUNTRY_DATA } from '../../utils/mockData';
 import { ChartContainer } from './ChartContainer';
+import type { RevenueByCountryData } from '../../types/charts';
 
-export function RevenueByCountry() {
+interface RevenueByCountryProps {
+  data: RevenueByCountryData[];
+}
+
+export function RevenueByCountry({ data }: RevenueByCountryProps) {
   return (
     <ChartContainer
       title="Revenue by Country"
       description="Total revenue across all territories"
     >
       <ResponsiveContainer width="100%" height="100%">
-        <BarChart data={REVENUE_BY_COUNTRY_DATA} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+        <BarChart data={data} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
           <CartesianGrid strokeDasharray="3 3" className="stroke-slate-200 dark:stroke-ocean-700" />
           <XAxis
             dataKey="country"

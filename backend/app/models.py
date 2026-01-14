@@ -55,3 +55,87 @@ class QueryHistoryItem(BaseModel):
 class QueryHistoryResponse(BaseModel):
     history: List[QueryHistoryItem]
     total: int
+
+
+# Chart data models
+class RevenueByCountryItem(BaseModel):
+    country: str
+    revenue: float
+
+
+class RevenueTrendItem(BaseModel):
+    month: str
+    revenue: float
+
+
+class QuarterlyRevenueItem(BaseModel):
+    quarter: str
+
+
+class TopExpenseItem(BaseModel):
+    account: str
+    amount: float
+
+
+class RegionalDistributionItem(BaseModel):
+    region: str
+    value: float
+    percentage: int
+
+
+class ProfitLossItem(BaseModel):
+    month: str
+    revenue: float
+    expenses: float
+    net: float
+
+
+class YoYGrowthItem(BaseModel):
+    year: int
+    revenue: float
+    prevRevenue: Optional[float] = None
+    growthRate: Optional[float] = None
+
+
+# Chart response models
+class RevenueByCountryResponse(BaseModel):
+    data: List[RevenueByCountryItem]
+
+
+class RevenueTrendResponse(BaseModel):
+    data: List[RevenueTrendItem]
+
+
+class QuarterlyRevenueResponse(BaseModel):
+    data: List[Dict[str, Any]]
+
+
+class TopExpensesResponse(BaseModel):
+    data: List[TopExpenseItem]
+
+
+class RegionalDistributionResponse(BaseModel):
+    data: List[RegionalDistributionItem]
+
+
+class ProfitLossResponse(BaseModel):
+    data: List[ProfitLossItem]
+
+
+class YoYGrowthResponse(BaseModel):
+    data: List[YoYGrowthItem]
+
+
+class ExpenseBreakdownResponse(BaseModel):
+    data: List[Dict[str, Any]]
+
+
+class AllChartsResponse(BaseModel):
+    revenueByCountry: List[RevenueByCountryItem]
+    revenueTrend: List[RevenueTrendItem]
+    quarterlyRevenue: List[Dict[str, Any]]
+    topExpenses: List[TopExpenseItem]
+    regionalDistribution: List[RegionalDistributionItem]
+    profitLoss: List[ProfitLossItem]
+    yoyGrowth: List[YoYGrowthItem]
+    expenseBreakdown: List[Dict[str, Any]]

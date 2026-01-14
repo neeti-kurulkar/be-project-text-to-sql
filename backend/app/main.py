@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 from app.config import settings
 from app.database import init_db_pool, close_db_pool
-from app.api.routes import query, tables, stats
+from app.api.routes import query, tables, stats, charts
 from app.routes import auth
 
 
@@ -47,6 +47,7 @@ app.include_router(auth.router)  # Authentication routes (public)
 app.include_router(query.router)
 app.include_router(tables.router)
 app.include_router(stats.router)
+app.include_router(charts.router)
 
 
 @app.get("/")

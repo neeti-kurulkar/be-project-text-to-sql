@@ -1,8 +1,12 @@
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { TOP_EXPENSES_DATA } from '../../utils/mockData';
 import { ChartContainer } from './ChartContainer';
+import type { TopExpenseData } from '../../types/charts';
 
-export function TopExpenses() {
+interface TopExpensesProps {
+  data: TopExpenseData[];
+}
+
+export function TopExpenses({ data }: TopExpensesProps) {
   return (
     <ChartContainer
       title="Top 5 Expense Accounts"
@@ -10,7 +14,7 @@ export function TopExpenses() {
     >
       <ResponsiveContainer width="100%" height="100%">
         <BarChart
-          data={TOP_EXPENSES_DATA}
+          data={data}
           layout="vertical"
           margin={{ top: 10, right: 10, left: 100, bottom: 0 }}
         >
@@ -23,7 +27,7 @@ export function TopExpenses() {
           <YAxis
             type="category"
             dataKey="account"
-            tick={{ fontSize: 12 }}
+            tick={{ fontSize: 11 }}
             className="fill-ocean-600 dark:fill-slate-400"
             width={90}
           />

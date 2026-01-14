@@ -66,4 +66,60 @@ export const getQuickStats = async () => {
   return response.data;
 };
 
+// Charts API
+export const getAllCharts = async (year?: number) => {
+  const response = await apiClient.get('/api/charts/all', {
+    params: year ? { year } : undefined,
+  });
+  return response.data;
+};
+
+export const getRevenueByCountry = async (year?: number) => {
+  const response = await apiClient.get('/api/charts/revenue-by-country', {
+    params: year ? { year } : undefined,
+  });
+  return response.data;
+};
+
+export const getRevenueTrend = async () => {
+  const response = await apiClient.get('/api/charts/revenue-trend');
+  return response.data;
+};
+
+export const getQuarterlyRevenue = async () => {
+  const response = await apiClient.get('/api/charts/quarterly-revenue');
+  return response.data;
+};
+
+export const getTopExpenses = async (limit: number = 5, year?: number) => {
+  const response = await apiClient.get('/api/charts/top-expenses', {
+    params: { limit, ...(year ? { year } : {}) },
+  });
+  return response.data;
+};
+
+export const getRegionalDistribution = async (year?: number) => {
+  const response = await apiClient.get('/api/charts/regional-distribution', {
+    params: year ? { year } : undefined,
+  });
+  return response.data;
+};
+
+export const getProfitLoss = async () => {
+  const response = await apiClient.get('/api/charts/profit-loss');
+  return response.data;
+};
+
+export const getYoYGrowth = async () => {
+  const response = await apiClient.get('/api/charts/yoy-growth');
+  return response.data;
+};
+
+export const getExpenseBreakdown = async (year?: number) => {
+  const response = await apiClient.get('/api/charts/expense-breakdown', {
+    params: year ? { year } : undefined,
+  });
+  return response.data;
+};
+
 export default apiClient;

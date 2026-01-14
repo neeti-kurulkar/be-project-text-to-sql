@@ -1,10 +1,14 @@
 import { PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer } from 'recharts';
-import { REGIONAL_DISTRIBUTION_DATA } from '../../utils/mockData';
 import { ChartContainer } from './ChartContainer';
+import type { RegionalDistributionData } from '../../types/charts';
 
-const COLORS = ['#3B82F6', '#10B981', '#F59E0B'];
+interface RegionalDistributionProps {
+  data: RegionalDistributionData[];
+}
 
-export function RegionalDistribution() {
+const COLORS = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6'];
+
+export function RegionalDistribution({ data }: RegionalDistributionProps) {
   return (
     <ChartContainer
       title="Regional Distribution"
@@ -13,12 +17,12 @@ export function RegionalDistribution() {
       <ResponsiveContainer width="100%" height="100%">
         <PieChart>
           <Pie
-            data={REGIONAL_DISTRIBUTION_DATA}
+            data={data}
             cx="50%"
             cy="50%"
             labelLine={false}
             label={(props) => {
-              const entry = REGIONAL_DISTRIBUTION_DATA[props.index];
+              const entry = data[props.index];
               return `${entry.region} ${entry.percentage}%`;
             }}
             outerRadius={100}
@@ -26,7 +30,7 @@ export function RegionalDistribution() {
             fill="#8884d8"
             dataKey="value"
           >
-            {REGIONAL_DISTRIBUTION_DATA.map((_entry, index) => (
+            {data.map((_entry, index) => (
               <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
             ))}
           </Pie>
