@@ -79,3 +79,7 @@ backend/.env
 *.temp
 *.swp
 *~
+
+# --- ChromaDB ---
+chroma_db/
+backend/chroma_db/

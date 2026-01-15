@@ -1,0 +1,668 @@
+[
+  {
+    "id": "base_001",
+    "category": "revenue_analysis",
+    "difficulty": "easy",
+    "question": "How has our revenue performed across different regions?",
+    "intent": {
+      "intent_type": "aggregate_by_dimension",
+      "metric": "revenue",
+      "aggregation": "sum",
+      "group_by": ["region"],
+      "filters": {},
+      "visualization_suitable": true
+    },
+    "schema": {
+      "tables": ["general_ledger", "chart_of_accounts", "territory"],
+      "joins": [
+        {"table": "chart_of_accounts", "on": "account_key", "type": "inner"},
+        {"table": "territory", "on": "territory_key", "type": "inner"}
+      ]
+    },
+    "sql": "SELECT t.region, t.country, SUM(gl.amount) as revenue, COUNT(*) as transaction_count FROM general_ledger gl JOIN chart_of_accounts coa ON gl.organization_id = coa.organization_id AND gl.account_key = coa.account_key JOIN territory t ON gl.organization_id = t.organization_id AND gl.territory_key = t.territory_key WHERE coa.class = 'Revenue' AND gl.organization_id = {org_id} GROUP BY t.region, t.country ORDER BY revenue DESC",
+    "explanation": "Shows revenue by region with country breakdown and transaction counts for context",
+    "notes": "Context-rich: includes both region grouping and transaction count for deeper analysis"
+  },
+  
+  {
+    "id": "base_002",
+    "category": "time_series",
+    "difficulty": "easy",
+    "question": "What's our quarterly revenue trend over the past year?",
+    "intent": {
+      "intent_type": "time_series",
+      "metric": "revenue",
+      "aggregation": "sum",
+      "group_by": ["year", "quarter"],
+      "filters": {},
+      "visualization_suitable": true
+    },
+    "schema": {
+      "tables": ["general_ledger", "chart_of_accounts", "calendar"],
+      "joins": [
+        {"table": "chart_of_accounts", "on": "account_key"},
+        {"table": "calendar", "on": "date"}
+      ]
+    },
+    "sql": "SELECT c.year, c.quarter, SUM(gl.amount) as quarterly_revenue, COUNT(DISTINCT gl.date) as days_with_transactions, COUNT(*) as transaction_count FROM general_ledger gl JOIN chart_of_accounts coa ON gl.organization_id = coa.organization_id AND gl.account_key = coa.account_key JOIN calendar c ON gl.date = c.date WHERE coa.class = 'Revenue' AND gl.organization_id = {org_id} GROUP BY c.year, c.quarter ORDER BY c.year, c.quarter",
+    "explanation": "Quarterly revenue with transaction context for identifying seasonal patterns",
+    "notes": "Includes transaction count and active days for richer insights"
+  },
+  
+  {
+    "id": "base_003",
+    "category": "expense_analysis",
+    "difficulty": "easy",
+    "question": "Which expense categories are consuming most of our budget?",
+    "intent": {
+      "intent_type": "ranking_query",
+      "metric": "expenses",
+      "aggregation": "sum",
+      "group_by": ["account"],
+      "order": "desc",
+      "limit": 10,
+      "visualization_suitable": true
+    },
+    "schema": {
+      "tables": ["general_ledger", "chart_of_accounts"],
+      "joins": [
+        {"table": "chart_of_accounts", "on": "account_key"}
+      ]
+    },
+    "sql": "SELECT coa.account, coa.subclass, ABS(SUM(gl.amount)) as total_expense, COUNT(*) as transaction_count, ABS(AVG(gl.amount)) as avg_transaction_size FROM general_ledger gl JOIN chart_of_accounts coa ON gl.organization_id = coa.organization_id AND gl.account_key = coa.account_key WHERE coa.class IN ('Expense', 'Operating Expense', 'Cost of Sales') AND gl.organization_id = {org_id} GROUP BY coa.account, coa.subclass ORDER BY total_expense DESC LIMIT 10",
+    "explanation": "Top expense accounts with transaction patterns and average sizes",
+    "notes": "ABS() for expenses (usually negative), includes count and average for context"
+  },
+  
+  {
+    "id": "base_004",
+    "category": "comparison",
+    "difficulty": "medium",
+    "question": "How does this year's revenue compare to last year by country?",
+    "intent": {
+      "intent_type": "year_over_year_comparison",
+      "metric": "revenue",
+      "aggregation": "sum",
+      "group_by": ["country"],
+      "comparison": "yoy",
+      "visualization_suitable": true
+    },
+    "schema": {
+      "tables": ["general_ledger", "chart_of_accounts", "territory", "calendar"],
+      "joins": [
+        {"table": "chart_of_accounts", "on": "account_key"},
+        {"table": "territory", "on": "territory_key"},
+        {"table": "calendar", "on": "date"}
+      ]
+    },
+    "sql": "WITH yearly_revenue AS (SELECT t.country, c.year, SUM(gl.amount) as revenue FROM general_ledger gl JOIN chart_of_accounts coa ON gl.organization_id = coa.organization_id AND gl.account_key = coa.account_key JOIN territory t ON gl.organization_id = t.organization_id AND gl.territory_key = t.territory_key JOIN calendar c ON gl.date = c.date WHERE coa.class = 'Revenue' AND gl.organization_id = {org_id} GROUP BY t.country, c.year) SELECT country, MAX(CASE WHEN year = 2019 THEN revenue END) as revenue_2019, MAX(CASE WHEN year = 2020 THEN revenue END) as revenue_2020, (MAX(CASE WHEN year = 2020 THEN revenue END) - MAX(CASE WHEN year = 2019 THEN revenue END)) as absolute_change, ROUND(((MAX(CASE WHEN year = 2020 THEN revenue END) - MAX(CASE WHEN year = 2019 THEN revenue END)) * 100.0 / NULLIF(MAX(CASE WHEN year = 2019 THEN revenue END), 0)), 2) as percent_change FROM yearly_revenue GROUP BY country ORDER BY revenue_2020 DESC",
+    "explanation": "Year-over-year comparison showing both years, absolute change, and percentage change",
+    "notes": "CRITICAL: Returns actual values for both years plus calculations - essential for insights"
+  },
+  
+  {
+    "id": "base_005",
+    "category": "profitability",
+    "difficulty": "medium",
+    "question": "What's our profit margin by quarter for the current year?",
+    "intent": {
+      "intent_type": "calculated_metric",
+      "metric": "profit_margin",
+      "aggregation": "calculated",
+      "group_by": ["quarter"],
+      "filters": {"year": 2020},
+      "visualization_suitable": true
+    },
+    "schema": {
+      "tables": ["general_ledger", "chart_of_accounts", "calendar"],
+      "joins": [
+        {"table": "chart_of_accounts", "on": "account_key"},
+        {"table": "calendar", "on": "date"}
+      ]
+    },
+    "sql": "SELECT c.quarter, SUM(CASE WHEN coa.class = 'Revenue' THEN gl.amount ELSE 0 END) as total_revenue, ABS(SUM(CASE WHEN coa.class IN ('Expense', 'Cost of Sales') THEN gl.amount ELSE 0 END)) as total_expenses, (SUM(CASE WHEN coa.class = 'Revenue' THEN gl.amount ELSE 0 END) - ABS(SUM(CASE WHEN coa.class IN ('Expense', 'Cost of Sales') THEN gl.amount ELSE 0 END))) as net_profit, ROUND(((SUM(CASE WHEN coa.class = 'Revenue' THEN gl.amount ELSE 0 END) - ABS(SUM(CASE WHEN coa.class IN ('Expense', 'Cost of Sales') THEN gl.amount ELSE 0 END))) * 100.0 / NULLIF(SUM(CASE WHEN coa.class = 'Revenue' THEN gl.amount ELSE 0 END), 0)), 2) as profit_margin_percent FROM general_ledger gl JOIN chart_of_accounts coa ON gl.organization_id = coa.organization_id AND gl.account_key = coa.account_key JOIN calendar c ON gl.date = c.date WHERE c.year = 2020 AND gl.organization_id = {org_id} GROUP BY c.quarter ORDER BY c.quarter",
+    "explanation": "Profit margin calculation showing revenue, expenses, profit, and margin percentage",
+    "notes": "Returns ALL components for full context: revenue, expenses, profit, AND margin"
+  },
+  
+  {
+    "id": "base_006",
+    "category": "territory_performance",
+    "difficulty": "medium",
+    "question": "Which territories are underperforming compared to the regional average?",
+    "intent": {
+      "intent_type": "analytical_comparison",
+      "metric": "revenue",
+      "aggregation": "sum",
+      "group_by": ["country", "region"],
+      "comparison": "vs_average",
+      "visualization_suitable": true
+    },
+    "schema": {
+      "tables": ["general_ledger", "chart_of_accounts", "territory"],
+      "joins": [
+        {"table": "chart_of_accounts", "on": "account_key"},
+        {"table": "territory", "on": "territory_key"}
+      ]
+    },
+    "sql": "WITH territory_revenue AS (SELECT t.region, t.country, SUM(gl.amount) as revenue FROM general_ledger gl JOIN chart_of_accounts coa ON gl.organization_id = coa.organization_id AND gl.account_key = coa.account_key JOIN territory t ON gl.organization_id = t.organization_id AND gl.territory_key = t.territory_key WHERE coa.class = 'Revenue' AND gl.organization_id = {org_id} GROUP BY t.region, t.country), regional_avg AS (SELECT region, AVG(revenue) as avg_revenue FROM territory_revenue GROUP BY region) SELECT tr.region, tr.country, tr.revenue as country_revenue, ra.avg_revenue as regional_average, (tr.revenue - ra.avg_revenue) as difference_from_avg, ROUND(((tr.revenue - ra.avg_revenue) * 100.0 / NULLIF(ra.avg_revenue, 0)), 2) as percent_vs_average FROM territory_revenue tr JOIN regional_avg ra ON tr.region = ra.region ORDER BY percent_vs_average ASC",
+    "explanation": "Country performance vs regional average with both absolute and percentage differences",
+    "notes": "Shows actual values, average, and variance - full picture for insights"
+  },
+  
+  {
+    "id": "base_007",
+    "category": "trend_analysis",
+    "difficulty": "medium",
+    "question": "Is our monthly revenue growing or declining over time?",
+    "intent": {
+      "intent_type": "trend_analysis",
+      "metric": "revenue",
+      "aggregation": "sum",
+      "group_by": ["year", "month"],
+      "trend": "month_over_month",
+      "visualization_suitable": true
+    },
+    "schema": {
+      "tables": ["general_ledger", "chart_of_accounts", "calendar"],
+      "joins": [
+        {"table": "chart_of_accounts", "on": "account_key"},
+        {"table": "calendar", "on": "date"}
+      ]
+    },
+    "sql": "WITH monthly_revenue AS (SELECT c.year, c.month, SUM(gl.amount) as revenue, ROW_NUMBER() OVER (ORDER BY c.year, c.month) as month_seq FROM general_ledger gl JOIN chart_of_accounts coa ON gl.organization_id = coa.organization_id AND gl.account_key = coa.account_key JOIN calendar c ON gl.date = c.date WHERE coa.class = 'Revenue' AND gl.organization_id = {org_id} GROUP BY c.year, c.month) SELECT year, month, revenue as current_month_revenue, LAG(revenue) OVER (ORDER BY month_seq) as previous_month_revenue, (revenue - LAG(revenue) OVER (ORDER BY month_seq)) as month_over_month_change, ROUND(((revenue - LAG(revenue) OVER (ORDER BY month_seq)) * 100.0 / NULLIF(LAG(revenue) OVER (ORDER BY month_seq), 0)), 2) as mom_growth_percent FROM monthly_revenue ORDER BY year, month",
+    "explanation": "Month-over-month trend with current, previous, change, and growth percentage",
+    "notes": "Uses LAG() for previous month comparison - shows progression clearly"
+  },
+  
+  {
+    "id": "base_008",
+    "category": "account_detail",
+    "difficulty": "easy",
+    "question": "Show me all transactions for a specific account this quarter",
+    "intent": {
+      "intent_type": "detail_query",
+      "metric": "transactions",
+      "aggregation": null,
+      "filters": {"quarter": "current", "account": "specified"},
+      "visualization_suitable": false
+    },
+    "schema": {
+      "tables": ["general_ledger", "chart_of_accounts", "territory", "calendar"],
+      "joins": [
+        {"table": "chart_of_accounts", "on": "account_key"},
+        {"table": "territory", "on": "territory_key"},
+        {"table": "calendar", "on": "date"}
+      ]
+    },
+    "sql": "SELECT gl.date, c.quarter, t.country, coa.account, coa.subaccount, gl.details, gl.amount, SUM(gl.amount) OVER (PARTITION BY coa.account ORDER BY gl.date) as running_balance FROM general_ledger gl JOIN chart_of_accounts coa ON gl.organization_id = coa.organization_id AND gl.account_key = coa.account_key JOIN territory t ON gl.organization_id = t.organization_id AND gl.territory_key = t.territory_key JOIN calendar c ON gl.date = c.date WHERE coa.account = 'Sales' AND c.year = 2020 AND c.quarter = 'Qtr 1' AND gl.organization_id = {org_id} ORDER BY gl.date",
+    "explanation": "Detailed transaction list with running balance for account tracking",
+    "notes": "Includes running balance using window function for context"
+  },
+  
+  {
+    "id": "base_009",
+    "category": "top_n",
+    "difficulty": "medium",
+    "question": "What are our top 5 revenue-generating countries and how much do they contribute?",
+    "intent": {
+      "intent_type": "ranking_with_contribution",
+      "metric": "revenue",
+      "aggregation": "sum",
+      "group_by": ["country"],
+      "order": "desc",
+      "limit": 5,
+      "visualization_suitable": true
+    },
+    "schema": {
+      "tables": ["general_ledger", "chart_of_accounts", "territory"],
+      "joins": [
+        {"table": "chart_of_accounts", "on": "account_key"},
+        {"table": "territory", "on": "territory_key"}
+      ]
+    },
+    "sql": "WITH country_revenue AS (SELECT t.country, t.region, SUM(gl.amount) as revenue FROM general_ledger gl JOIN chart_of_accounts coa ON gl.organization_id = coa.organization_id AND gl.account_key = coa.account_key JOIN territory t ON gl.organization_id = t.organization_id AND gl.territory_key = t.territory_key WHERE coa.class = 'Revenue' AND gl.organization_id = {org_id} GROUP BY t.country, t.region), total_revenue AS (SELECT SUM(revenue) as total FROM country_revenue) SELECT cr.country, cr.region, cr.revenue, tr.total as total_revenue, ROUND((cr.revenue * 100.0 / tr.total), 2) as percent_of_total, SUM(cr.revenue) OVER (ORDER BY cr.revenue DESC) as cumulative_revenue, ROUND((SUM(cr.revenue) OVER (ORDER BY cr.revenue DESC) * 100.0 / tr.total), 2) as cumulative_percent FROM country_revenue cr CROSS JOIN total_revenue tr ORDER BY cr.revenue DESC LIMIT 5",
+    "explanation": "Top 5 countries with revenue, percentage contribution, and cumulative totals",
+    "notes": "Shows individual and cumulative contribution - critical for Pareto analysis"
+  },
+  
+  {
+    "id": "base_010",
+    "category": "expense_growth",
+    "difficulty": "complex",
+    "question": "How have our operating expenses grown year-over-year by category?",
+    "intent": {
+      "intent_type": "multi_year_comparison",
+      "metric": "expenses",
+      "aggregation": "sum",
+      "group_by": ["account", "year"],
+      "comparison": "yoy",
+      "visualization_suitable": true
+    },
+    "schema": {
+      "tables": ["general_ledger", "chart_of_accounts", "calendar"],
+      "joins": [
+        {"table": "chart_of_accounts", "on": "account_key"},
+        {"table": "calendar", "on": "date"}
+      ]
+    },
+    "sql": "WITH yearly_expenses AS (SELECT coa.account, c.year, ABS(SUM(gl.amount)) as expense FROM general_ledger gl JOIN chart_of_accounts coa ON gl.organization_id = coa.organization_id AND gl.account_key = coa.account_key JOIN calendar c ON gl.date = c.date WHERE coa.class IN ('Expense', 'Operating Expense') AND gl.organization_id = {org_id} GROUP BY coa.account, c.year) SELECT account, MAX(CASE WHEN year = 2018 THEN expense END) as expense_2018, MAX(CASE WHEN year = 2019 THEN expense END) as expense_2019, MAX(CASE WHEN year = 2020 THEN expense END) as expense_2020, (MAX(CASE WHEN year = 2019 THEN expense END) - MAX(CASE WHEN year = 2018 THEN expense END)) as growth_2018_to_2019, (MAX(CASE WHEN year = 2020 THEN expense END) - MAX(CASE WHEN year = 2019 THEN expense END)) as growth_2019_to_2020, ROUND(((MAX(CASE WHEN year = 2019 THEN expense END) - MAX(CASE WHEN year = 2018 THEN expense END)) * 100.0 / NULLIF(MAX(CASE WHEN year = 2018 THEN expense END), 0)), 2) as percent_growth_2019, ROUND(((MAX(CASE WHEN year = 2020 THEN expense END) - MAX(CASE WHEN year = 2019 THEN expense END)) * 100.0 / NULLIF(MAX(CASE WHEN year = 2019 THEN expense END), 0)), 2) as percent_growth_2020 FROM yearly_expenses GROUP BY account ORDER BY expense_2020 DESC",
+    "explanation": "Three-year expense comparison with absolute and percentage growth for each transition",
+    "notes": "Shows ALL years + growth calculations - essential for multi-year trend analysis"
+  },
+  
+  {
+    "id": "base_011",
+    "category": "seasonality",
+    "difficulty": "complex",
+    "question": "Do we see any seasonal patterns in our revenue across quarters?",
+    "intent": {
+      "intent_type": "seasonal_analysis",
+      "metric": "revenue",
+      "aggregation": "sum",
+      "group_by": ["quarter"],
+      "analysis": "multi_year_quarterly",
+      "visualization_suitable": true
+    },
+    "schema": {
+      "tables": ["general_ledger", "chart_of_accounts", "calendar"],
+      "joins": [
+        {"table": "chart_of_accounts", "on": "account_key"},
+        {"table": "calendar", "on": "date"}
+      ]
+    },
+    "sql": "WITH quarterly_revenue AS (SELECT c.year, c.quarter, SUM(gl.amount) as revenue FROM general_ledger gl JOIN chart_of_accounts coa ON gl.organization_id = coa.organization_id AND gl.account_key = coa.account_key JOIN calendar c ON gl.date = c.date WHERE coa.class = 'Revenue' AND gl.organization_id = {org_id} GROUP BY c.year, c.quarter) SELECT quarter, AVG(revenue) as avg_quarterly_revenue, MIN(revenue) as min_revenue, MAX(revenue) as max_revenue, MAX(revenue) - MIN(revenue) as revenue_variance, COUNT(*) as years_of_data, STRING_AGG(year::TEXT || ': $' || ROUND(revenue::NUMERIC, 2)::TEXT, ', ' ORDER BY year) as yearly_breakdown FROM quarterly_revenue GROUP BY quarter ORDER BY quarter",
+    "explanation": "Seasonal analysis showing average, min, max, variance, and year-by-year breakdown per quarter",
+    "notes": "Aggregates across years to identify seasonal patterns - includes variance for context"
+  },
+  
+  {
+    "id": "base_012",
+    "category": "concentration_risk",
+    "difficulty": "complex",
+    "question": "How concentrated is our revenue? Are we too dependent on a few countries?",
+    "intent": {
+      "intent_type": "concentration_analysis",
+      "metric": "revenue",
+      "aggregation": "sum",
+      "group_by": ["country"],
+      "analysis": "distribution",
+      "visualization_suitable": true
+    },
+    "schema": {
+      "tables": ["general_ledger", "chart_of_accounts", "territory"],
+      "joins": [
+        {"table": "chart_of_accounts", "on": "account_key"},
+        {"table": "territory", "on": "territory_key"}
+      ]
+    },
+    "sql": "WITH country_revenue AS (SELECT t.country, SUM(gl.amount) as revenue FROM general_ledger gl JOIN chart_of_accounts coa ON gl.organization_id = coa.organization_id AND gl.account_key = coa.account_key JOIN territory t ON gl.organization_id = t.organization_id AND gl.territory_key = t.territory_key WHERE coa.class = 'Revenue' AND gl.organization_id = {org_id} GROUP BY t.country), total_revenue AS (SELECT SUM(revenue) as total, COUNT(*) as country_count FROM country_revenue), ranked_countries AS (SELECT cr.country, cr.revenue, ROUND((cr.revenue * 100.0 / tr.total), 2) as percent_of_total, RANK() OVER (ORDER BY cr.revenue DESC) as revenue_rank, SUM(cr.revenue) OVER (ORDER BY cr.revenue DESC) as cumulative_revenue, ROUND((SUM(cr.revenue) OVER (ORDER BY cr.revenue DESC) * 100.0 / tr.total), 2) as cumulative_percent FROM country_revenue cr CROSS JOIN total_revenue tr) SELECT country, revenue, percent_of_total, revenue_rank, cumulative_revenue, cumulative_percent, CASE WHEN revenue_rank <= 3 THEN 'Top 3' WHEN cumulative_percent <= 80 THEN 'Next Tier' ELSE 'Long Tail' END as concentration_category FROM ranked_countries ORDER BY revenue DESC",
+    "explanation": "Revenue concentration showing individual contribution, cumulative totals, and categorization",
+    "notes": "Identifies concentration risk with cumulative analysis - critical for diversification insights"
+  },
+  
+  {
+    "id": "base_013",
+    "category": "efficiency_metric",
+    "difficulty": "complex",
+    "question": "What's our revenue per transaction and how does it vary by region?",
+    "intent": {
+      "intent_type": "efficiency_analysis",
+      "metric": "revenue_per_transaction",
+      "aggregation": "calculated",
+      "group_by": ["region"],
+      "visualization_suitable": true
+    },
+    "schema": {
+      "tables": ["general_ledger", "chart_of_accounts", "territory"],
+      "joins": [
+        {"table": "chart_of_accounts", "on": "account_key"},
+        {"table": "territory", "on": "territory_key"}
+      ]
+    },
+    "sql": "SELECT t.region, COUNT(*) as total_transactions, SUM(gl.amount) as total_revenue, ROUND(AVG(gl.amount), 2) as avg_revenue_per_transaction, ROUND(STDDEV(gl.amount), 2) as revenue_std_dev, MIN(gl.amount) as min_transaction, MAX(gl.amount) as max_transaction, PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY gl.amount) as median_transaction FROM general_ledger gl JOIN chart_of_accounts coa ON gl.organization_id = coa.organization_id AND gl.account_key = coa.account_key JOIN territory t ON gl.organization_id = t.organization_id AND gl.territory_key = t.territory_key WHERE coa.class = 'Revenue' AND gl.organization_id = {org_id} GROUP BY t.region ORDER BY total_revenue DESC",
+    "explanation": "Transaction efficiency metrics including count, totals, averages, and distribution statistics",
+    "notes": "Full statistical context: count, sum, avg, stddev, min, max, median - comprehensive view"
+  },
+  
+  {
+    "id": "base_014",
+    "category": "balance_sheet",
+    "difficulty": "medium",
+    "question": "What's our current asset composition and how has it changed?",
+    "intent": {
+      "intent_type": "composition_analysis",
+      "metric": "assets",
+      "aggregation": "sum",
+      "group_by": ["account"],
+      "filters": {"class": "Asset"},
+      "visualization_suitable": true
+    },
+    "schema": {
+      "tables": ["general_ledger", "chart_of_accounts", "calendar"],
+      "joins": [
+        {"table": "chart_of_accounts", "on": "account_key"},
+        {"table": "calendar", "on": "date"}
+      ]
+    },
+    "sql": "WITH asset_totals AS (SELECT coa.account, coa.subclass, SUM(gl.amount) as total_amount FROM general_ledger gl JOIN chart_of_accounts coa ON gl.organization_id = coa.organization_id AND gl.account_key = coa.account_key WHERE coa.class = 'Asset' AND gl.organization_id = {org_id} GROUP BY coa.account, coa.subclass), total_assets AS (SELECT SUM(total_amount) as total FROM asset_totals) SELECT at.account, at.subclass, at.total_amount, ta.total as total_assets, ROUND((at.total_amount * 100.0 / ta.total), 2) as percent_of_assets FROM asset_totals at CROSS JOIN total_assets ta ORDER BY at.total_amount DESC",
+    "explanation": "Asset breakdown showing individual values, totals, and percentage composition",
+    "notes": "Shows both absolute and relative values for composition analysis"
+  },
+  
+  {
+    "id": "base_015",
+    "category": "custom_period",
+    "difficulty": "medium",
+    "question": "Compare our performance between Q1 and Q3 of this year",
+    "intent": {
+      "intent_type": "custom_period_comparison",
+      "metric": "revenue",
+      "aggregation": "sum",
+      "group_by": ["quarter"],
+      "filters": {"quarters": ["Qtr 1", "Qtr 3"], "year": 2020},
+      "visualization_suitable": true
+    },
+    "schema": {
+      "tables": ["general_ledger", "chart_of_accounts", "calendar"],
+      "joins": [
+        {"table": "chart_of_accounts", "on": "account_key"},
+        {"table": "calendar", "on": "date"}
+      ]
+    },
+    "sql": "WITH quarterly_metrics AS (SELECT c.quarter, SUM(CASE WHEN coa.class = 'Revenue' THEN gl.amount ELSE 0 END) as revenue, ABS(SUM(CASE WHEN coa.class IN ('Expense', 'Cost of Sales') THEN gl.amount ELSE 0 END)) as expenses, COUNT(DISTINCT t.country) as active_countries, COUNT(*) as transaction_count FROM general_ledger gl JOIN chart_of_accounts coa ON gl.organization_id = coa.organization_id AND gl.account_key = coa.account_key JOIN calendar c ON gl.date = c.date JOIN territory t ON gl.organization_id = t.organization_id AND gl.territory_key = t.territory_key WHERE c.year = 2020 AND c.quarter IN ('Qtr 1', 'Qtr 3') AND gl.organization_id = {org_id} GROUP BY c.quarter) SELECT quarter, revenue, expenses, (revenue - expenses) as net_profit, active_countries, transaction_count, ROUND((revenue * 100.0 / NULLIF((revenue + expenses), 0)), 2) as revenue_ratio FROM quarterly_metrics ORDER BY quarter",
+    "explanation": "Quarter comparison with revenue, expenses, profit, and activity metrics",
+    "notes": "Multiple dimensions of comparison - not just revenue, full business view"
+  },
+
+  {
+    "id": "base_016",
+    "category": "growth_comparison",
+    "difficulty": "complex",
+    "question": "Which expense categories are growing faster than revenue?",
+    "intent": {
+      "intent_type": "growth_rate_comparison",
+      "metric": "expense_growth_vs_revenue_growth",
+      "aggregation": "calculated",
+      "group_by": ["account"],
+      "comparison": "growth_rate",
+      "visualization_suitable": true
+    },
+    "schema": {
+      "tables": ["general_ledger", "chart_of_accounts", "calendar"],
+      "joins": [
+        {"table": "chart_of_accounts", "on": "account_key"},
+        {"table": "calendar", "on": "date"}
+      ]
+    },
+    "sql": "WITH yearly_revenue AS (SELECT c.year, SUM(gl.amount) as revenue FROM general_ledger gl JOIN chart_of_accounts coa ON gl.organization_id = coa.organization_id AND gl.account_key = coa.account_key JOIN calendar c ON gl.date = c.date WHERE coa.class = 'Revenue' AND gl.organization_id = {org_id} GROUP BY c.year), revenue_growth AS (SELECT year, revenue, LAG(revenue) OVER (ORDER BY year) as prev_revenue, ROUND(((revenue - LAG(revenue) OVER (ORDER BY year)) * 100.0 / NULLIF(LAG(revenue) OVER (ORDER BY year), 0)), 2) as revenue_growth_rate FROM yearly_revenue), yearly_expenses AS (SELECT coa.account, c.year, ABS(SUM(gl.amount)) as expense FROM general_ledger gl JOIN chart_of_accounts coa ON gl.organization_id = coa.organization_id AND gl.account_key = coa.account_key JOIN calendar c ON gl.date = c.date WHERE coa.class IN ('Expense', 'Operating account', 'Operating Expense') AND gl.organization_id = {org_id} GROUP BY coa.account, c.year), expense_growth AS (SELECT account, year, expense, LAG(expense) OVER (PARTITION BY account ORDER BY year) as prev_expense, ROUND(((expense - LAG(expense) OVER (PARTITION BY account ORDER BY year)) * 100.0 / NULLIF(LAG(expense) OVER (PARTITION BY account ORDER BY year), 0)), 2) as expense_growth_rate FROM yearly_expenses) SELECT eg.account, eg.year, eg.prev_expense as expense_prior_year, eg.expense as expense_current_year, eg.expense_growth_rate, rg.revenue_growth_rate, (eg.expense_growth_rate - rg.revenue_growth_rate) as growth_rate_gap, CASE WHEN eg.expense_growth_rate > rg.revenue_growth_rate THEN 'Growing Faster Than Revenue' ELSE 'Growing Slower Than Revenue' END as assessment FROM expense_growth eg JOIN revenue_growth rg ON eg.year = rg.year WHERE eg.prev_expense IS NOT NULL AND eg.expense_growth_rate > rg.revenue_growth_rate ORDER BY growth_rate_gap DESC",
+    "explanation": "Compares YoY growth rate of each expense category against revenue growth rate, showing which expenses are outpacing revenue",
+    "notes": "CRITICAL: For growth comparison questions, must calculate YoY growth RATES (not totals) and compare them. Shows both years' values, both growth rates, and the gap."
+  },
+
+  {
+    "id": "base_017",
+    "category": "growth_comparison",
+    "difficulty": "complex",
+    "question": "Are any of our costs increasing disproportionately compared to sales growth?",
+    "intent": {
+      "intent_type": "disproportionate_growth_analysis",
+      "metric": "cost_growth_vs_sales_growth",
+      "aggregation": "calculated",
+      "group_by": ["account"],
+      "comparison": "growth_rate",
+      "visualization_suitable": true
+    },
+    "schema": {
+      "tables": ["general_ledger", "chart_of_accounts", "calendar"],
+      "joins": [
+        {"table": "chart_of_accounts", "on": "account_key"},
+        {"table": "calendar", "on": "date"}
+      ]
+    },
+    "sql": "WITH sales_by_year AS (SELECT c.year, SUM(gl.amount) as total_sales FROM general_ledger gl JOIN chart_of_accounts coa ON gl.organization_id = coa.organization_id AND gl.account_key = coa.account_key JOIN calendar c ON gl.date = c.date WHERE coa.account = 'Sales' AND gl.organization_id = {org_id} GROUP BY c.year), sales_growth AS (SELECT year, total_sales, LAG(total_sales) OVER (ORDER BY year) as prev_sales, ROUND(((total_sales - LAG(total_sales) OVER (ORDER BY year)) * 100.0 / NULLIF(LAG(total_sales) OVER (ORDER BY year), 0)), 2) as sales_growth_pct FROM sales_by_year), expense_by_year AS (SELECT coa.account, c.year, ABS(SUM(gl.amount)) as total_expense FROM general_ledger gl JOIN chart_of_accounts coa ON gl.organization_id = coa.organization_id AND gl.account_key = coa.account_key JOIN calendar c ON gl.date = c.date WHERE coa.class IN ('Operating account', 'Trading account') AND coa.account NOT IN ('Sales', 'Sales Return') AND gl.organization_id = {org_id} GROUP BY coa.account, c.year), expense_growth AS (SELECT account, year, total_expense, LAG(total_expense) OVER (PARTITION BY account ORDER BY year) as prev_expense, ROUND(((total_expense - LAG(total_expense) OVER (PARTITION BY account ORDER BY year)) * 100.0 / NULLIF(LAG(total_expense) OVER (PARTITION BY account ORDER BY year), 0)), 2) as expense_growth_pct FROM expense_by_year) SELECT eg.account, eg.year, eg.prev_expense, eg.total_expense, eg.expense_growth_pct, sg.sales_growth_pct, (eg.expense_growth_pct - sg.sales_growth_pct) as disproportionate_growth, ROUND((eg.total_expense * 100.0 / NULLIF(sg.total_sales, 0)), 2) as expense_as_pct_of_sales FROM expense_growth eg JOIN sales_growth sg ON eg.year = sg.year WHERE eg.prev_expense IS NOT NULL ORDER BY disproportionate_growth DESC NULLS LAST",
+    "explanation": "Shows expense categories with their growth rates compared to sales growth, highlighting disproportionate increases",
+    "notes": "Shows prior year vs current year values, both growth percentages, and calculates the gap to identify problem areas"
+  },
+
+  {
+    "id": "base_018",
+    "category": "moving_average",
+    "difficulty": "complex",
+    "question": "Show me the 3-month moving average of revenue to identify trends",
+    "intent": {
+      "intent_type": "trend_smoothing",
+      "metric": "revenue_moving_average",
+      "aggregation": "calculated",
+      "group_by": ["month"],
+      "visualization_suitable": true
+    },
+    "schema": {
+      "tables": ["general_ledger", "chart_of_accounts", "calendar"],
+      "joins": [
+        {"table": "chart_of_accounts", "on": "account_key"},
+        {"table": "calendar", "on": "date"}
+      ]
+    },
+    "sql": "WITH monthly_revenue AS (SELECT c.year, c.month, SUM(gl.amount) as revenue FROM general_ledger gl JOIN chart_of_accounts coa ON gl.organization_id = coa.organization_id AND gl.account_key = coa.account_key JOIN calendar c ON gl.date = c.date WHERE coa.class = 'Revenue' AND gl.organization_id = {org_id} GROUP BY c.year, c.month ORDER BY c.year, c.month) SELECT year, month, revenue as monthly_revenue, AVG(revenue) OVER (ORDER BY year, month ROWS BETWEEN 2 PRECEDING AND CURRENT ROW) as moving_avg_3m, revenue - AVG(revenue) OVER (ORDER BY year, month ROWS BETWEEN 2 PRECEDING AND CURRENT ROW) as variance_from_ma, ROUND(((revenue - AVG(revenue) OVER (ORDER BY year, month ROWS BETWEEN 2 PRECEDING AND CURRENT ROW)) * 100.0 / NULLIF(AVG(revenue) OVER (ORDER BY year, month ROWS BETWEEN 2 PRECEDING AND CURRENT ROW), 0)), 2) as pct_variance FROM monthly_revenue ORDER BY year, month",
+    "explanation": "3-month moving average with variance from trend to smooth out noise and identify true patterns",
+    "notes": "Uses window function for rolling average - helps identify if a month is above or below trend"
+  },
+
+  {
+    "id": "base_019",
+    "category": "pareto_analysis",
+    "difficulty": "complex",
+    "question": "Apply the 80/20 rule - which countries generate 80% of our revenue?",
+    "intent": {
+      "intent_type": "pareto_analysis",
+      "metric": "revenue_concentration",
+      "aggregation": "sum",
+      "group_by": ["country"],
+      "visualization_suitable": true
+    },
+    "schema": {
+      "tables": ["general_ledger", "chart_of_accounts", "territory"],
+      "joins": [
+        {"table": "chart_of_accounts", "on": "account_key"},
+        {"table": "territory", "on": "territory_key"}
+      ]
+    },
+    "sql": "WITH country_revenue AS (SELECT t.country, SUM(gl.amount) as revenue FROM general_ledger gl JOIN chart_of_accounts coa ON gl.organization_id = coa.organization_id AND gl.account_key = coa.account_key JOIN territory t ON gl.organization_id = t.organization_id AND gl.territory_key = t.territory_key WHERE coa.class = 'Revenue' AND gl.organization_id = {org_id} GROUP BY t.country), ranked AS (SELECT country, revenue, SUM(revenue) OVER () as total_revenue, SUM(revenue) OVER (ORDER BY revenue DESC) as cumulative_revenue, ROW_NUMBER() OVER (ORDER BY revenue DESC) as rank FROM country_revenue) SELECT country, revenue, ROUND((revenue * 100.0 / total_revenue), 2) as pct_of_total, cumulative_revenue, ROUND((cumulative_revenue * 100.0 / total_revenue), 2) as cumulative_pct, rank, CASE WHEN (cumulative_revenue * 100.0 / total_revenue) <= 80 THEN 'Top 80%' ELSE 'Long Tail' END as pareto_category FROM ranked ORDER BY revenue DESC",
+    "explanation": "Pareto analysis showing which countries form the vital few (80%) vs trivial many",
+    "notes": "Classic 80/20 analysis - identifies where to focus resources for maximum impact"
+  },
+
+  {
+    "id": "base_020",
+    "category": "cagr",
+    "difficulty": "complex",
+    "question": "What's our compound annual growth rate (CAGR) for revenue?",
+    "intent": {
+      "intent_type": "growth_analysis",
+      "metric": "cagr",
+      "aggregation": "calculated",
+      "visualization_suitable": true
+    },
+    "schema": {
+      "tables": ["general_ledger", "chart_of_accounts", "calendar"],
+      "joins": [
+        {"table": "chart_of_accounts", "on": "account_key"},
+        {"table": "calendar", "on": "date"}
+      ]
+    },
+    "sql": "WITH yearly_revenue AS (SELECT c.year, SUM(gl.amount) as revenue FROM general_ledger gl JOIN chart_of_accounts coa ON gl.organization_id = coa.organization_id AND gl.account_key = coa.account_key JOIN calendar c ON gl.date = c.date WHERE coa.class = 'Revenue' AND gl.organization_id = {org_id} GROUP BY c.year ORDER BY c.year), first_last AS (SELECT MIN(year) as first_year, MAX(year) as last_year, (SELECT revenue FROM yearly_revenue ORDER BY year LIMIT 1) as first_revenue, (SELECT revenue FROM yearly_revenue ORDER BY year DESC LIMIT 1) as last_revenue, COUNT(DISTINCT year) as num_years FROM yearly_revenue) SELECT first_year, last_year, num_years - 1 as periods, first_revenue, last_revenue, ROUND(((POWER(last_revenue / NULLIF(first_revenue, 0), 1.0 / NULLIF(num_years - 1, 0)) - 1) * 100), 2) as cagr_percent, ROUND(((last_revenue - first_revenue) * 100.0 / NULLIF(first_revenue, 0)), 2) as total_growth_percent FROM first_last",
+    "explanation": "Calculates CAGR showing start/end values, number of periods, and annualized growth rate",
+    "notes": "CAGR = (End/Start)^(1/years) - 1; smooths out year-to-year volatility"
+  },
+
+  {
+    "id": "base_021",
+    "category": "same_period_comparison",
+    "difficulty": "medium",
+    "question": "Compare each month to the same month last year",
+    "intent": {
+      "intent_type": "period_comparison",
+      "metric": "revenue",
+      "aggregation": "sum",
+      "group_by": ["month"],
+      "comparison": "same_period_yoy",
+      "visualization_suitable": true
+    },
+    "schema": {
+      "tables": ["general_ledger", "chart_of_accounts", "calendar"],
+      "joins": [
+        {"table": "chart_of_accounts", "on": "account_key"},
+        {"table": "calendar", "on": "date"}
+      ]
+    },
+    "sql": "WITH monthly_revenue AS (SELECT c.year, c.month, SUM(gl.amount) as revenue FROM general_ledger gl JOIN chart_of_accounts coa ON gl.organization_id = coa.organization_id AND gl.account_key = coa.account_key JOIN calendar c ON gl.date = c.date WHERE coa.class = 'Revenue' AND gl.organization_id = {org_id} GROUP BY c.year, c.month) SELECT curr.year, curr.month, curr.revenue as current_revenue, prev.revenue as prior_year_revenue, (curr.revenue - prev.revenue) as yoy_change, ROUND(((curr.revenue - prev.revenue) * 100.0 / NULLIF(prev.revenue, 0)), 2) as yoy_growth_pct FROM monthly_revenue curr LEFT JOIN monthly_revenue prev ON curr.month = prev.month AND curr.year = prev.year + 1 WHERE prev.revenue IS NOT NULL ORDER BY curr.year, curr.month",
+    "explanation": "Month-over-same-month-last-year comparison to account for seasonality",
+    "notes": "Better than sequential month comparison when business has seasonal patterns"
+  },
+
+  {
+    "id": "base_022",
+    "category": "anomaly_detection",
+    "difficulty": "complex",
+    "question": "Find months where revenue was unusually high or low compared to average",
+    "intent": {
+      "intent_type": "outlier_detection",
+      "metric": "revenue",
+      "aggregation": "calculated",
+      "analysis": "statistical",
+      "visualization_suitable": true
+    },
+    "schema": {
+      "tables": ["general_ledger", "chart_of_accounts", "calendar"],
+      "joins": [
+        {"table": "chart_of_accounts", "on": "account_key"},
+        {"table": "calendar", "on": "date"}
+      ]
+    },
+    "sql": "WITH monthly_revenue AS (SELECT c.year, c.month, SUM(gl.amount) as revenue FROM general_ledger gl JOIN chart_of_accounts coa ON gl.organization_id = coa.organization_id AND gl.account_key = coa.account_key JOIN calendar c ON gl.date = c.date WHERE coa.class = 'Revenue' AND gl.organization_id = {org_id} GROUP BY c.year, c.month), stats AS (SELECT AVG(revenue) as avg_revenue, STDDEV(revenue) as stddev_revenue FROM monthly_revenue) SELECT mr.year, mr.month, mr.revenue, ROUND(s.avg_revenue, 2) as average, ROUND(s.stddev_revenue, 2) as std_dev, ROUND((mr.revenue - s.avg_revenue) / NULLIF(s.stddev_revenue, 0), 2) as z_score, CASE WHEN (mr.revenue - s.avg_revenue) / NULLIF(s.stddev_revenue, 0) > 2 THEN 'Unusually High' WHEN (mr.revenue - s.avg_revenue) / NULLIF(s.stddev_revenue, 0) < -2 THEN 'Unusually Low' WHEN (mr.revenue - s.avg_revenue) / NULLIF(s.stddev_revenue, 0) > 1 THEN 'Above Average' WHEN (mr.revenue - s.avg_revenue) / NULLIF(s.stddev_revenue, 0) < -1 THEN 'Below Average' ELSE 'Normal' END as assessment FROM monthly_revenue mr CROSS JOIN stats s ORDER BY ABS((mr.revenue - s.avg_revenue) / NULLIF(s.stddev_revenue, 0)) DESC",
+    "explanation": "Statistical anomaly detection using z-scores to find unusual months",
+    "notes": "Z-score > 2 or < -2 indicates statistically significant anomaly (95% confidence)"
+  },
+
+  {
+    "id": "base_023",
+    "category": "expense_ratio",
+    "difficulty": "medium",
+    "question": "What's our expense ratio and how has it trended over time?",
+    "intent": {
+      "intent_type": "ratio_analysis",
+      "metric": "expense_to_revenue",
+      "aggregation": "calculated",
+      "group_by": ["quarter"],
+      "visualization_suitable": true
+    },
+    "schema": {
+      "tables": ["general_ledger", "chart_of_accounts", "calendar"],
+      "joins": [
+        {"table": "chart_of_accounts", "on": "account_key"},
+        {"table": "calendar", "on": "date"}
+      ]
+    },
+    "sql": "WITH quarterly_metrics AS (SELECT c.year, c.quarter, SUM(CASE WHEN coa.class = 'Revenue' THEN gl.amount ELSE 0 END) as revenue, ABS(SUM(CASE WHEN coa.class IN ('Expense', 'Operating account', 'Operating Expense') THEN gl.amount ELSE 0 END)) as expenses FROM general_ledger gl JOIN chart_of_accounts coa ON gl.organization_id = coa.organization_id AND gl.account_key = coa.account_key JOIN calendar c ON gl.date = c.date WHERE gl.organization_id = {org_id} GROUP BY c.year, c.quarter) SELECT year, quarter, revenue, expenses, ROUND((expenses * 100.0 / NULLIF(revenue, 0)), 2) as expense_ratio_pct, LAG(ROUND((expenses * 100.0 / NULLIF(revenue, 0)), 2)) OVER (ORDER BY year, quarter) as prev_expense_ratio, ROUND((expenses * 100.0 / NULLIF(revenue, 0)), 2) - LAG(ROUND((expenses * 100.0 / NULLIF(revenue, 0)), 2)) OVER (ORDER BY year, quarter) as ratio_change FROM quarterly_metrics ORDER BY year, quarter",
+    "explanation": "Expense ratio trend showing efficiency changes over time",
+    "notes": "Lower expense ratio = better efficiency; tracks if costs are growing faster than revenue"
+  },
+
+  {
+    "id": "base_024",
+    "category": "revenue_per_transaction",
+    "difficulty": "medium",
+    "question": "What's our average revenue per transaction and how does it vary by region?",
+    "intent": {
+      "intent_type": "unit_economics",
+      "metric": "revenue_per_transaction",
+      "aggregation": "calculated",
+      "group_by": ["region"],
+      "visualization_suitable": true
+    },
+    "schema": {
+      "tables": ["general_ledger", "chart_of_accounts", "territory"],
+      "joins": [
+        {"table": "chart_of_accounts", "on": "account_key"},
+        {"table": "territory", "on": "territory_key"}
+      ]
+    },
+    "sql": "WITH regional_metrics AS (SELECT t.region, COUNT(*) as transaction_count, SUM(gl.amount) as total_revenue, AVG(gl.amount) as avg_transaction, MIN(gl.amount) as min_transaction, MAX(gl.amount) as max_transaction FROM general_ledger gl JOIN chart_of_accounts coa ON gl.organization_id = coa.organization_id AND gl.account_key = coa.account_key JOIN territory t ON gl.organization_id = t.organization_id AND gl.territory_key = t.territory_key WHERE coa.class = 'Revenue' AND gl.organization_id = {org_id} GROUP BY t.region), totals AS (SELECT SUM(transaction_count) as total_transactions, SUM(total_revenue) as grand_total FROM regional_metrics) SELECT rm.region, rm.transaction_count, rm.total_revenue, ROUND(rm.avg_transaction, 2) as avg_revenue_per_transaction, ROUND(rm.min_transaction, 2) as min_transaction, ROUND(rm.max_transaction, 2) as max_transaction, ROUND((rm.transaction_count * 100.0 / t.total_transactions), 2) as pct_of_transactions, ROUND((rm.total_revenue * 100.0 / t.grand_total), 2) as pct_of_revenue FROM regional_metrics rm CROSS JOIN totals t ORDER BY rm.avg_transaction DESC",
+    "explanation": "Unit economics by region showing transaction patterns and value distribution",
+    "notes": "High avg transaction + low volume vs low avg + high volume tells different stories"
+  },
+
+  {
+    "id": "base_025",
+    "category": "quarter_over_quarter",
+    "difficulty": "medium",
+    "question": "Show me quarter-over-quarter growth for all key metrics",
+    "intent": {
+      "intent_type": "sequential_comparison",
+      "metric": "multiple",
+      "aggregation": "sum",
+      "group_by": ["quarter"],
+      "visualization_suitable": true
+    },
+    "schema": {
+      "tables": ["general_ledger", "chart_of_accounts", "calendar"],
+      "joins": [
+        {"table": "chart_of_accounts", "on": "account_key"},
+        {"table": "calendar", "on": "date"}
+      ]
+    },
+    "sql": "WITH quarterly_metrics AS (SELECT c.year, c.quarter, SUM(CASE WHEN coa.class = 'Revenue' THEN gl.amount ELSE 0 END) as revenue, ABS(SUM(CASE WHEN coa.class IN ('Expense', 'Operating account') THEN gl.amount ELSE 0 END)) as expenses, COUNT(*) as transactions FROM general_ledger gl JOIN chart_of_accounts coa ON gl.organization_id = coa.organization_id AND gl.account_key = coa.account_key JOIN calendar c ON gl.date = c.date WHERE gl.organization_id = {org_id} GROUP BY c.year, c.quarter) SELECT year, quarter, revenue, LAG(revenue) OVER (ORDER BY year, quarter) as prev_revenue, ROUND(((revenue - LAG(revenue) OVER (ORDER BY year, quarter)) * 100.0 / NULLIF(LAG(revenue) OVER (ORDER BY year, quarter), 0)), 2) as revenue_qoq_pct, expenses, ROUND(((expenses - LAG(expenses) OVER (ORDER BY year, quarter)) * 100.0 / NULLIF(LAG(expenses) OVER (ORDER BY year, quarter), 0)), 2) as expense_qoq_pct, transactions, ROUND(((transactions - LAG(transactions) OVER (ORDER BY year, quarter)) * 100.0 / NULLIF(LAG(transactions) OVER (ORDER BY year, quarter), 0)), 2) as transactions_qoq_pct FROM quarterly_metrics ORDER BY year, quarter",
+    "explanation": "Quarter-over-quarter comparison for revenue, expenses, and transaction volume",
+    "notes": "Shows momentum across multiple dimensions - identifies if growth is slowing or accelerating"
+  },
+
+  {
+    "id": "base_026",
+    "category": "contribution_margin",
+    "difficulty": "complex",
+    "question": "What's the contribution margin by country after direct costs?",
+    "intent": {
+      "intent_type": "profitability_analysis",
+      "metric": "contribution_margin",
+      "aggregation": "calculated",
+      "group_by": ["country"],
+      "visualization_suitable": true
+    },
+    "schema": {
+      "tables": ["general_ledger", "chart_of_accounts", "territory"],
+      "joins": [
+        {"table": "chart_of_accounts", "on": "account_key"},
+        {"table": "territory", "on": "territory_key"}
+      ]
+    },
+    "sql": "WITH country_metrics AS (SELECT t.country, t.region, SUM(CASE WHEN coa.class = 'Revenue' THEN gl.amount ELSE 0 END) as revenue, ABS(SUM(CASE WHEN coa.class IN ('Cost of Sales', 'Trading account') AND coa.account != 'Sales' THEN gl.amount ELSE 0 END)) as direct_costs FROM general_ledger gl JOIN chart_of_accounts coa ON gl.organization_id = coa.organization_id AND gl.account_key = coa.account_key JOIN territory t ON gl.organization_id = t.organization_id AND gl.territory_key = t.territory_key WHERE gl.organization_id = {org_id} GROUP BY t.country, t.region), totals AS (SELECT SUM(revenue) as total_revenue, SUM(revenue - direct_costs) as total_contribution FROM country_metrics) SELECT cm.country, cm.region, cm.revenue, cm.direct_costs, (cm.revenue - cm.direct_costs) as contribution_margin, ROUND(((cm.revenue - cm.direct_costs) * 100.0 / NULLIF(cm.revenue, 0)), 2) as contribution_margin_pct, ROUND(((cm.revenue - cm.direct_costs) * 100.0 / NULLIF(t.total_contribution, 0)), 2) as pct_of_total_contribution FROM country_metrics cm CROSS JOIN totals t ORDER BY contribution_margin DESC",
+    "explanation": "Contribution margin analysis by country showing revenue, direct costs, and profitability",
+    "notes": "Contribution margin = Revenue - Direct Costs; shows which countries are most profitable before overhead"
+  },
+
+  {
+    "id": "base_027",
+    "category": "revenue_mix_shift",
+    "difficulty": "complex",
+    "question": "How has our revenue mix by region shifted over the years?",
+    "intent": {
+      "intent_type": "mix_analysis",
+      "metric": "revenue",
+      "aggregation": "sum",
+      "group_by": ["region", "year"],
+      "visualization_suitable": true
+    },
+    "schema": {
+      "tables": ["general_ledger", "chart_of_accounts", "territory", "calendar"],
+      "joins": [
+        {"table": "chart_of_accounts", "on": "account_key"},
+        {"table": "territory", "on": "territory_key"},
+        {"table": "calendar", "on": "date"}
+      ]
+    },
+    "sql": "WITH yearly_regional AS (SELECT c.year, t.region, SUM(gl.amount) as revenue FROM general_ledger gl JOIN chart_of_accounts coa ON gl.organization_id = coa.organization_id AND gl.account_key = coa.account_key JOIN territory t ON gl.organization_id = t.organization_id AND gl.territory_key = t.territory_key JOIN calendar c ON gl.date = c.date WHERE coa.class = 'Revenue' AND gl.organization_id = {org_id} GROUP BY c.year, t.region), yearly_total AS (SELECT year, SUM(revenue) as total FROM yearly_regional GROUP BY year) SELECT yr.year, yr.region, yr.revenue, yt.total as year_total, ROUND((yr.revenue * 100.0 / yt.total), 2) as pct_of_year, LAG(ROUND((yr.revenue * 100.0 / yt.total), 2)) OVER (PARTITION BY yr.region ORDER BY yr.year) as prev_year_pct, ROUND((yr.revenue * 100.0 / yt.total), 2) - LAG(ROUND((yr.revenue * 100.0 / yt.total), 2)) OVER (PARTITION BY yr.region ORDER BY yr.year) as mix_shift FROM yearly_regional yr JOIN yearly_total yt ON yr.year = yt.year ORDER BY yr.region, yr.year",
+    "explanation": "Revenue mix shift analysis showing how regional contribution has changed over time",
+    "notes": "Identifies if business is becoming more or less dependent on specific regions"
+  }
+]

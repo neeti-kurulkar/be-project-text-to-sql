@@ -1,5 +1,7 @@
 import time
 import psycopg2
+from decimal import Decimal
+from datetime import date, datetime
 from typing import Tuple, List, Dict, Any
 from app.database import get_db_connection
 
@@ -27,10 +29,8 @@ class QueryService:
             try:
                 # Wrap SQL with organization filter if provided
                 if organization_id:
-                    # Create filtered views for each table
-                    wrapped_sql = f"""
-                    WITH
-                    general_ledger AS (
+                    # Base CTEs for org filtering
+                    org_ctes = f"""general_ledger AS (
                         SELECT * FROM general_ledger WHERE organization_id = {organization_id}
                     ),
                     chart_of_accounts AS (
@@ -38,9 +38,18 @@ class QueryService:
                     ),
                     territory AS (
                         SELECT * FROM territory WHERE organization_id = {organization_id}
-                    )
-                    {sql}
-                    """
+                    )"""
+
+                    # Check if SQL starts with WITH (has its own CTEs)
+                    sql_stripped = sql.strip()
+                    if sql_stripped.upper().startswith('WITH '):
+                        # Merge CTEs: remove WITH from user SQL and add comma
+                        user_sql_without_with = sql_stripped[4:].strip()  # Remove "WITH"
+                        wrapped_sql = f"WITH {org_ctes}, {user_sql_without_with}"
+                    else:
+                        # No CTEs in user SQL, just prepend our CTEs
+                        wrapped_sql = f"WITH {org_ctes} {sql}"
+
                     sql = wrapped_sql
 
                 # Execute query
@@ -59,7 +68,14 @@ class QueryService:
                     for i, col in enumerate(columns):
                         value = row[i]
                         # Convert to JSON-serializable types
-                        if isinstance(value, (int, float, str, bool, type(None))):
+                        if value is None:
+                            row_dict[col] = None
+                        elif isinstance(value, Decimal):
+                            # Convert Decimal to float for JSON/charts
+                            row_dict[col] = float(value)
+                        elif isinstance(value, (date, datetime)):
+                            row_dict[col] = value.isoformat()
+                        elif isinstance(value, (int, float, str, bool)):
                             row_dict[col] = value
                         else:
                             row_dict[col] = str(value)

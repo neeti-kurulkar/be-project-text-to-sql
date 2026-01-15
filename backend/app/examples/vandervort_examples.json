@@ -1,0 +1,511 @@
+[
+  {
+    "id": "vandervort_001",
+    "organization": "vandervort",
+    "organization_id": 2,
+    "category": "revenue_mix",
+    "difficulty": "easy",
+    "question": "How much revenue comes from products versus services?",
+    "intent": {
+      "intent_type": "revenue_breakdown",
+      "metric": "revenue_by_type",
+      "aggregation": "sum",
+      "group_by": ["revenue_type"],
+      "visualization_suitable": true
+    },
+    "schema": {
+      "tables": ["general_ledger", "chart_of_accounts"],
+      "joins": [
+        {"table": "chart_of_accounts", "on": "account_key"}
+      ]
+    },
+    "sql": "WITH revenue_breakdown AS (SELECT SUM(CASE WHEN coa.account = 'Product Sales' THEN gl.amount ELSE 0 END) as product_revenue, SUM(CASE WHEN coa.subaccount = 'Domestic Market' THEN gl.amount ELSE 0 END) as domestic_product, SUM(CASE WHEN coa.subaccount = 'Export Sales' THEN gl.amount ELSE 0 END) as export_product, SUM(CASE WHEN coa.account = 'Service Revenue' THEN gl.amount ELSE 0 END) as service_revenue, SUM(CASE WHEN coa.subaccount = 'Consulting Services' THEN gl.amount ELSE 0 END) as consulting, SUM(CASE WHEN coa.subaccount = 'Support Contracts' THEN gl.amount ELSE 0 END) as support_contracts FROM general_ledger gl JOIN chart_of_accounts coa ON gl.organization_id = coa.organization_id AND gl.account_key = coa.account_key WHERE coa.class = 'Revenue' AND coa.account IN ('Product Sales', 'Service Revenue') AND gl.organization_id = 2) SELECT product_revenue, domestic_product, export_product, service_revenue, consulting, support_contracts, (product_revenue + service_revenue) as total_revenue, ROUND((product_revenue * 100.0 / NULLIF(product_revenue + service_revenue, 0)), 2) as product_percent, ROUND((service_revenue * 100.0 / NULLIF(product_revenue + service_revenue, 0)), 2) as service_percent FROM revenue_breakdown",
+    "explanation": "Revenue mix showing product (domestic/export) vs service (consulting/support) with percentages",
+    "notes": "Uses Vandervort-specific revenue accounts with detailed breakdowns"
+  },
+
+  {
+    "id": "vandervort_002",
+    "organization": "vandervort",
+    "organization_id": 2,
+    "category": "marketing_roi",
+    "difficulty": "medium",
+    "question": "What's our total marketing spend across all channels and how does it compare to revenue?",
+    "intent": {
+      "intent_type": "marketing_analysis",
+      "metric": "marketing_expenses",
+      "aggregation": "sum",
+      "group_by": ["marketing_channel"],
+      "visualization_suitable": true
+    },
+    "schema": {
+      "tables": ["general_ledger", "chart_of_accounts"],
+      "joins": [
+        {"table": "chart_of_accounts", "on": "account_key"}
+      ]
+    },
+    "sql": "WITH marketing_spend AS (SELECT ABS(SUM(CASE WHEN coa.account = 'Advertising Costs' THEN gl.amount ELSE 0 END)) as advertising, ABS(SUM(CASE WHEN coa.account = 'Online Marketing' THEN gl.amount ELSE 0 END)) as digital_marketing, ABS(SUM(CASE WHEN coa.account = 'PR Expenses' THEN gl.amount ELSE 0 END)) as pr_spend, ABS(SUM(CASE WHEN coa.account = 'Sales Promotions' THEN gl.amount ELSE 0 END)) as promotions, ABS(SUM(CASE WHEN coa.account = 'Corporate Events' THEN gl.amount ELSE 0 END)) as events FROM general_ledger gl JOIN chart_of_accounts coa ON gl.organization_id = coa.organization_id AND gl.account_key = coa.account_key WHERE coa.subclass = 'Marketing' AND gl.organization_id = 2), total_revenue AS (SELECT SUM(gl.amount) as revenue FROM general_ledger gl JOIN chart_of_accounts coa ON gl.organization_id = coa.organization_id AND gl.account_key = coa.account_key WHERE coa.class = 'Revenue' AND gl.organization_id = 2) SELECT ms.advertising, ms.digital_marketing, ms.pr_spend, ms.promotions, ms.events, (ms.advertising + ms.digital_marketing + ms.pr_spend + ms.promotions + ms.events) as total_marketing_spend, tr.revenue, ROUND(((ms.advertising + ms.digital_marketing + ms.pr_spend + ms.promotions + ms.events) * 100.0 / tr.revenue), 2) as marketing_to_revenue_percent FROM marketing_spend ms CROSS JOIN total_revenue tr",
+    "explanation": "Marketing expense breakdown by channel with total spend and marketing-to-revenue ratio",
+    "notes": "Shows all marketing channels: Advertising, Online, PR, Promotions, Events - plus efficiency ratio"
+  },
+
+  {
+    "id": "vandervort_003",
+    "organization": "vandervort",
+    "organization_id": 2,
+    "category": "administrative_costs",
+    "difficulty": "medium",
+    "question": "How have our administrative costs evolved and which areas are growing fastest?",
+    "intent": {
+      "intent_type": "cost_trend_analysis",
+      "metric": "administrative_expenses",
+      "aggregation": "sum",
+      "group_by": ["year", "account"],
+      "visualization_suitable": true
+    },
+    "schema": {
+      "tables": ["general_ledger", "chart_of_accounts", "calendar"],
+      "joins": [
+        {"table": "chart_of_accounts", "on": "account_key"},
+        {"table": "calendar", "on": "date"}
+      ]
+    },
+    "sql": "WITH yearly_admin AS (SELECT c.year, coa.account, ABS(SUM(gl.amount)) as expense FROM general_ledger gl JOIN chart_of_accounts coa ON gl.organization_id = coa.organization_id AND gl.account_key = coa.account_key JOIN calendar c ON gl.date = c.date WHERE coa.subclass = 'Administrative' AND gl.organization_id = 2 GROUP BY c.year, coa.account) SELECT account, MAX(CASE WHEN year = 2019 THEN expense END) as expense_2019, MAX(CASE WHEN year = 2020 THEN expense END) as expense_2020, (MAX(CASE WHEN year = 2020 THEN expense END) - MAX(CASE WHEN year = 2019 THEN expense END)) as absolute_change, ROUND(((MAX(CASE WHEN year = 2020 THEN expense END) - MAX(CASE WHEN year = 2019 THEN expense END)) * 100.0 / NULLIF(MAX(CASE WHEN year = 2019 THEN expense END), 0)), 2) as growth_percent FROM yearly_admin GROUP BY account ORDER BY growth_percent DESC NULLS LAST",
+    "explanation": "Year-over-year administrative expense growth for Audit, Legal, Insurance, and Technology",
+    "notes": "Uses Vandervort admin accounts: Audit Services, Legal Services, Insurance Premiums, Technology Costs"
+  },
+
+  {
+    "id": "vandervort_004",
+    "organization": "vandervort",
+    "organization_id": 2,
+    "category": "regional_expansion",
+    "difficulty": "medium",
+    "question": "Which of our newer markets are performing best in terms of revenue growth?",
+    "intent": {
+      "intent_type": "geographic_performance",
+      "metric": "revenue_by_market",
+      "aggregation": "sum",
+      "group_by": ["country", "year"],
+      "visualization_suitable": true
+    },
+    "schema": {
+      "tables": ["general_ledger", "chart_of_accounts", "territory", "calendar"],
+      "joins": [
+        {"table": "chart_of_accounts", "on": "account_key"},
+        {"table": "territory", "on": "territory_key"},
+        {"table": "calendar", "on": "date"}
+      ]
+    },
+    "sql": "WITH country_revenue AS (SELECT t.country, t.region, c.year, SUM(gl.amount) as revenue, COUNT(DISTINCT gl.date) as days_active FROM general_ledger gl JOIN chart_of_accounts coa ON gl.organization_id = coa.organization_id AND gl.account_key = coa.account_key JOIN territory t ON gl.organization_id = t.organization_id AND gl.territory_key = t.territory_key JOIN calendar c ON gl.date = c.date WHERE coa.class = 'Revenue' AND gl.organization_id = 2 GROUP BY t.country, t.region, c.year) SELECT country, region, MAX(CASE WHEN year = 2019 THEN revenue END) as revenue_2019, MAX(CASE WHEN year = 2020 THEN revenue END) as revenue_2020, (MAX(CASE WHEN year = 2020 THEN revenue END) - MAX(CASE WHEN year = 2019 THEN revenue END)) as revenue_growth, ROUND(((MAX(CASE WHEN year = 2020 THEN revenue END) - MAX(CASE WHEN year = 2019 THEN revenue END)) * 100.0 / NULLIF(MAX(CASE WHEN year = 2019 THEN revenue END), 0)), 2) as growth_percent, MAX(CASE WHEN year = 2020 THEN days_active END) as active_days_2020 FROM country_revenue GROUP BY country, region ORDER BY growth_percent DESC NULLS LAST",
+    "explanation": "Country performance showing revenue for both years, growth, and activity levels",
+    "notes": "Covers Vandervort territories: South Africa, Asia Pacific (Australia, India, Japan, Singapore), Mexico, Brazil"
+  },
+
+  {
+    "id": "vandervort_005",
+    "organization": "vandervort",
+    "organization_id": 2,
+    "category": "asset_composition",
+    "difficulty": "medium",
+    "question": "What's our current asset mix between liquid assets and inventory?",
+    "intent": {
+      "intent_type": "asset_liquidity",
+      "metric": "current_assets",
+      "aggregation": "sum",
+      "group_by": ["asset_type"],
+      "visualization_suitable": true
+    },
+    "schema": {
+      "tables": ["general_ledger", "chart_of_accounts"],
+      "joins": [
+        {"table": "chart_of_accounts", "on": "account_key"}
+      ]
+    },
+    "sql": "WITH current_assets AS (SELECT SUM(CASE WHEN coa.account = 'Cash & Equivalents' THEN gl.amount ELSE 0 END) as cash_equivalents, SUM(CASE WHEN coa.subaccount = 'Bank Accounts' THEN gl.amount ELSE 0 END) as bank_cash, SUM(CASE WHEN coa.subaccount = 'Petty Cash' THEN gl.amount ELSE 0 END) as petty_cash, SUM(CASE WHEN coa.account = 'Marketable Securities' THEN gl.amount ELSE 0 END) as marketable_securities, SUM(CASE WHEN coa.account = 'Accounts Receivable' THEN gl.amount ELSE 0 END) as receivables, SUM(CASE WHEN coa.account IN ('Inventory', 'Finished Goods') THEN gl.amount ELSE 0 END) as inventory, SUM(CASE WHEN coa.account = 'Prepaid Expenses' THEN gl.amount ELSE 0 END) as prepaids FROM general_ledger gl JOIN chart_of_accounts coa ON gl.organization_id = coa.organization_id AND gl.account_key = coa.account_key WHERE coa.subclass = 'Current Assets' AND gl.organization_id = 2) SELECT cash_equivalents, bank_cash, petty_cash, marketable_securities, receivables, inventory, prepaids, (cash_equivalents + marketable_securities) as liquid_assets, (cash_equivalents + marketable_securities + receivables + inventory + prepaids) as total_current_assets, ROUND(((cash_equivalents + marketable_securities) * 100.0 / NULLIF(cash_equivalents + marketable_securities + receivables + inventory + prepaids, 0)), 2) as liquidity_ratio FROM current_assets",
+    "explanation": "Current asset breakdown showing cash, securities, receivables, inventory with liquidity ratio",
+    "notes": "Uses Vandervort current asset accounts with granular cash breakdown (bank vs petty)"
+  },
+
+  {
+    "id": "vandervort_006",
+    "organization": "vandervort",
+    "organization_id": 2,
+    "category": "investment_portfolio",
+    "difficulty": "complex",
+    "question": "What's the composition of our investment portfolio and how much income does it generate?",
+    "intent": {
+      "intent_type": "investment_analysis",
+      "metric": "investments",
+      "aggregation": "calculated",
+      "visualization_suitable": true
+    },
+    "schema": {
+      "tables": ["general_ledger", "chart_of_accounts"],
+      "joins": [
+        {"table": "chart_of_accounts", "on": "account_key"}
+      ]
+    },
+    "sql": "WITH investment_holdings AS (SELECT SUM(CASE WHEN coa.account = 'Equity Holdings' THEN gl.amount ELSE 0 END) as equity_investments, SUM(CASE WHEN coa.account = 'Bonds & Debentures' THEN gl.amount ELSE 0 END) as fixed_income, SUM(CASE WHEN coa.account = 'Investment Property' THEN gl.amount ELSE 0 END) as real_estate, SUM(CASE WHEN coa.account = 'Financial Derivatives' THEN gl.amount ELSE 0 END) as derivatives FROM general_ledger gl JOIN chart_of_accounts coa ON gl.organization_id = coa.organization_id AND gl.account_key = coa.account_key WHERE coa.subclass = 'Investments' AND gl.organization_id = 2), investment_income AS (SELECT SUM(CASE WHEN coa.account = 'Dividend Income' THEN gl.amount ELSE 0 END) as dividend_income, SUM(CASE WHEN coa.subaccount = 'Investment Returns' THEN gl.amount ELSE 0 END) as other_returns FROM general_ledger gl JOIN chart_of_accounts coa ON gl.organization_id = coa.organization_id AND gl.account_key = coa.account_key WHERE coa.class = 'Revenue' AND gl.organization_id = 2) SELECT ih.equity_investments, ih.fixed_income, ih.real_estate, ih.derivatives, (ih.equity_investments + ih.fixed_income + ih.real_estate + ih.derivatives) as total_investments, ii.dividend_income, ii.other_returns, (ii.dividend_income + ii.other_returns) as total_investment_income, ROUND(((ii.dividend_income + ii.other_returns) * 100.0 / NULLIF(ih.equity_investments + ih.fixed_income + ih.real_estate + ih.derivatives, 0)), 2) as portfolio_yield_percent FROM investment_holdings ih CROSS JOIN investment_income ii",
+    "explanation": "Investment portfolio composition with income generation and yield calculation",
+    "notes": "Shows diversification: Equity, Bonds, Real Estate, Derivatives - plus ROI"
+  },
+
+  {
+    "id": "vandervort_007",
+    "organization": "vandervort",
+    "organization_id": 2,
+    "category": "debt_structure",
+    "difficulty": "complex",
+    "question": "What's our debt profile and how much interest are we paying relative to our borrowings?",
+    "intent": {
+      "intent_type": "debt_analysis",
+      "metric": "debt_and_interest",
+      "aggregation": "calculated",
+      "visualization_suitable": true
+    },
+    "schema": {
+      "tables": ["general_ledger", "chart_of_accounts"],
+      "joins": [
+        {"table": "chart_of_accounts", "on": "account_key"}
+      ]
+    },
+    "sql": "WITH debt_obligations AS (SELECT ABS(SUM(CASE WHEN coa.account = 'Notes Payable' THEN gl.amount ELSE 0 END)) as short_term_notes, ABS(SUM(CASE WHEN coa.account = 'Bank Overdraft' THEN gl.amount ELSE 0 END)) as overdraft, ABS(SUM(CASE WHEN coa.account = 'Bank Loans' THEN gl.amount ELSE 0 END)) as term_loans, ABS(SUM(CASE WHEN coa.account = 'Corporate Bonds' THEN gl.amount ELSE 0 END)) as bonds_issued FROM general_ledger gl JOIN chart_of_accounts coa ON gl.organization_id = coa.organization_id AND gl.account_key = coa.account_key WHERE coa.class = 'Liabilities' AND coa.account IN ('Notes Payable', 'Bank Overdraft', 'Bank Loans', 'Corporate Bonds') AND gl.organization_id = 2), interest_expense AS (SELECT ABS(SUM(gl.amount)) as total_interest FROM general_ledger gl JOIN chart_of_accounts coa ON gl.organization_id = coa.organization_id AND gl.account_key = coa.account_key WHERE coa.account = 'Interest Payments' AND gl.organization_id = 2) SELECT do.short_term_notes, do.overdraft, do.term_loans, do.bonds_issued, (do.short_term_notes + do.overdraft) as total_short_term_debt, (do.term_loans + do.bonds_issued) as total_long_term_debt, (do.short_term_notes + do.overdraft + do.term_loans + do.bonds_issued) as total_debt, ie.total_interest, ROUND((ie.total_interest * 100.0 / NULLIF(do.short_term_notes + do.overdraft + do.term_loans + do.bonds_issued, 0)), 2) as effective_interest_rate FROM debt_obligations do CROSS JOIN interest_expense ie",
+    "explanation": "Debt structure showing short-term vs long-term obligations with effective interest rate",
+    "notes": "Complete debt profile: Notes, Overdraft, Loans, Bonds - plus cost of capital"
+  },
+
+  {
+    "id": "vandervort_008",
+    "organization": "vandervort",
+    "organization_id": 2,
+    "category": "operating_efficiency",
+    "difficulty": "complex",
+    "question": "How efficient are we at converting revenue to cash from operations?",
+    "intent": {
+      "intent_type": "cash_efficiency",
+      "metric": "operating_cash_flow",
+      "aggregation": "calculated",
+      "group_by": ["quarter"],
+      "visualization_suitable": true
+    },
+    "schema": {
+      "tables": ["general_ledger", "chart_of_accounts", "calendar"],
+      "joins": [
+        {"table": "chart_of_accounts", "on": "account_key"},
+        {"table": "calendar", "on": "date"}
+      ]
+    },
+    "sql": "SELECT c.year, c.quarter, SUM(CASE WHEN coa.class = 'Revenue' THEN gl.amount ELSE 0 END) as total_revenue, SUM(CASE WHEN coa.subaccount = 'Operating Cash' THEN gl.amount ELSE 0 END) as operating_cash_flow, ABS(SUM(CASE WHEN coa.subclass IN ('Marketing', 'Administrative', 'Operating Expenses') THEN gl.amount ELSE 0 END)) as total_operating_expenses, ABS(SUM(CASE WHEN coa.account IN ('Depreciation Expense', 'Amortization Expense') THEN gl.amount ELSE 0 END)) as non_cash_expenses, ROUND((SUM(CASE WHEN coa.subaccount = 'Operating Cash' THEN gl.amount ELSE 0 END) * 100.0 / NULLIF(SUM(CASE WHEN coa.class = 'Revenue' THEN gl.amount ELSE 0 END), 0)), 2) as cash_conversion_ratio FROM general_ledger gl JOIN chart_of_accounts coa ON gl.organization_id = coa.organization_id AND gl.account_key = coa.account_key JOIN calendar c ON gl.date = c.date WHERE gl.organization_id = 2 GROUP BY c.year, c.quarter ORDER BY c.year, c.quarter",
+    "explanation": "Operating cash flow analysis showing revenue, cash from operations, expenses, and conversion efficiency",
+    "notes": "Cash flow quality metric - shows how much revenue becomes actual cash"
+  },
+
+  {
+    "id": "vandervort_009",
+    "organization": "vandervort",
+    "organization_id": 2,
+    "category": "non_cash_charges",
+    "difficulty": "medium",
+    "question": "What are our total non-cash expenses and how do they impact our cash position?",
+    "intent": {
+      "intent_type": "non_cash_analysis",
+      "metric": "depreciation_amortization",
+      "aggregation": "sum",
+      "group_by": ["year"],
+      "visualization_suitable": true
+    },
+    "schema": {
+      "tables": ["general_ledger", "chart_of_accounts", "calendar"],
+      "joins": [
+        {"table": "chart_of_accounts", "on": "account_key"},
+        {"table": "calendar", "on": "date"}
+      ]
+    },
+    "sql": "SELECT c.year, ABS(SUM(CASE WHEN coa.account = 'Depreciation Expense' THEN gl.amount ELSE 0 END)) as depreciation, ABS(SUM(CASE WHEN coa.account = 'Amortization Expense' THEN gl.amount ELSE 0 END)) as amortization, ABS(SUM(CASE WHEN coa.account = 'Bad Debt Expense' THEN gl.amount ELSE 0 END)) as bad_debt_expense, ABS(SUM(CASE WHEN coa.subclass = 'Non-Cash Expenses' THEN gl.amount ELSE 0 END)) as total_non_cash, SUM(CASE WHEN coa.class = 'Revenue' THEN gl.amount ELSE 0 END) as revenue, ABS(SUM(CASE WHEN coa.class = 'Expenses' THEN gl.amount ELSE 0 END)) as total_expenses, ROUND((ABS(SUM(CASE WHEN coa.subclass = 'Non-Cash Expenses' THEN gl.amount ELSE 0 END)) * 100.0 / NULLIF(ABS(SUM(CASE WHEN coa.class = 'Expenses' THEN gl.amount ELSE 0 END)), 0)), 2) as non_cash_to_total_expenses FROM general_ledger gl JOIN chart_of_accounts coa ON gl.organization_id = coa.organization_id AND gl.account_key = coa.account_key JOIN calendar c ON gl.date = c.date WHERE gl.organization_id = 2 GROUP BY c.year ORDER BY c.year",
+    "explanation": "Non-cash expense breakdown showing depreciation, amortization, bad debt, and impact on expense base",
+    "notes": "Important for cash flow analysis - these expenses don't require cash outlay"
+  },
+
+  {
+    "id": "vandervort_010",
+    "organization": "vandervort",
+    "organization_id": 2,
+    "category": "equity_analysis",
+    "difficulty": "complex",
+    "question": "How has our shareholders' equity changed and what drove those changes?",
+    "intent": {
+      "intent_type": "equity_movement",
+      "metric": "shareholders_equity",
+      "aggregation": "calculated",
+      "group_by": ["year"],
+      "visualization_suitable": true
+    },
+    "schema": {
+      "tables": ["general_ledger", "chart_of_accounts", "calendar"],
+      "joins": [
+        {"table": "chart_of_accounts", "on": "account_key"},
+        {"table": "calendar", "on": "date"}
+      ]
+    },
+    "sql": "WITH equity_components AS (SELECT c.year, SUM(CASE WHEN coa.account = 'Share Capital' THEN gl.amount ELSE 0 END) as share_capital, SUM(CASE WHEN coa.subaccount = 'Statutory Reserves' THEN gl.amount ELSE 0 END) as reserves, SUM(CASE WHEN coa.account = 'Retained Earnings' THEN gl.amount ELSE 0 END) as retained_earnings, ABS(SUM(CASE WHEN coa.account = 'Dividends' THEN gl.amount ELSE 0 END)) as dividends_paid, SUM(CASE WHEN coa.subaccount = 'Currency Adjustments' THEN gl.amount ELSE 0 END) as translation_adjustments FROM general_ledger gl JOIN chart_of_accounts coa ON gl.organization_id = coa.organization_id AND gl.account_key = coa.account_key JOIN calendar c ON gl.date = c.date WHERE coa.class = 'Equity' AND gl.organization_id = 2 GROUP BY c.year) SELECT year, share_capital, reserves, retained_earnings, dividends_paid, translation_adjustments, (share_capital + reserves + retained_earnings + translation_adjustments) as total_equity, (share_capital + reserves + retained_earnings + translation_adjustments) - LAG(share_capital + reserves + retained_earnings + translation_adjustments) OVER (ORDER BY year) as equity_change FROM equity_components ORDER BY year",
+    "explanation": "Equity statement showing all components: share capital, reserves, retained earnings, dividends, and changes",
+    "notes": "Complete equity reconciliation - shows what drives shareholder value changes"
+  },
+
+  {
+    "id": "vandervort_011",
+    "organization": "vandervort",
+    "organization_id": 2,
+    "category": "product_service_margin",
+    "difficulty": "complex",
+    "question": "Compare profit margins between product sales and service revenue",
+    "intent": {
+      "intent_type": "segment_profitability",
+      "metric": "margin_comparison",
+      "aggregation": "calculated",
+      "visualization_suitable": true
+    },
+    "schema": {
+      "tables": ["general_ledger", "chart_of_accounts"],
+      "joins": [
+        {"table": "chart_of_accounts", "on": "account_key"}
+      ]
+    },
+    "sql": "WITH revenue_segments AS (SELECT SUM(CASE WHEN coa.account = 'Product Sales' THEN gl.amount ELSE 0 END) as product_revenue, SUM(CASE WHEN coa.subaccount = 'Domestic Market' THEN gl.amount ELSE 0 END) as domestic_product, SUM(CASE WHEN coa.subaccount = 'Export Sales' THEN gl.amount ELSE 0 END) as export_product, SUM(CASE WHEN coa.account = 'Service Revenue' THEN gl.amount ELSE 0 END) as service_revenue, SUM(CASE WHEN coa.subaccount = 'Consulting Services' THEN gl.amount ELSE 0 END) as consulting, SUM(CASE WHEN coa.subaccount = 'Support Contracts' THEN gl.amount ELSE 0 END) as support FROM general_ledger gl JOIN chart_of_accounts coa ON gl.organization_id = coa.organization_id AND gl.account_key = coa.account_key WHERE coa.class = 'Revenue' AND gl.organization_id = 2), total_costs AS (SELECT ABS(SUM(gl.amount)) as total_operating_costs FROM general_ledger gl JOIN chart_of_accounts coa ON gl.organization_id = coa.organization_id AND gl.account_key = coa.account_key WHERE coa.class = 'Expenses' AND gl.organization_id = 2) SELECT 'Product Sales' as segment, rs.product_revenue as revenue, ROUND((rs.product_revenue * tc.total_operating_costs / NULLIF(rs.product_revenue + rs.service_revenue, 0)), 2) as allocated_costs, rs.product_revenue - ROUND((rs.product_revenue * tc.total_operating_costs / NULLIF(rs.product_revenue + rs.service_revenue, 0)), 2) as profit, ROUND(((rs.product_revenue - ROUND((rs.product_revenue * tc.total_operating_costs / NULLIF(rs.product_revenue + rs.service_revenue, 0)), 2)) * 100.0 / NULLIF(rs.product_revenue, 0)), 2) as margin_pct FROM revenue_segments rs CROSS JOIN total_costs tc UNION ALL SELECT 'Service Revenue' as segment, rs.service_revenue as revenue, ROUND((rs.service_revenue * tc.total_operating_costs / NULLIF(rs.product_revenue + rs.service_revenue, 0)), 2) as allocated_costs, rs.service_revenue - ROUND((rs.service_revenue * tc.total_operating_costs / NULLIF(rs.product_revenue + rs.service_revenue, 0)), 2) as profit, ROUND(((rs.service_revenue - ROUND((rs.service_revenue * tc.total_operating_costs / NULLIF(rs.product_revenue + rs.service_revenue, 0)), 2)) * 100.0 / NULLIF(rs.service_revenue, 0)), 2) as margin_pct FROM revenue_segments rs CROSS JOIN total_costs tc",
+    "explanation": "Segment profitability comparing product vs service margins using cost allocation",
+    "notes": "Uses Vandervort Product Sales and Service Revenue accounts with proportional cost allocation"
+  },
+
+  {
+    "id": "vandervort_012",
+    "organization": "vandervort",
+    "organization_id": 2,
+    "category": "export_domestic_growth",
+    "difficulty": "medium",
+    "question": "How is our export sales growing compared to domestic market?",
+    "intent": {
+      "intent_type": "channel_growth_comparison",
+      "metric": "export_vs_domestic",
+      "aggregation": "sum",
+      "group_by": ["year"],
+      "visualization_suitable": true
+    },
+    "schema": {
+      "tables": ["general_ledger", "chart_of_accounts", "calendar"],
+      "joins": [
+        {"table": "chart_of_accounts", "on": "account_key"},
+        {"table": "calendar", "on": "date"}
+      ]
+    },
+    "sql": "WITH yearly_channels AS (SELECT c.year, SUM(CASE WHEN coa.subaccount = 'Domestic Market' THEN gl.amount ELSE 0 END) as domestic, SUM(CASE WHEN coa.subaccount = 'Export Sales' THEN gl.amount ELSE 0 END) as export FROM general_ledger gl JOIN chart_of_accounts coa ON gl.organization_id = coa.organization_id AND gl.account_key = coa.account_key JOIN calendar c ON gl.date = c.date WHERE coa.account = 'Product Sales' AND gl.organization_id = 2 GROUP BY c.year) SELECT year, domestic, export, (domestic + export) as total_product_sales, ROUND((domestic * 100.0 / NULLIF(domestic + export, 0)), 2) as domestic_pct, ROUND((export * 100.0 / NULLIF(domestic + export, 0)), 2) as export_pct, ROUND(((domestic - LAG(domestic) OVER (ORDER BY year)) * 100.0 / NULLIF(LAG(domestic) OVER (ORDER BY year), 0)), 2) as domestic_yoy_growth, ROUND(((export - LAG(export) OVER (ORDER BY year)) * 100.0 / NULLIF(LAG(export) OVER (ORDER BY year), 0)), 2) as export_yoy_growth FROM yearly_channels ORDER BY year",
+    "explanation": "Export vs domestic sales comparison with YoY growth rates for each channel",
+    "notes": "Uses Vandervort Product Sales subaccounts: Domestic Market and Export Sales"
+  },
+
+  {
+    "id": "vandervort_013",
+    "organization": "vandervort",
+    "organization_id": 2,
+    "category": "marketing_channel_roi",
+    "difficulty": "complex",
+    "question": "Which marketing channels are most cost-effective?",
+    "intent": {
+      "intent_type": "marketing_efficiency",
+      "metric": "cost_per_channel",
+      "aggregation": "sum",
+      "group_by": ["account"],
+      "visualization_suitable": true
+    },
+    "schema": {
+      "tables": ["general_ledger", "chart_of_accounts"],
+      "joins": [
+        {"table": "chart_of_accounts", "on": "account_key"}
+      ]
+    },
+    "sql": "WITH marketing_spend AS (SELECT coa.account as channel, ABS(SUM(gl.amount)) as spend FROM general_ledger gl JOIN chart_of_accounts coa ON gl.organization_id = coa.organization_id AND gl.account_key = coa.account_key WHERE coa.subclass = 'Marketing' AND gl.organization_id = 2 GROUP BY coa.account), total_revenue AS (SELECT SUM(gl.amount) as revenue FROM general_ledger gl JOIN chart_of_accounts coa ON gl.organization_id = coa.organization_id AND gl.account_key = coa.account_key WHERE coa.class = 'Revenue' AND gl.organization_id = 2), totals AS (SELECT SUM(spend) as total_marketing FROM marketing_spend) SELECT ms.channel, ms.spend, ROUND((ms.spend * 100.0 / t.total_marketing), 2) as pct_of_marketing_budget, ROUND((ms.spend * 100.0 / tr.revenue), 2) as cost_to_revenue_pct, ROUND((tr.revenue / NULLIF(t.total_marketing, 0)), 2) as revenue_per_marketing_dollar FROM marketing_spend ms CROSS JOIN total_revenue tr CROSS JOIN totals t ORDER BY ms.spend DESC",
+    "explanation": "Marketing spend by channel showing budget allocation and cost-to-revenue ratios",
+    "notes": "Uses Vandervort Marketing accounts: Advertising, Online Marketing, PR, Promotions, Events"
+  },
+
+  {
+    "id": "vandervort_014",
+    "organization": "vandervort",
+    "organization_id": 2,
+    "category": "consulting_support_mix",
+    "difficulty": "medium",
+    "question": "How is our service revenue split between consulting and support contracts?",
+    "intent": {
+      "intent_type": "service_mix",
+      "metric": "service_breakdown",
+      "aggregation": "sum",
+      "group_by": ["quarter"],
+      "visualization_suitable": true
+    },
+    "schema": {
+      "tables": ["general_ledger", "chart_of_accounts", "calendar"],
+      "joins": [
+        {"table": "chart_of_accounts", "on": "account_key"},
+        {"table": "calendar", "on": "date"}
+      ]
+    },
+    "sql": "WITH quarterly_services AS (SELECT c.year, c.quarter, SUM(CASE WHEN coa.subaccount = 'Consulting Services' THEN gl.amount ELSE 0 END) as consulting, SUM(CASE WHEN coa.subaccount = 'Support Contracts' THEN gl.amount ELSE 0 END) as support_contracts FROM general_ledger gl JOIN chart_of_accounts coa ON gl.organization_id = coa.organization_id AND gl.account_key = coa.account_key JOIN calendar c ON gl.date = c.date WHERE coa.account = 'Service Revenue' AND gl.organization_id = 2 GROUP BY c.year, c.quarter) SELECT year, quarter, consulting, support_contracts, (consulting + support_contracts) as total_service_revenue, ROUND((consulting * 100.0 / NULLIF(consulting + support_contracts, 0)), 2) as consulting_pct, ROUND((support_contracts * 100.0 / NULLIF(consulting + support_contracts, 0)), 2) as support_pct, LAG(consulting + support_contracts) OVER (ORDER BY year, quarter) as prev_total, ROUND(((consulting + support_contracts - LAG(consulting + support_contracts) OVER (ORDER BY year, quarter)) * 100.0 / NULLIF(LAG(consulting + support_contracts) OVER (ORDER BY year, quarter), 0)), 2) as qoq_growth FROM quarterly_services ORDER BY year, quarter",
+    "explanation": "Service revenue mix showing consulting vs support contracts with quarterly trends",
+    "notes": "Uses Vandervort Service Revenue subaccounts for recurring vs project-based revenue analysis"
+  },
+
+  {
+    "id": "vandervort_015",
+    "organization": "vandervort",
+    "organization_id": 2,
+    "category": "investment_yield",
+    "difficulty": "complex",
+    "question": "What's the yield on our investment portfolio by asset class?",
+    "intent": {
+      "intent_type": "investment_return",
+      "metric": "portfolio_yield",
+      "aggregation": "calculated",
+      "group_by": ["asset_class"],
+      "visualization_suitable": true
+    },
+    "schema": {
+      "tables": ["general_ledger", "chart_of_accounts"],
+      "joins": [
+        {"table": "chart_of_accounts", "on": "account_key"}
+      ]
+    },
+    "sql": "WITH investment_values AS (SELECT SUM(CASE WHEN coa.account = 'Equity Holdings' THEN gl.amount ELSE 0 END) as equities, SUM(CASE WHEN coa.account = 'Bonds & Debentures' THEN gl.amount ELSE 0 END) as bonds, SUM(CASE WHEN coa.account = 'Investment Property' THEN gl.amount ELSE 0 END) as property, SUM(CASE WHEN coa.account = 'Financial Derivatives' THEN gl.amount ELSE 0 END) as derivatives, SUM(CASE WHEN coa.account = 'Marketable Securities' THEN gl.amount ELSE 0 END) as securities FROM general_ledger gl JOIN chart_of_accounts coa ON gl.organization_id = coa.organization_id AND gl.account_key = coa.account_key WHERE coa.subclass = 'Investments' AND gl.organization_id = 2), investment_income AS (SELECT SUM(CASE WHEN coa.account = 'Dividend Income' THEN gl.amount ELSE 0 END) as dividends, SUM(CASE WHEN coa.subaccount = 'Investment Returns' THEN gl.amount ELSE 0 END) as returns FROM general_ledger gl JOIN chart_of_accounts coa ON gl.organization_id = coa.organization_id AND gl.account_key = coa.account_key WHERE coa.class = 'Revenue' AND gl.organization_id = 2) SELECT iv.equities, iv.bonds, iv.property, iv.derivatives, iv.securities, (iv.equities + iv.bonds + iv.property + iv.derivatives + iv.securities) as total_portfolio, ii.dividends, ii.returns, (ii.dividends + ii.returns) as total_income, ROUND(((ii.dividends + ii.returns) * 100.0 / NULLIF(iv.equities + iv.bonds + iv.property + iv.derivatives + iv.securities, 0)), 2) as portfolio_yield_pct FROM investment_values iv CROSS JOIN investment_income ii",
+    "explanation": "Investment portfolio analysis showing holdings by class and income yield",
+    "notes": "Uses Vandervort Investment accounts for portfolio composition and performance analysis"
+  },
+
+  {
+    "id": "vandervort_016",
+    "organization": "vandervort",
+    "organization_id": 2,
+    "category": "debt_coverage",
+    "difficulty": "complex",
+    "question": "Can we cover our debt obligations from operating income?",
+    "intent": {
+      "intent_type": "debt_service_coverage",
+      "metric": "coverage_ratio",
+      "aggregation": "calculated",
+      "group_by": ["year"],
+      "visualization_suitable": true
+    },
+    "schema": {
+      "tables": ["general_ledger", "chart_of_accounts", "calendar"],
+      "joins": [
+        {"table": "chart_of_accounts", "on": "account_key"},
+        {"table": "calendar", "on": "date"}
+      ]
+    },
+    "sql": "WITH yearly_metrics AS (SELECT c.year, SUM(CASE WHEN coa.class = 'Revenue' THEN gl.amount ELSE 0 END) as revenue, ABS(SUM(CASE WHEN coa.class = 'Expenses' THEN gl.amount ELSE 0 END)) as operating_expenses, ABS(SUM(CASE WHEN coa.account = 'Interest Payments' THEN gl.amount ELSE 0 END)) as interest_expense FROM general_ledger gl JOIN chart_of_accounts coa ON gl.organization_id = coa.organization_id AND gl.account_key = coa.account_key JOIN calendar c ON gl.date = c.date WHERE gl.organization_id = 2 GROUP BY c.year), debt_levels AS (SELECT ABS(SUM(CASE WHEN coa.account IN ('Notes Payable', 'Bank Overdraft') THEN gl.amount ELSE 0 END)) as short_term_debt, ABS(SUM(CASE WHEN coa.account IN ('Bank Loans', 'Corporate Bonds') THEN gl.amount ELSE 0 END)) as long_term_debt FROM general_ledger gl JOIN chart_of_accounts coa ON gl.organization_id = coa.organization_id AND gl.account_key = coa.account_key WHERE coa.class = 'Liabilities' AND gl.organization_id = 2) SELECT ym.year, ym.revenue, ym.operating_expenses, (ym.revenue - ym.operating_expenses) as operating_income, ym.interest_expense, dl.short_term_debt, dl.long_term_debt, (dl.short_term_debt + dl.long_term_debt) as total_debt, ROUND(((ym.revenue - ym.operating_expenses) / NULLIF(ym.interest_expense, 0)), 2) as interest_coverage_ratio, ROUND(((ym.revenue - ym.operating_expenses) / NULLIF(dl.short_term_debt + dl.long_term_debt, 0)), 2) as debt_coverage_ratio FROM yearly_metrics ym CROSS JOIN debt_levels dl ORDER BY ym.year",
+    "explanation": "Debt service coverage showing operating income vs debt obligations",
+    "notes": "Uses Vandervort debt accounts to assess financial health and ability to service debt"
+  },
+
+  {
+    "id": "vandervort_017",
+    "organization": "vandervort",
+    "organization_id": 2,
+    "category": "apac_performance",
+    "difficulty": "medium",
+    "question": "How are our Asia Pacific markets performing compared to other regions?",
+    "intent": {
+      "intent_type": "regional_comparison",
+      "metric": "revenue_by_region",
+      "aggregation": "sum",
+      "group_by": ["region", "country"],
+      "visualization_suitable": true
+    },
+    "schema": {
+      "tables": ["general_ledger", "chart_of_accounts", "territory"],
+      "joins": [
+        {"table": "chart_of_accounts", "on": "account_key"},
+        {"table": "territory", "on": "territory_key"}
+      ]
+    },
+    "sql": "WITH regional_revenue AS (SELECT t.region, t.country, SUM(gl.amount) as revenue, COUNT(*) as transactions FROM general_ledger gl JOIN chart_of_accounts coa ON gl.organization_id = coa.organization_id AND gl.account_key = coa.account_key JOIN territory t ON gl.organization_id = t.organization_id AND gl.territory_key = t.territory_key WHERE coa.class = 'Revenue' AND gl.organization_id = 2 GROUP BY t.region, t.country), region_totals AS (SELECT region, SUM(revenue) as region_revenue, SUM(transactions) as region_transactions FROM regional_revenue GROUP BY region), grand_total AS (SELECT SUM(revenue) as total FROM regional_revenue) SELECT rr.region, rr.country, rr.revenue, rr.transactions, rt.region_revenue, ROUND((rr.revenue * 100.0 / rt.region_revenue), 2) as pct_of_region, ROUND((rt.region_revenue * 100.0 / gt.total), 2) as region_pct_of_total, ROUND((rr.revenue / NULLIF(rr.transactions, 0)), 2) as revenue_per_transaction FROM regional_revenue rr JOIN region_totals rt ON rr.region = rt.region CROSS JOIN grand_total gt ORDER BY rr.region, rr.revenue DESC",
+    "explanation": "Regional performance breakdown with focus on Asia Pacific vs other regions",
+    "notes": "Uses Vandervort territories: APAC (Australia, India, Japan, Singapore), Africa, Americas"
+  },
+
+  {
+    "id": "vandervort_018",
+    "organization": "vandervort",
+    "organization_id": 2,
+    "category": "admin_overhead",
+    "difficulty": "medium",
+    "question": "What's our administrative overhead ratio and how does it trend?",
+    "intent": {
+      "intent_type": "overhead_analysis",
+      "metric": "admin_to_revenue",
+      "aggregation": "calculated",
+      "group_by": ["quarter"],
+      "visualization_suitable": true
+    },
+    "schema": {
+      "tables": ["general_ledger", "chart_of_accounts", "calendar"],
+      "joins": [
+        {"table": "chart_of_accounts", "on": "account_key"},
+        {"table": "calendar", "on": "date"}
+      ]
+    },
+    "sql": "WITH quarterly_admin AS (SELECT c.year, c.quarter, ABS(SUM(CASE WHEN coa.account = 'Audit Services' THEN gl.amount ELSE 0 END)) as audit, ABS(SUM(CASE WHEN coa.account = 'Legal Services' THEN gl.amount ELSE 0 END)) as legal, ABS(SUM(CASE WHEN coa.account = 'Insurance Premiums' THEN gl.amount ELSE 0 END)) as insurance, ABS(SUM(CASE WHEN coa.account = 'Technology Costs' THEN gl.amount ELSE 0 END)) as technology, SUM(CASE WHEN coa.class = 'Revenue' THEN gl.amount ELSE 0 END) as revenue FROM general_ledger gl JOIN chart_of_accounts coa ON gl.organization_id = coa.organization_id AND gl.account_key = coa.account_key JOIN calendar c ON gl.date = c.date WHERE gl.organization_id = 2 GROUP BY c.year, c.quarter) SELECT year, quarter, audit, legal, insurance, technology, (audit + legal + insurance + technology) as total_admin, revenue, ROUND(((audit + legal + insurance + technology) * 100.0 / NULLIF(revenue, 0)), 2) as admin_overhead_pct, LAG(ROUND(((audit + legal + insurance + technology) * 100.0 / NULLIF(revenue, 0)), 2)) OVER (ORDER BY year, quarter) as prev_overhead_pct FROM quarterly_admin ORDER BY year, quarter",
+    "explanation": "Administrative overhead breakdown showing audit, legal, insurance, technology costs",
+    "notes": "Uses Vandervort Administrative subclass accounts for overhead efficiency analysis"
+  },
+
+  {
+    "id": "vandervort_019",
+    "organization": "vandervort",
+    "organization_id": 2,
+    "category": "dividend_policy",
+    "difficulty": "complex",
+    "question": "What's our dividend payout ratio and how sustainable is it?",
+    "intent": {
+      "intent_type": "dividend_analysis",
+      "metric": "payout_ratio",
+      "aggregation": "calculated",
+      "group_by": ["year"],
+      "visualization_suitable": true
+    },
+    "schema": {
+      "tables": ["general_ledger", "chart_of_accounts", "calendar"],
+      "joins": [
+        {"table": "chart_of_accounts", "on": "account_key"},
+        {"table": "calendar", "on": "date"}
+      ]
+    },
+    "sql": "WITH yearly_profits AS (SELECT c.year, SUM(CASE WHEN coa.class = 'Revenue' THEN gl.amount ELSE 0 END) - ABS(SUM(CASE WHEN coa.class = 'Expenses' THEN gl.amount ELSE 0 END)) as net_income, ABS(SUM(CASE WHEN coa.account = 'Dividends' THEN gl.amount ELSE 0 END)) as dividends_paid, SUM(CASE WHEN coa.account = 'Retained Earnings' THEN gl.amount ELSE 0 END) as retained_earnings FROM general_ledger gl JOIN chart_of_accounts coa ON gl.organization_id = coa.organization_id AND gl.account_key = coa.account_key JOIN calendar c ON gl.date = c.date WHERE gl.organization_id = 2 GROUP BY c.year) SELECT year, net_income, dividends_paid, (net_income - dividends_paid) as retained, retained_earnings, ROUND((dividends_paid * 100.0 / NULLIF(net_income, 0)), 2) as payout_ratio_pct, ROUND(((net_income - dividends_paid) * 100.0 / NULLIF(net_income, 0)), 2) as retention_ratio_pct, CASE WHEN (dividends_paid * 100.0 / NULLIF(net_income, 0)) > 80 THEN 'High Risk' WHEN (dividends_paid * 100.0 / NULLIF(net_income, 0)) > 50 THEN 'Moderate' ELSE 'Sustainable' END as sustainability FROM yearly_profits ORDER BY year",
+    "explanation": "Dividend analysis showing payout ratio, retention, and sustainability assessment",
+    "notes": "Uses Vandervort Equity accounts: Dividends and Retained Earnings for shareholder analysis"
+  },
+
+  {
+    "id": "vandervort_020",
+    "organization": "vandervort",
+    "organization_id": 2,
+    "category": "liquidity_trend",
+    "difficulty": "complex",
+    "question": "How has our liquidity position changed over time?",
+    "intent": {
+      "intent_type": "liquidity_analysis",
+      "metric": "current_ratio",
+      "aggregation": "calculated",
+      "group_by": ["quarter"],
+      "visualization_suitable": true
+    },
+    "schema": {
+      "tables": ["general_ledger", "chart_of_accounts", "calendar"],
+      "joins": [
+        {"table": "chart_of_accounts", "on": "account_key"},
+        {"table": "calendar", "on": "date"}
+      ]
+    },
+    "sql": "WITH quarterly_liquidity AS (SELECT c.year, c.quarter, SUM(CASE WHEN coa.account = 'Cash & Equivalents' THEN gl.amount ELSE 0 END) as cash, SUM(CASE WHEN coa.account = 'Marketable Securities' THEN gl.amount ELSE 0 END) as securities, SUM(CASE WHEN coa.account = 'Accounts Receivable' THEN gl.amount ELSE 0 END) as receivables, SUM(CASE WHEN coa.account IN ('Inventory', 'Finished Goods') THEN gl.amount ELSE 0 END) as inventory, ABS(SUM(CASE WHEN coa.account IN ('Notes Payable', 'Bank Overdraft') THEN gl.amount ELSE 0 END)) as current_liabilities FROM general_ledger gl JOIN chart_of_accounts coa ON gl.organization_id = coa.organization_id AND gl.account_key = coa.account_key JOIN calendar c ON gl.date = c.date WHERE gl.organization_id = 2 GROUP BY c.year, c.quarter) SELECT year, quarter, cash, securities, receivables, inventory, (cash + securities + receivables + inventory) as current_assets, current_liabilities, ROUND(((cash + securities + receivables + inventory) / NULLIF(current_liabilities, 0)), 2) as current_ratio, ROUND(((cash + securities + receivables) / NULLIF(current_liabilities, 0)), 2) as quick_ratio, ROUND(((cash + securities) / NULLIF(current_liabilities, 0)), 2) as cash_ratio FROM quarterly_liquidity ORDER BY year, quarter",
+    "explanation": "Liquidity analysis showing current, quick, and cash ratios over time",
+    "notes": "Uses Vandervort Current Assets and Liabilities for comprehensive liquidity assessment"
+  }
+]

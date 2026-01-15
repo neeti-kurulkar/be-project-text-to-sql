@@ -69,7 +69,8 @@ export function QueryInterface() {
       visualization: cached.visualization
     };
 
-    setMessages(prev => [...prev, userMessage, assistantMessage]);
+    // Replace messages instead of appending to prevent duplicates
+    setMessages([userMessage, assistantMessage]);
   };
 
   const handleSubmit = async (question: string) => {

@@ -51,6 +51,10 @@ export function useQueryHistory() {
     return history.find(item => item.question === question);
   };
 
+  const removeQuery = (id: string) => {
+    setHistory(prev => prev.filter(item => item.id !== id));
+  };
+
   const clearHistory = () => {
     setHistory([]);
     try {
@@ -63,6 +67,7 @@ export function useQueryHistory() {
   return {
     history,
     addQuery,
+    removeQuery,
     clearHistory,
     getByQuestion
   };

@@ -5,7 +5,7 @@ import { Card } from '../common/Card';
 import { Button } from '../common/Button';
 
 export function QueryHistory() {
-  const { history, clearHistory } = useQueryHistory();
+  const { history, clearHistory, removeQuery } = useQueryHistory();
   const navigate = useNavigate();
 
   const formatTime = (date: Date) => {
@@ -86,7 +86,7 @@ export function QueryHistory() {
                   <span>{item.executionTime}ms</span>
                 </div>
               </div>
-              <div className="flex items-center gap-2 ml-4">
+              <div className="flex items-center gap-1 ml-4">
                 <button
                   onClick={() => handleView(item)}
                   className="p-2 rounded-lg text-ocean-600 dark:text-slate-400 hover:bg-white dark:hover:bg-ocean-800 hover:text-electric-600 dark:hover:text-electric-400 transition-colors duration-200"
@@ -97,9 +97,16 @@ export function QueryHistory() {
                 <button
                   onClick={() => handleRerun(item.question)}
                   className="p-2 rounded-lg text-ocean-600 dark:text-slate-400 hover:bg-white dark:hover:bg-ocean-800 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors duration-200"
-                  title="Re-run"
+                  title="Re-run query"
                 >
                   <RotateCw className="w-4 h-4" />
+                </button>
+                <button
+                  onClick={() => removeQuery(item.id)}
+                  className="p-2 rounded-lg text-ocean-600 dark:text-slate-400 hover:bg-white dark:hover:bg-ocean-800 hover:text-red-600 dark:hover:text-red-400 transition-colors duration-200"
+                  title="Delete query"
+                >
+                  <Trash2 className="w-4 h-4" />
                 </button>
               </div>
             </div>

@@ -1,0 +1,520 @@
+[
+  {
+    "id": "kuvalis_001",
+    "organization": "kuvalis",
+    "organization_id": 1,
+    "category": "revenue_analysis",
+    "difficulty": "easy",
+    "question": "How are our sales performing compared to sales returns this year?",
+    "intent": {
+      "intent_type": "comparison",
+      "metric": "sales_vs_returns",
+      "aggregation": "sum",
+      "filters": {"year": 2020},
+      "visualization_suitable": true
+    },
+    "schema": {
+      "tables": ["general_ledger", "chart_of_accounts", "calendar"],
+      "joins": [
+        {"table": "chart_of_accounts", "on": "account_key"},
+        {"table": "calendar", "on": "date"}
+      ]
+    },
+    "sql": "SELECT SUM(CASE WHEN coa.account = 'Sales' THEN gl.amount ELSE 0 END) as total_sales, ABS(SUM(CASE WHEN coa.account = 'Sales Return' THEN gl.amount ELSE 0 END)) as total_returns, SUM(CASE WHEN coa.account = 'Sales' THEN gl.amount ELSE 0 END) - ABS(SUM(CASE WHEN coa.account = 'Sales Return' THEN gl.amount ELSE 0 END)) as net_sales, ROUND((ABS(SUM(CASE WHEN coa.account = 'Sales Return' THEN gl.amount ELSE 0 END)) * 100.0 / NULLIF(SUM(CASE WHEN coa.account = 'Sales' THEN gl.amount ELSE 0 END), 0)), 2) as return_rate_percent FROM general_ledger gl JOIN chart_of_accounts coa ON gl.organization_id = coa.organization_id AND gl.account_key = coa.account_key JOIN calendar c ON gl.date = c.date WHERE coa.account IN ('Sales', 'Sales Return') AND c.year = 2020 AND gl.organization_id = 1",
+    "explanation": "Shows gross sales, returns, net sales, and return rate for quality analysis",
+    "notes": "Context-rich: includes all components plus calculated return rate"
+  },
+
+  {
+    "id": "kuvalis_002",
+    "organization": "kuvalis",
+    "organization_id": 1,
+    "category": "expense_breakdown",
+    "difficulty": "easy",
+    "question": "What are our biggest operating expenses and how much are we spending on staff?",
+    "intent": {
+      "intent_type": "expense_ranking",
+      "metric": "operating_expenses",
+      "aggregation": "sum",
+      "group_by": ["account"],
+      "order": "desc",
+      "visualization_suitable": true
+    },
+    "schema": {
+      "tables": ["general_ledger", "chart_of_accounts"],
+      "joins": [
+        {"table": "chart_of_accounts", "on": "account_key"}
+      ]
+    },
+    "sql": "SELECT coa.account, ABS(SUM(gl.amount)) as total_expense, COUNT(*) as transaction_count, ABS(AVG(gl.amount)) as avg_per_transaction, ROUND((ABS(SUM(gl.amount)) * 100.0 / (SELECT ABS(SUM(amount)) FROM general_ledger gl2 JOIN chart_of_accounts coa2 ON gl2.organization_id = coa2.organization_id AND gl2.account_key = coa2.account_key WHERE coa2.class = 'Operating account' AND gl2.organization_id = 1)), 2) as percent_of_operating_expenses FROM general_ledger gl JOIN chart_of_accounts coa ON gl.organization_id = coa.organization_id AND gl.account_key = coa.account_key WHERE coa.class = 'Operating account' AND coa.account IN ('Staff Costs', 'Rent', 'Utilities', 'Advertisements', 'Travel', 'Office Supplies', 'Telephone', 'Professional Services') AND gl.organization_id = 1 GROUP BY coa.account ORDER BY total_expense DESC",
+    "explanation": "Operating expense breakdown with transaction patterns and percentage contribution",
+    "notes": "Uses actual Kuvalis accounts: Staff Costs, Rent, Utilities, etc."
+  },
+
+  {
+    "id": "kuvalis_003",
+    "organization": "kuvalis",
+    "organization_id": 1,
+    "category": "profitability",
+    "difficulty": "medium",
+    "question": "What's our gross profit margin after accounting for cost of sales?",
+    "intent": {
+      "intent_type": "margin_calculation",
+      "metric": "gross_profit_margin",
+      "aggregation": "calculated",
+      "group_by": ["quarter"],
+      "visualization_suitable": true
+    },
+    "schema": {
+      "tables": ["general_ledger", "chart_of_accounts", "calendar"],
+      "joins": [
+        {"table": "chart_of_accounts", "on": "account_key"},
+        {"table": "calendar", "on": "date"}
+      ]
+    },
+    "sql": "SELECT c.year, c.quarter, SUM(CASE WHEN coa.account = 'Sales' THEN gl.amount ELSE 0 END) as gross_sales, ABS(SUM(CASE WHEN coa.account = 'Sales Return' THEN gl.amount ELSE 0 END)) as returns, (SUM(CASE WHEN coa.account = 'Sales' THEN gl.amount ELSE 0 END) - ABS(SUM(CASE WHEN coa.account = 'Sales Return' THEN gl.amount ELSE 0 END))) as net_sales, ABS(SUM(CASE WHEN coa.account = 'Cost of Sales' THEN gl.amount ELSE 0 END)) as cost_of_sales, (SUM(CASE WHEN coa.account = 'Sales' THEN gl.amount ELSE 0 END) - ABS(SUM(CASE WHEN coa.account = 'Sales Return' THEN gl.amount ELSE 0 END)) - ABS(SUM(CASE WHEN coa.account = 'Cost of Sales' THEN gl.amount ELSE 0 END))) as gross_profit, ROUND(((SUM(CASE WHEN coa.account = 'Sales' THEN gl.amount ELSE 0 END) - ABS(SUM(CASE WHEN coa.account = 'Sales Return' THEN gl.amount ELSE 0 END)) - ABS(SUM(CASE WHEN coa.account = 'Cost of Sales' THEN gl.amount ELSE 0 END))) * 100.0 / NULLIF((SUM(CASE WHEN coa.account = 'Sales' THEN gl.amount ELSE 0 END) - ABS(SUM(CASE WHEN coa.account = 'Sales Return' THEN gl.amount ELSE 0 END))), 0)), 2) as gross_margin_percent FROM general_ledger gl JOIN chart_of_accounts coa ON gl.organization_id = coa.organization_id AND gl.account_key = coa.account_key JOIN calendar c ON gl.date = c.date WHERE coa.account IN ('Sales', 'Sales Return', 'Cost of Sales') AND gl.organization_id = 1 GROUP BY c.year, c.quarter ORDER BY c.year, c.quarter",
+    "explanation": "Quarterly gross profit calculation showing all components: sales, returns, COGS, profit, and margin",
+    "notes": "Full P&L context for insights - shows sales funnel from gross to net to profit"
+  },
+
+  {
+    "id": "kuvalis_004",
+    "organization": "kuvalis",
+    "organization_id": 1,
+    "category": "cash_position",
+    "difficulty": "medium",
+    "question": "How has our cash position changed over the quarters?",
+    "intent": {
+      "intent_type": "balance_trend",
+      "metric": "cash",
+      "aggregation": "sum",
+      "group_by": ["quarter"],
+      "visualization_suitable": true
+    },
+    "schema": {
+      "tables": ["general_ledger", "chart_of_accounts", "calendar"],
+      "joins": [
+        {"table": "chart_of_accounts", "on": "account_key"},
+        {"table": "calendar", "on": "date"}
+      ]
+    },
+    "sql": "WITH quarterly_cash AS (SELECT c.year, c.quarter, SUM(CASE WHEN coa.subaccount = 'Cash at Bank' THEN gl.amount ELSE 0 END) as bank_cash, SUM(CASE WHEN coa.subaccount = 'Cash in hand' THEN gl.amount ELSE 0 END) as hand_cash, SUM(CASE WHEN coa.account = 'Cash & Cash Equivalents' THEN gl.amount ELSE 0 END) as total_cash FROM general_ledger gl JOIN chart_of_accounts coa ON gl.organization_id = coa.organization_id AND gl.account_key = coa.account_key JOIN calendar c ON gl.date = c.date WHERE coa.account = 'Cash & Cash Equivalents' AND gl.organization_id = 1 GROUP BY c.year, c.quarter) SELECT year, quarter, bank_cash, hand_cash, total_cash, total_cash - LAG(total_cash) OVER (ORDER BY year, quarter) as quarter_over_quarter_change, ROUND(((total_cash - LAG(total_cash) OVER (ORDER BY year, quarter)) * 100.0 / NULLIF(LAG(total_cash) OVER (ORDER BY year, quarter), 0)), 2) as qoq_growth_percent FROM quarterly_cash ORDER BY year, quarter",
+    "explanation": "Cash position trend showing bank vs hand cash, totals, and quarter-over-quarter changes",
+    "notes": "Breaks down cash types (bank vs hand) and shows progression"
+  },
+
+  {
+    "id": "kuvalis_005",
+    "organization": "kuvalis",
+    "organization_id": 1,
+    "category": "receivables_analysis",
+    "difficulty": "medium",
+    "question": "How are our trade receivables performing and what's our collection pattern?",
+    "intent": {
+      "intent_type": "working_capital_analysis",
+      "metric": "receivables",
+      "aggregation": "sum",
+      "group_by": ["month"],
+      "visualization_suitable": true
+    },
+    "schema": {
+      "tables": ["general_ledger", "chart_of_accounts", "calendar"],
+      "joins": [
+        {"table": "chart_of_accounts", "on": "account_key"},
+        {"table": "calendar", "on": "date"}
+      ]
+    },
+    "sql": "SELECT c.year, c.month, SUM(CASE WHEN coa.subaccount = 'Trade Receivables' THEN gl.amount ELSE 0 END) as trade_receivables, SUM(CASE WHEN coa.subaccount = 'Other Receivables' THEN gl.amount ELSE 0 END) as other_receivables, ABS(SUM(CASE WHEN coa.subaccount = 'Allowance for Bad Debt' THEN gl.amount ELSE 0 END)) as bad_debt_allowance, SUM(CASE WHEN coa.account = 'Receivables' THEN gl.amount ELSE 0 END) as total_receivables, COUNT(DISTINCT CASE WHEN coa.subaccount = 'Trade Receivables' THEN gl.date END) as days_with_activity FROM general_ledger gl JOIN chart_of_accounts coa ON gl.organization_id = coa.organization_id AND gl.account_key = coa.account_key JOIN calendar c ON gl.date = c.date WHERE coa.account = 'Receivables' AND c.year = 2020 AND gl.organization_id = 1 GROUP BY c.year, c.month ORDER BY c.year, c.month",
+    "explanation": "Receivables breakdown by type with bad debt allowance and activity tracking",
+    "notes": "Shows trade vs other receivables plus bad debt context for credit quality insights"
+  },
+
+  {
+    "id": "kuvalis_006",
+    "organization": "kuvalis",
+    "organization_id": 1,
+    "category": "depreciation_analysis",
+    "difficulty": "medium",
+    "question": "What's our total depreciation expense across different asset categories?",
+    "intent": {
+      "intent_type": "non_cash_expense",
+      "metric": "depreciation",
+      "aggregation": "sum",
+      "group_by": ["account"],
+      "visualization_suitable": true
+    },
+    "schema": {
+      "tables": ["general_ledger", "chart_of_accounts"],
+      "joins": [
+        {"table": "chart_of_accounts", "on": "account_key"}
+      ]
+    },
+    "sql": "SELECT coa.subaccount as asset_category, ABS(SUM(gl.amount)) as depreciation_expense, COUNT(*) as transaction_count, ABS(AVG(gl.amount)) as avg_depreciation FROM general_ledger gl JOIN chart_of_accounts coa ON gl.organization_id = coa.organization_id AND gl.account_key = coa.account_key WHERE coa.account = 'Depreciation & Amortization' AND coa.subaccount IN ('Equipment', 'Furniture and Fixtures', 'Vehicles', 'Amortization of Intangible Assets') AND gl.organization_id = 1 GROUP BY coa.subaccount ORDER BY depreciation_expense DESC",
+    "explanation": "Depreciation breakdown by asset type with transaction patterns",
+    "notes": "Uses Kuvalis-specific depreciation accounts: Equipment, Furniture, Vehicles, Intangibles"
+  },
+
+  {
+    "id": "kuvalis_007",
+    "organization": "kuvalis",
+    "organization_id": 1,
+    "category": "regional_profitability",
+    "difficulty": "complex",
+    "question": "Which regions are most profitable after accounting for operating expenses?",
+    "intent": {
+      "intent_type": "regional_profit_analysis",
+      "metric": "profit_by_region",
+      "aggregation": "calculated",
+      "group_by": ["region", "country"],
+      "visualization_suitable": true
+    },
+    "schema": {
+      "tables": ["general_ledger", "chart_of_accounts", "territory"],
+      "joins": [
+        {"table": "chart_of_accounts", "on": "account_key"},
+        {"table": "territory", "on": "territory_key"}
+      ]
+    },
+    "sql": "WITH regional_metrics AS (SELECT t.region, t.country, SUM(CASE WHEN coa.account = 'Sales' THEN gl.amount ELSE 0 END) as revenue, ABS(SUM(CASE WHEN coa.account = 'Cost of Sales' THEN gl.amount ELSE 0 END)) as cogs, ABS(SUM(CASE WHEN coa.class = 'Operating account' THEN gl.amount ELSE 0 END)) as operating_expenses FROM general_ledger gl JOIN chart_of_accounts coa ON gl.organization_id = coa.organization_id AND gl.account_key = coa.account_key JOIN territory t ON gl.organization_id = t.organization_id AND gl.territory_key = t.territory_key WHERE gl.organization_id = 1 GROUP BY t.region, t.country) SELECT region, country, revenue, cogs, operating_expenses, (revenue - cogs) as gross_profit, (revenue - cogs - operating_expenses) as operating_profit, ROUND(((revenue - cogs) * 100.0 / NULLIF(revenue, 0)), 2) as gross_margin_percent, ROUND(((revenue - cogs - operating_expenses) * 100.0 / NULLIF(revenue, 0)), 2) as operating_margin_percent FROM regional_metrics ORDER BY operating_profit DESC",
+    "explanation": "Regional profitability showing revenue, COGS, operating expenses, and both gross and operating profit margins",
+    "notes": "Full profit waterfall by region - shows margin erosion from gross to operating profit"
+  },
+
+  {
+    "id": "kuvalis_008",
+    "organization": "kuvalis",
+    "organization_id": 1,
+    "category": "interest_tax",
+    "difficulty": "medium",
+    "question": "How much are we paying in interest and taxes, and what's the trend?",
+    "intent": {
+      "intent_type": "financial_burden_analysis",
+      "metric": "interest_and_tax",
+      "aggregation": "sum",
+      "group_by": ["quarter"],
+      "visualization_suitable": true
+    },
+    "schema": {
+      "tables": ["general_ledger", "chart_of_accounts", "calendar"],
+      "joins": [
+        {"table": "chart_of_accounts", "on": "account_key"},
+        {"table": "calendar", "on": "date"}
+      ]
+    },
+    "sql": "SELECT c.year, c.quarter, ABS(SUM(CASE WHEN coa.account = 'Interest Expense' THEN gl.amount ELSE 0 END)) as interest_expense, ABS(SUM(CASE WHEN coa.account = 'Taxation' THEN gl.amount ELSE 0 END)) as tax_expense, ABS(SUM(gl.amount)) as total_financial_burden, SUM(CASE WHEN coa.class = 'Trading account' AND coa.account = 'Sales' THEN gl.amount ELSE 0 END) as revenue_for_context, ROUND((ABS(SUM(CASE WHEN coa.account = 'Interest Expense' THEN gl.amount ELSE 0 END)) * 100.0 / NULLIF(SUM(CASE WHEN coa.class = 'Trading account' AND coa.account = 'Sales' THEN gl.amount ELSE 0 END), 0)), 2) as interest_to_revenue_percent, ROUND((ABS(SUM(CASE WHEN coa.account = 'Taxation' THEN gl.amount ELSE 0 END)) * 100.0 / NULLIF(SUM(CASE WHEN coa.class = 'Trading account' AND coa.account = 'Sales' THEN gl.amount ELSE 0 END), 0)), 2) as tax_to_revenue_percent FROM general_ledger gl JOIN chart_of_accounts coa ON gl.organization_id = coa.organization_id AND gl.account_key = coa.account_key JOIN calendar c ON gl.date = c.date WHERE coa.class IN ('Interest & Tax', 'Trading account') AND gl.organization_id = 1 GROUP BY c.year, c.quarter ORDER BY c.year, c.quarter",
+    "explanation": "Interest and tax burden over time with revenue context and burden ratios",
+    "notes": "Shows absolute amounts plus ratios to revenue for understanding financial efficiency"
+  },
+
+  {
+    "id": "kuvalis_009",
+    "organization": "kuvalis",
+    "organization_id": 1,
+    "category": "working_capital",
+    "difficulty": "complex",
+    "question": "What's our working capital position and how efficient is our cash conversion?",
+    "intent": {
+      "intent_type": "liquidity_analysis",
+      "metric": "working_capital",
+      "aggregation": "calculated",
+      "group_by": ["quarter"],
+      "visualization_suitable": true
+    },
+    "schema": {
+      "tables": ["general_ledger", "chart_of_accounts", "calendar"],
+      "joins": [
+        {"table": "chart_of_accounts", "on": "account_key"},
+        {"table": "calendar", "on": "date"}
+      ]
+    },
+    "sql": "WITH quarterly_wc AS (SELECT c.year, c.quarter, SUM(CASE WHEN coa.account IN ('Cash & Cash Equivalents', 'Receivables', 'Inventory', 'Other Current Assets') THEN gl.amount ELSE 0 END) as current_assets, ABS(SUM(CASE WHEN coa.subclass IN ('Other Current Liabilities', 'Trade Payables') OR coa.account IN ('Other Payables', 'Current Installments of Long-term Debt') THEN gl.amount ELSE 0 END)) as current_liabilities FROM general_ledger gl JOIN chart_of_accounts coa ON gl.organization_id = coa.organization_id AND gl.account_key = coa.account_key JOIN calendar c ON gl.date = c.date WHERE gl.organization_id = 1 GROUP BY c.year, c.quarter) SELECT year, quarter, current_assets, current_liabilities, (current_assets - current_liabilities) as working_capital, ROUND((current_assets * 1.0 / NULLIF(current_liabilities, 0)), 2) as current_ratio, (current_assets - current_liabilities) - LAG(current_assets - current_liabilities) OVER (ORDER BY year, quarter) as wc_change FROM quarterly_wc ORDER BY year, quarter",
+    "explanation": "Working capital analysis showing current assets, liabilities, net working capital, current ratio, and changes",
+    "notes": "Comprehensive liquidity view - includes both absolute working capital and liquidity ratio"
+  },
+
+  {
+    "id": "kuvalis_010",
+    "organization": "kuvalis",
+    "organization_id": 1,
+    "category": "non_operating_income",
+    "difficulty": "complex",
+    "question": "How significant is our non-operating income compared to our core business revenue?",
+    "intent": {
+      "intent_type": "revenue_composition",
+      "metric": "operating_vs_non_operating",
+      "aggregation": "sum",
+      "group_by": ["year"],
+      "visualization_suitable": true
+    },
+    "schema": {
+      "tables": ["general_ledger", "chart_of_accounts", "calendar"],
+      "joins": [
+        {"table": "chart_of_accounts", "on": "account_key"},
+        {"table": "calendar", "on": "date"}
+      ]
+    },
+    "sql": "SELECT c.year, SUM(CASE WHEN coa.class = 'Trading account' AND coa.account = 'Sales' THEN gl.amount ELSE 0 END) as core_revenue, SUM(CASE WHEN coa.class = 'Non-operating' THEN gl.amount ELSE 0 END) as non_operating_income, SUM(CASE WHEN coa.account = 'Dividend Income' THEN gl.amount ELSE 0 END) as dividend_income, SUM(CASE WHEN coa.account = 'Interest Income' THEN gl.amount ELSE 0 END) as interest_income, SUM(CASE WHEN coa.account = 'Exchange Loss/Gain' THEN gl.amount ELSE 0 END) as forex_gain_loss, SUM(CASE WHEN coa.account = 'Gain/Loss on Sales of Asset' THEN gl.amount ELSE 0 END) as asset_sale_gain_loss, (SUM(CASE WHEN coa.class = 'Trading account' AND coa.account = 'Sales' THEN gl.amount ELSE 0 END) + SUM(CASE WHEN coa.class = 'Non-operating' THEN gl.amount ELSE 0 END)) as total_income, ROUND((SUM(CASE WHEN coa.class = 'Non-operating' THEN gl.amount ELSE 0 END) * 100.0 / NULLIF(SUM(CASE WHEN coa.class = 'Trading account' AND coa.account = 'Sales' THEN gl.amount ELSE 0 END), 0)), 2) as non_operating_to_core_percent FROM general_ledger gl JOIN chart_of_accounts coa ON gl.organization_id = coa.organization_id AND gl.account_key = coa.account_key JOIN calendar c ON gl.date = c.date WHERE gl.organization_id = 1 GROUP BY c.year ORDER BY c.year",
+    "explanation": "Revenue composition showing core sales vs non-operating income breakdown (dividends, interest, forex, asset sales)",
+    "notes": "Full income statement context - shows dependence on non-operating income vs core business"
+  },
+
+  {
+    "id": "kuvalis_011",
+    "organization": "kuvalis",
+    "organization_id": 1,
+    "category": "staff_efficiency",
+    "difficulty": "medium",
+    "question": "What's our staff cost as a percentage of revenue and how has it changed?",
+    "intent": {
+      "intent_type": "cost_ratio_analysis",
+      "metric": "staff_cost_ratio",
+      "aggregation": "calculated",
+      "group_by": ["quarter"],
+      "visualization_suitable": true
+    },
+    "schema": {
+      "tables": ["general_ledger", "chart_of_accounts", "calendar"],
+      "joins": [
+        {"table": "chart_of_accounts", "on": "account_key"},
+        {"table": "calendar", "on": "date"}
+      ]
+    },
+    "sql": "WITH quarterly_data AS (SELECT c.year, c.quarter, SUM(CASE WHEN coa.account = 'Sales' THEN gl.amount ELSE 0 END) as revenue, ABS(SUM(CASE WHEN coa.account = 'Staff Costs' THEN gl.amount ELSE 0 END)) as staff_costs FROM general_ledger gl JOIN chart_of_accounts coa ON gl.organization_id = coa.organization_id AND gl.account_key = coa.account_key JOIN calendar c ON gl.date = c.date WHERE gl.organization_id = 1 GROUP BY c.year, c.quarter) SELECT year, quarter, revenue, staff_costs, ROUND((staff_costs * 100.0 / NULLIF(revenue, 0)), 2) as staff_cost_ratio, LAG(ROUND((staff_costs * 100.0 / NULLIF(revenue, 0)), 2)) OVER (ORDER BY year, quarter) as prev_ratio, ROUND((staff_costs * 100.0 / NULLIF(revenue, 0)), 2) - LAG(ROUND((staff_costs * 100.0 / NULLIF(revenue, 0)), 2)) OVER (ORDER BY year, quarter) as ratio_change FROM quarterly_data ORDER BY year, quarter",
+    "explanation": "Staff cost efficiency showing cost-to-revenue ratio trend over quarters",
+    "notes": "Uses Kuvalis Staff Costs account - tracks if labor costs are scaling with revenue"
+  },
+
+  {
+    "id": "kuvalis_012",
+    "organization": "kuvalis",
+    "organization_id": 1,
+    "category": "commission_analysis",
+    "difficulty": "medium",
+    "question": "How do our commission expenses relate to sales performance?",
+    "intent": {
+      "intent_type": "sales_cost_analysis",
+      "metric": "commission_to_sales",
+      "aggregation": "calculated",
+      "group_by": ["quarter"],
+      "visualization_suitable": true
+    },
+    "schema": {
+      "tables": ["general_ledger", "chart_of_accounts", "calendar"],
+      "joins": [
+        {"table": "chart_of_accounts", "on": "account_key"},
+        {"table": "calendar", "on": "date"}
+      ]
+    },
+    "sql": "WITH quarterly_sales AS (SELECT c.year, c.quarter, SUM(CASE WHEN coa.account = 'Sales' THEN gl.amount ELSE 0 END) as gross_sales, ABS(SUM(CASE WHEN coa.account = 'Sales Return' THEN gl.amount ELSE 0 END)) as returns, ABS(SUM(CASE WHEN coa.account = 'Commissions' THEN gl.amount ELSE 0 END)) as commissions FROM general_ledger gl JOIN chart_of_accounts coa ON gl.organization_id = coa.organization_id AND gl.account_key = coa.account_key JOIN calendar c ON gl.date = c.date WHERE gl.organization_id = 1 GROUP BY c.year, c.quarter) SELECT year, quarter, gross_sales, returns, (gross_sales - returns) as net_sales, commissions, ROUND((commissions * 100.0 / NULLIF(gross_sales, 0)), 2) as commission_rate_pct, ROUND((commissions * 100.0 / NULLIF(gross_sales - returns, 0)), 2) as commission_to_net_sales FROM quarterly_sales ORDER BY year, quarter",
+    "explanation": "Commission expense analysis showing relationship to gross and net sales",
+    "notes": "Uses Kuvalis Commissions account - helps evaluate sales team cost efficiency"
+  },
+
+  {
+    "id": "kuvalis_013",
+    "organization": "kuvalis",
+    "organization_id": 1,
+    "category": "overhead_analysis",
+    "difficulty": "medium",
+    "question": "Break down our office overhead costs - rent, utilities, telephone, supplies",
+    "intent": {
+      "intent_type": "overhead_breakdown",
+      "metric": "office_expenses",
+      "aggregation": "sum",
+      "group_by": ["account"],
+      "visualization_suitable": true
+    },
+    "schema": {
+      "tables": ["general_ledger", "chart_of_accounts", "calendar"],
+      "joins": [
+        {"table": "chart_of_accounts", "on": "account_key"},
+        {"table": "calendar", "on": "date"}
+      ]
+    },
+    "sql": "WITH overhead_expenses AS (SELECT c.year, coa.account, ABS(SUM(gl.amount)) as expense FROM general_ledger gl JOIN chart_of_accounts coa ON gl.organization_id = coa.organization_id AND gl.account_key = coa.account_key JOIN calendar c ON gl.date = c.date WHERE coa.account IN ('Rent', 'Utilities', 'Telephone', 'Office Supplies') AND gl.organization_id = 1 GROUP BY c.year, coa.account), yearly_totals AS (SELECT year, SUM(expense) as total_overhead FROM overhead_expenses GROUP BY year) SELECT oe.year, oe.account, oe.expense, yt.total_overhead, ROUND((oe.expense * 100.0 / yt.total_overhead), 2) as pct_of_overhead, LAG(oe.expense) OVER (PARTITION BY oe.account ORDER BY oe.year) as prev_year, ROUND(((oe.expense - LAG(oe.expense) OVER (PARTITION BY oe.account ORDER BY oe.year)) * 100.0 / NULLIF(LAG(oe.expense) OVER (PARTITION BY oe.account ORDER BY oe.year), 0)), 2) as yoy_change FROM overhead_expenses oe JOIN yearly_totals yt ON oe.year = yt.year ORDER BY oe.year, oe.expense DESC",
+    "explanation": "Office overhead breakdown showing rent, utilities, telephone, and supplies with YoY changes",
+    "notes": "Uses Kuvalis-specific operating accounts for overhead analysis"
+  },
+
+  {
+    "id": "kuvalis_014",
+    "organization": "kuvalis",
+    "organization_id": 1,
+    "category": "gross_margin_territory",
+    "difficulty": "complex",
+    "question": "What's our gross margin by territory after cost of sales?",
+    "intent": {
+      "intent_type": "territorial_profitability",
+      "metric": "gross_margin",
+      "aggregation": "calculated",
+      "group_by": ["country"],
+      "visualization_suitable": true
+    },
+    "schema": {
+      "tables": ["general_ledger", "chart_of_accounts", "territory"],
+      "joins": [
+        {"table": "chart_of_accounts", "on": "account_key"},
+        {"table": "territory", "on": "territory_key"}
+      ]
+    },
+    "sql": "WITH territory_pnl AS (SELECT t.country, t.region, SUM(CASE WHEN coa.account = 'Sales' THEN gl.amount ELSE 0 END) as gross_sales, ABS(SUM(CASE WHEN coa.account = 'Sales Return' THEN gl.amount ELSE 0 END)) as returns, ABS(SUM(CASE WHEN coa.account = 'Cost of Sales' THEN gl.amount ELSE 0 END)) as cost_of_sales FROM general_ledger gl JOIN chart_of_accounts coa ON gl.organization_id = coa.organization_id AND gl.account_key = coa.account_key JOIN territory t ON gl.organization_id = t.organization_id AND gl.territory_key = t.territory_key WHERE gl.organization_id = 1 GROUP BY t.country, t.region) SELECT country, region, gross_sales, returns, (gross_sales - returns) as net_sales, cost_of_sales, (gross_sales - returns - cost_of_sales) as gross_profit, ROUND(((gross_sales - returns - cost_of_sales) * 100.0 / NULLIF(gross_sales - returns, 0)), 2) as gross_margin_pct FROM territory_pnl ORDER BY gross_margin_pct DESC",
+    "explanation": "Gross margin by territory showing sales, returns, COGS, and margin percentage",
+    "notes": "Uses Kuvalis Trading account structure (Sales, Sales Return, Cost of Sales)"
+  },
+
+  {
+    "id": "kuvalis_015",
+    "organization": "kuvalis",
+    "organization_id": 1,
+    "category": "bad_debt_analysis",
+    "difficulty": "medium",
+    "question": "What's our bad debt allowance relative to trade receivables?",
+    "intent": {
+      "intent_type": "credit_quality",
+      "metric": "bad_debt_ratio",
+      "aggregation": "calculated",
+      "group_by": ["quarter"],
+      "visualization_suitable": true
+    },
+    "schema": {
+      "tables": ["general_ledger", "chart_of_accounts", "calendar"],
+      "joins": [
+        {"table": "chart_of_accounts", "on": "account_key"},
+        {"table": "calendar", "on": "date"}
+      ]
+    },
+    "sql": "WITH quarterly_receivables AS (SELECT c.year, c.quarter, SUM(CASE WHEN coa.subaccount = 'Trade Receivables' THEN gl.amount ELSE 0 END) as trade_receivables, SUM(CASE WHEN coa.subaccount = 'Other Receivables' THEN gl.amount ELSE 0 END) as other_receivables, ABS(SUM(CASE WHEN coa.subaccount = 'Allowance for Bad Debt' THEN gl.amount ELSE 0 END)) as bad_debt_allowance FROM general_ledger gl JOIN chart_of_accounts coa ON gl.organization_id = coa.organization_id AND gl.account_key = coa.account_key JOIN calendar c ON gl.date = c.date WHERE coa.account = 'Receivables' AND gl.organization_id = 1 GROUP BY c.year, c.quarter) SELECT year, quarter, trade_receivables, other_receivables, (trade_receivables + other_receivables) as total_receivables, bad_debt_allowance, ROUND((bad_debt_allowance * 100.0 / NULLIF(trade_receivables, 0)), 2) as bad_debt_ratio_pct FROM quarterly_receivables ORDER BY year, quarter",
+    "explanation": "Receivables quality analysis showing trade receivables and bad debt provision",
+    "notes": "Uses Kuvalis Receivables subaccounts to assess credit risk"
+  },
+
+  {
+    "id": "kuvalis_016",
+    "organization": "kuvalis",
+    "organization_id": 1,
+    "category": "equipment_analysis",
+    "difficulty": "medium",
+    "question": "How much are we spending on equipment and what's the depreciation impact?",
+    "intent": {
+      "intent_type": "capex_analysis",
+      "metric": "equipment_costs",
+      "aggregation": "sum",
+      "group_by": ["year"],
+      "visualization_suitable": true
+    },
+    "schema": {
+      "tables": ["general_ledger", "chart_of_accounts", "calendar"],
+      "joins": [
+        {"table": "chart_of_accounts", "on": "account_key"},
+        {"table": "calendar", "on": "date"}
+      ]
+    },
+    "sql": "SELECT c.year, ABS(SUM(CASE WHEN coa.account = 'Equipment' AND coa.class = 'Operating account' THEN gl.amount ELSE 0 END)) as equipment_expense, ABS(SUM(CASE WHEN coa.subaccount = 'Equipment' AND coa.account = 'Depreciation & Amortization' THEN gl.amount ELSE 0 END)) as equipment_depreciation, ABS(SUM(CASE WHEN coa.subaccount = 'Furniture and Fixtures' THEN gl.amount ELSE 0 END)) as furniture_depreciation, ABS(SUM(CASE WHEN coa.subaccount = 'Vehicles' THEN gl.amount ELSE 0 END)) as vehicle_depreciation, ABS(SUM(CASE WHEN coa.account = 'Depreciation & Amortization' THEN gl.amount ELSE 0 END)) as total_depreciation FROM general_ledger gl JOIN chart_of_accounts coa ON gl.organization_id = coa.organization_id AND gl.account_key = coa.account_key JOIN calendar c ON gl.date = c.date WHERE gl.organization_id = 1 GROUP BY c.year ORDER BY c.year",
+    "explanation": "Equipment and depreciation analysis showing expense vs non-cash charges",
+    "notes": "Uses Kuvalis depreciation accounts: Equipment, Furniture and Fixtures, Vehicles"
+  },
+
+  {
+    "id": "kuvalis_017",
+    "organization": "kuvalis",
+    "organization_id": 1,
+    "category": "forex_impact",
+    "difficulty": "complex",
+    "question": "How much have currency fluctuations impacted our bottom line?",
+    "intent": {
+      "intent_type": "forex_analysis",
+      "metric": "exchange_gain_loss",
+      "aggregation": "sum",
+      "group_by": ["quarter"],
+      "visualization_suitable": true
+    },
+    "schema": {
+      "tables": ["general_ledger", "chart_of_accounts", "calendar"],
+      "joins": [
+        {"table": "chart_of_accounts", "on": "account_key"},
+        {"table": "calendar", "on": "date"}
+      ]
+    },
+    "sql": "WITH quarterly_forex AS (SELECT c.year, c.quarter, SUM(CASE WHEN coa.account = 'Exchange Loss/Gain' THEN gl.amount ELSE 0 END) as forex_impact, SUM(CASE WHEN coa.account = 'Sales' THEN gl.amount ELSE 0 END) as revenue FROM general_ledger gl JOIN chart_of_accounts coa ON gl.organization_id = coa.organization_id AND gl.account_key = coa.account_key JOIN calendar c ON gl.date = c.date WHERE gl.organization_id = 1 GROUP BY c.year, c.quarter) SELECT year, quarter, forex_impact, CASE WHEN forex_impact > 0 THEN 'Gain' ELSE 'Loss' END as forex_direction, revenue, ROUND((ABS(forex_impact) * 100.0 / NULLIF(revenue, 0)), 2) as forex_impact_pct, SUM(forex_impact) OVER (ORDER BY year, quarter) as cumulative_forex_impact FROM quarterly_forex ORDER BY year, quarter",
+    "explanation": "Foreign exchange impact analysis showing quarterly gains/losses and cumulative effect",
+    "notes": "Uses Kuvalis Exchange Loss/Gain account from Non-operating class"
+  },
+
+  {
+    "id": "kuvalis_018",
+    "organization": "kuvalis",
+    "organization_id": 1,
+    "category": "return_rate",
+    "difficulty": "medium",
+    "question": "What's our sales return rate and how does it vary by country?",
+    "intent": {
+      "intent_type": "quality_analysis",
+      "metric": "return_rate",
+      "aggregation": "calculated",
+      "group_by": ["country"],
+      "visualization_suitable": true
+    },
+    "schema": {
+      "tables": ["general_ledger", "chart_of_accounts", "territory"],
+      "joins": [
+        {"table": "chart_of_accounts", "on": "account_key"},
+        {"table": "territory", "on": "territory_key"}
+      ]
+    },
+    "sql": "WITH country_returns AS (SELECT t.country, t.region, SUM(CASE WHEN coa.account = 'Sales' THEN gl.amount ELSE 0 END) as gross_sales, ABS(SUM(CASE WHEN coa.account = 'Sales Return' THEN gl.amount ELSE 0 END)) as returns FROM general_ledger gl JOIN chart_of_accounts coa ON gl.organization_id = coa.organization_id AND gl.account_key = coa.account_key JOIN territory t ON gl.organization_id = t.organization_id AND gl.territory_key = t.territory_key WHERE coa.account IN ('Sales', 'Sales Return') AND gl.organization_id = 1 GROUP BY t.country, t.region), totals AS (SELECT SUM(gross_sales) as total_sales, SUM(returns) as total_returns FROM country_returns) SELECT cr.country, cr.region, cr.gross_sales, cr.returns, ROUND((cr.returns * 100.0 / NULLIF(cr.gross_sales, 0)), 2) as return_rate_pct, ROUND((t.total_returns * 100.0 / NULLIF(t.total_sales, 0)), 2) as company_avg_return_rate, ROUND((cr.returns * 100.0 / NULLIF(cr.gross_sales, 0)), 2) - ROUND((t.total_returns * 100.0 / NULLIF(t.total_sales, 0)), 2) as vs_company_avg FROM country_returns cr CROSS JOIN totals t ORDER BY return_rate_pct DESC",
+    "explanation": "Sales return rate by country compared to company average",
+    "notes": "Uses Kuvalis Sales Return account - identifies quality or satisfaction issues by region"
+  },
+
+  {
+    "id": "kuvalis_019",
+    "organization": "kuvalis",
+    "organization_id": 1,
+    "category": "effective_tax_rate",
+    "difficulty": "complex",
+    "question": "What's our effective tax rate and how has it changed?",
+    "intent": {
+      "intent_type": "tax_analysis",
+      "metric": "effective_tax_rate",
+      "aggregation": "calculated",
+      "group_by": ["year"],
+      "visualization_suitable": true
+    },
+    "schema": {
+      "tables": ["general_ledger", "chart_of_accounts", "calendar"],
+      "joins": [
+        {"table": "chart_of_accounts", "on": "account_key"},
+        {"table": "calendar", "on": "date"}
+      ]
+    },
+    "sql": "WITH yearly_tax AS (SELECT c.year, SUM(CASE WHEN coa.account = 'Sales' THEN gl.amount ELSE 0 END) - ABS(SUM(CASE WHEN coa.account = 'Sales Return' THEN gl.amount ELSE 0 END)) - ABS(SUM(CASE WHEN coa.account = 'Cost of Sales' THEN gl.amount ELSE 0 END)) - ABS(SUM(CASE WHEN coa.class = 'Operating account' THEN gl.amount ELSE 0 END)) - ABS(SUM(CASE WHEN coa.account = 'Interest Expense' THEN gl.amount ELSE 0 END)) as pretax_income, ABS(SUM(CASE WHEN coa.account = 'Taxation' THEN gl.amount ELSE 0 END)) as tax_expense FROM general_ledger gl JOIN chart_of_accounts coa ON gl.organization_id = coa.organization_id AND gl.account_key = coa.account_key JOIN calendar c ON gl.date = c.date WHERE gl.organization_id = 1 GROUP BY c.year) SELECT year, pretax_income, tax_expense, ROUND((tax_expense * 100.0 / NULLIF(pretax_income, 0)), 2) as effective_tax_rate_pct, LAG(ROUND((tax_expense * 100.0 / NULLIF(pretax_income, 0)), 2)) OVER (ORDER BY year) as prev_year_rate, ROUND((tax_expense * 100.0 / NULLIF(pretax_income, 0)), 2) - LAG(ROUND((tax_expense * 100.0 / NULLIF(pretax_income, 0)), 2)) OVER (ORDER BY year) as rate_change FROM yearly_tax ORDER BY year",
+    "explanation": "Effective tax rate calculation showing pre-tax income, tax expense, and rate trend",
+    "notes": "Uses Kuvalis Taxation account from Interest & Tax class"
+  },
+
+  {
+    "id": "kuvalis_020",
+    "organization": "kuvalis",
+    "organization_id": 1,
+    "category": "travel_expense",
+    "difficulty": "medium",
+    "question": "Analyze our travel and professional services expenses trend",
+    "intent": {
+      "intent_type": "discretionary_expense",
+      "metric": "travel_professional",
+      "aggregation": "sum",
+      "group_by": ["quarter"],
+      "visualization_suitable": true
+    },
+    "schema": {
+      "tables": ["general_ledger", "chart_of_accounts", "calendar"],
+      "joins": [
+        {"table": "chart_of_accounts", "on": "account_key"},
+        {"table": "calendar", "on": "date"}
+      ]
+    },
+    "sql": "WITH quarterly_discretionary AS (SELECT c.year, c.quarter, ABS(SUM(CASE WHEN coa.account = 'Travel' THEN gl.amount ELSE 0 END)) as travel_expense, ABS(SUM(CASE WHEN coa.account = 'Professional Services' THEN gl.amount ELSE 0 END)) as professional_services, ABS(SUM(CASE WHEN coa.account = 'Advertisements' THEN gl.amount ELSE 0 END)) as advertising, SUM(CASE WHEN coa.account = 'Sales' THEN gl.amount ELSE 0 END) as revenue FROM general_ledger gl JOIN chart_of_accounts coa ON gl.organization_id = coa.organization_id AND gl.account_key = coa.account_key JOIN calendar c ON gl.date = c.date WHERE gl.organization_id = 1 GROUP BY c.year, c.quarter) SELECT year, quarter, travel_expense, professional_services, advertising, (travel_expense + professional_services + advertising) as total_discretionary, revenue, ROUND(((travel_expense + professional_services + advertising) * 100.0 / NULLIF(revenue, 0)), 2) as discretionary_pct_of_revenue FROM quarterly_discretionary ORDER BY year, quarter",
+    "explanation": "Discretionary expense analysis showing travel, professional services, and advertising trends",
+    "notes": "Uses Kuvalis Travel, Professional Services, and Advertisements accounts"
+  }
+]

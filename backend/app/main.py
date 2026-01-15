@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 from app.config import settings
 from app.database import init_db_pool, close_db_pool
-from app.api.routes import query, tables, stats, charts
+from app.api.routes import query, tables, stats, charts, nl2sql, insights
 from app.routes import auth
 
 
@@ -48,6 +48,8 @@ app.include_router(query.router)
 app.include_router(tables.router)
 app.include_router(stats.router)
 app.include_router(charts.router)
+app.include_router(nl2sql.router)  # NL2SQL multi-agent pipeline
+app.include_router(insights.router)  # Automated insights
 
 
 @app.get("/")
