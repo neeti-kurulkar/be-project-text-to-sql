@@ -1,8 +1,8 @@
 import { useState, useEffect, useRef } from 'react';
 import { useLocation } from 'react-router-dom';
-import { type QueryMessage as QueryMessageType } from '../../types/query';
-import { getMockSQL } from '../../utils/mockData';
-import { executeQuery } from '../../services/api';
+import { type QueryMessage as QueryMessageType, type NL2SQLResponse } from '../../types/query';
+import { type CachedQueryResponse } from '../../types/data';
+import { processNaturalLanguageQuery } from '../../services/api';
 import { QueryMessage } from './QueryMessage';
 import { QueryInput } from './QueryInput';
 import { SuggestedQuestions } from './SuggestedQuestions';
@@ -16,12 +16,23 @@ export function QueryInterface() {
   const location = useLocation();
   const { addQuery } = useQueryHistory();
 
-  // Handle navigation from suggested questions
+  // Handle navigation from history or suggested questions
   useEffect(() => {
     if (location.state?.question) {
-      setInitialQuestion(location.state.question);
+      const question = location.state.question;
+      const cachedResponse = location.state.cachedResponse as CachedQueryResponse | undefined;
+      const fromCache = location.state.fromCache;
+
       // Clear the state after using it
       window.history.replaceState({}, document.title);
+
+      // If we have a cached response and user clicked "View", display it directly
+      if (fromCache && cachedResponse) {
+        displayCachedResponse(question, cachedResponse);
+      } else {
+        // Otherwise, set as initial question for re-run
+        setInitialQuestion(question);
+      }
     }
   }, [location]);
 
@@ -30,9 +41,38 @@ export function QueryInterface() {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  const handleSubmit = async (question: string) => {
-    const startTime = Date.now();
+  // Display cached response without API call
+  const displayCachedResponse = (question: string, cached: CachedQueryResponse) => {
+    const userMessage: QueryMessageType = {
+      id: Date.now().toString(),
+      type: 'user',
+      content: question,
+      timestamp: new Date()
+    };
 
+    const explanation = cached.insights?.summary ||
+      `Found ${cached.results?.rowCount || 0} results for your question.`;
+
+    const assistantMessage: QueryMessageType = {
+      id: (Date.now() + 1).toString(),
+      type: 'assistant',
+      content: explanation,
+      timestamp: new Date(),
+      sql: cached.sql,
+      results: cached.results ? {
+        columns: cached.results.columns,
+        rows: cached.results.rows,
+        rowCount: cached.results.rowCount,
+        explanation: explanation
+      } : undefined,
+      insights: cached.insights,
+      visualization: cached.visualization
+    };
+
+    setMessages(prev => [...prev, userMessage, assistantMessage]);
+  };
+
+  const handleSubmit = async (question: string) => {
     // Add user message
     const userMessage: QueryMessageType = {
       id: Date.now().toString(),
@@ -45,65 +85,68 @@ export function QueryInterface() {
     setIsLoading(true);
 
     try {
-      // Generate SQL from question (mock for now - Phase 4 will use NL2SQL agents)
-      const generatedSQL = getMockSQL(question);
+      // Use NL2SQL API for natural language processing
+      const response: NL2SQLResponse = await processNaturalLanguageQuery(question);
 
-      // Execute SQL using real API
-      const apiResponse = await executeQuery(generatedSQL);
+      // Log agent trace for debugging
+      if (response.agent_trace) {
+        console.log('Agent Trace:', response.agent_trace);
+      }
 
-      // Generate explanation (mock for now - Phase 4 will use AI)
-      const explanation = generateExplanation(question, apiResponse);
+      if (!response.success) {
+        throw new Error(response.error || 'Query processing failed');
+      }
 
-      // Add assistant message with real data
+      // Build explanation from insights
+      const explanation = response.insights?.summary ||
+        `Found ${response.results?.row_count || 0} results for your question.`;
+
+      // Add assistant message with NL2SQL response data
       const assistantMessage: QueryMessageType = {
         id: (Date.now() + 1).toString(),
         type: 'assistant',
         content: explanation,
         timestamp: new Date(),
-        sql: generatedSQL,
-        results: {
-          columns: apiResponse.columns,
-          rows: apiResponse.rows,
-          rowCount: apiResponse.row_count,
+        sql: response.sql?.query,
+        results: response.results ? {
+          columns: response.results.columns,
+          rows: response.results.rows,
+          rowCount: response.results.row_count,
           explanation: explanation
-        }
+        } : undefined,
+        insights: response.insights,
+        visualization: response.visualization,
+        agentTrace: response.agent_trace,
+        executionTime: response.total_time
       };
 
       setMessages((prev) => [...prev, assistantMessage]);
 
-      // Add to query history
-      const executionTime = Date.now() - startTime;
-      addQuery(question, executionTime);
+      // Add to query history with cached response
+      const cachedResponse: CachedQueryResponse = {
+        sql: response.sql?.query,
+        results: response.results ? {
+          columns: response.results.columns,
+          rows: response.results.rows,
+          rowCount: response.results.row_count
+        } : undefined,
+        insights: response.insights,
+        visualization: response.visualization
+      };
+      addQuery(question, Math.round(response.total_time * 1000), cachedResponse);
 
     } catch (error: any) {
       // Handle error
       const errorMessage: QueryMessageType = {
         id: (Date.now() + 1).toString(),
         type: 'assistant',
-        content: `Error: ${error.message || 'Failed to execute query'}. Please try rephrasing your question.`,
+        content: `Error: ${error.response?.data?.detail || error.message || 'Failed to process query'}. Please try rephrasing your question.`,
         timestamp: new Date()
       };
 
       setMessages((prev) => [...prev, errorMessage]);
     } finally {
       setIsLoading(false);
-    }
-  };
-
-  // Generate a simple explanation based on the question and results
-  const generateExplanation = (question: string, results: any): string => {
-    const rowCount = results.row_count;
-    const hasData = rowCount > 0;
-
-    if (!hasData) {
-      return `No results found for your question: "${question}". The query executed successfully but returned no data.`;
-    }
-
-    // Simple explanation based on row count
-    if (rowCount === 1) {
-      return `Found 1 result for your question. The data shows the specific information you requested.`;
-    } else {
-      return `Found ${rowCount} results for your question. The table below shows all matching records from the database.`;
     }
   };
 
@@ -135,6 +178,25 @@ export function QueryInterface() {
               {messages.map((message) => (
                 <QueryMessage key={message.id} message={message} />
               ))}
+              {isLoading && (
+                <div className="flex gap-4">
+                  <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center flex-shrink-0">
+                    <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                    </svg>
+                  </div>
+                  <div className="flex-1 bg-white dark:bg-slate-800 rounded-2xl rounded-tl-sm p-4 shadow-sm border border-slate-200 dark:border-slate-700">
+                    <div className="flex items-center gap-3">
+                      <div className="flex gap-1">
+                        <span className="w-2 h-2 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></span>
+                        <span className="w-2 h-2 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></span>
+                        <span className="w-2 h-2 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></span>
+                      </div>
+                      <span className="text-sm text-slate-500 dark:text-slate-400">Analyzing your question...</span>
+                    </div>
+                  </div>
+                </div>
+              )}
             </>
           )}
           <div ref={messagesEndRef} />

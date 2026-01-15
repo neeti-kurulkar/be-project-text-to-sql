@@ -1,12 +1,13 @@
 import { NavLink } from 'react-router-dom';
-import { LayoutDashboard, MessageSquare, Database, BarChart3, ChevronLeft, ChevronRight, Zap } from 'lucide-react';
+import { LayoutDashboard, MessageSquare, Database, BarChart3, ChevronLeft, ChevronRight, Zap, Lightbulb } from 'lucide-react';
 import { useSidebar } from '../../hooks/useSidebar';
 
 const navItems = [
-  { to: '/dashboard', icon: LayoutDashboard, label: 'Home', end: true },
-  { to: '/dashboard/query', icon: MessageSquare, label: 'Ask Questions' },
-  { to: '/dashboard/charts', icon: BarChart3, label: 'Charts' },
-  { to: '/dashboard/data', icon: Database, label: 'View Data' }
+  { to: '/dashboard', icon: LayoutDashboard, label: 'Overview', end: true },
+  { to: '/dashboard/query', icon: MessageSquare, label: 'Ask FinQ' },
+  { to: '/dashboard/insights', icon: Lightbulb, label: 'Insights' },
+  { to: '/dashboard/analytics', icon: BarChart3, label: 'Analytics' },
+  { to: '/dashboard/explorer', icon: Database, label: 'Data Explorer' }
 ];
 
 export function Sidebar() {

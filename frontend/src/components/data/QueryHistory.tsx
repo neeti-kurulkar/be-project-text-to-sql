@@ -21,12 +21,20 @@ export function QueryHistory() {
     return 'Just now';
   };
 
-  const handleView = (question: string) => {
-    navigate('/dashboard/query', { state: { question } });
+  const handleView = (item: typeof history[0]) => {
+    // Navigate with cached response if available
+    navigate('/dashboard/query', {
+      state: {
+        question: item.question,
+        cachedResponse: item.cachedResponse,
+        fromCache: true
+      }
+    });
   };
 
   const handleRerun = (question: string) => {
-    navigate('/dashboard/query', { state: { question } });
+    // Re-run without cache - will make fresh LLM call
+    navigate('/dashboard/query', { state: { question, fromCache: false } });
   };
 
   if (history.length === 0) {
@@ -80,9 +88,9 @@ export function QueryHistory() {
               </div>
               <div className="flex items-center gap-2 ml-4">
                 <button
-                  onClick={() => handleView(item.question)}
+                  onClick={() => handleView(item)}
                   className="p-2 rounded-lg text-ocean-600 dark:text-slate-400 hover:bg-white dark:hover:bg-ocean-800 hover:text-electric-600 dark:hover:text-electric-400 transition-colors duration-200"
-                  title="View"
+                  title="View cached result"
                 >
                   <Eye className="w-4 h-4" />
                 </button>

@@ -9,16 +9,16 @@ export const QUICK_STATS = {
   dateRange: '2018-2020'
 };
 
-// Suggested Questions
+// Suggested Questions - Business-focused queries for actionable insights
 export const SUGGESTED_QUESTIONS: SuggestedQuestion[] = [
-  { id: '1', question: 'What was our total revenue in 2020?', category: 'Revenue' },
-  { id: '2', question: 'Show me revenue by country', category: 'Revenue' },
-  { id: '3', question: 'Which quarter had the highest sales?', category: 'Sales' },
-  { id: '4', question: 'What are the top 5 expense accounts?', category: 'Expenses' },
-  { id: '5', question: 'Compare 2019 vs 2020 revenue', category: 'Revenue' },
-  { id: '6', question: 'Show me quarterly revenue trends', category: 'Trends' },
-  { id: '7', question: "What's our revenue in USA?", category: 'Revenue' },
-  { id: '8', question: 'List all countries we operate in', category: 'General' }
+  { id: '1', question: 'How concentrated is our revenue? Are we too dependent on a few countries?', category: 'Risk Analysis' },
+  { id: '2', question: 'Which regions are underperforming and why should we investigate them?', category: 'Performance' },
+  { id: '3', question: 'What does our quarterly growth trend tell us about seasonality?', category: 'Trends' },
+  { id: '4', question: 'Compare year-over-year revenue growth by region', category: 'Growth' },
+  { id: '5', question: 'Which expense categories are growing faster than revenue?', category: 'Cost Control' },
+  { id: '6', question: 'What percentage of our revenue comes from each territory?', category: 'Distribution' },
+  { id: '7', question: 'Show me the profit margin trend across quarters', category: 'Profitability' },
+  { id: '8', question: 'Which markets showed the strongest growth in 2020?', category: 'Expansion' }
 ];
 
 // Mock Query Responses (map question keywords to responses)

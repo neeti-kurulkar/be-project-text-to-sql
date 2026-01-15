@@ -5,6 +5,7 @@ import { DashboardHome } from './pages/DashboardHome';
 import { QueryPage } from './pages/QueryPage';
 import { DataPage } from './pages/DataPage';
 import { ChartsPage } from './pages/ChartsPage';
+import { InsightsPage } from './pages/InsightsPage';
 import { ProfilePage } from './pages/ProfilePage';
 import { SettingsPage } from './pages/SettingsPage';
 import { ProtectedRoute } from './components/auth/ProtectedRoute';
@@ -32,21 +33,32 @@ function App() {
           }
         />
         <Route
-          path="/dashboard/data"
+          path="/dashboard/insights"
           element={
             <ProtectedRoute>
-              <DataPage />
+              <InsightsPage />
             </ProtectedRoute>
           }
         />
         <Route
-          path="/dashboard/charts"
+          path="/dashboard/analytics"
           element={
             <ProtectedRoute>
               <ChartsPage />
             </ProtectedRoute>
           }
         />
+        <Route
+          path="/dashboard/explorer"
+          element={
+            <ProtectedRoute>
+              <DataPage />
+            </ProtectedRoute>
+          }
+        />
+        {/* Legacy routes for backwards compatibility */}
+        <Route path="/dashboard/data" element={<Navigate to="/dashboard/explorer" replace />} />
+        <Route path="/dashboard/charts" element={<Navigate to="/dashboard/analytics" replace />} />
         <Route
           path="/dashboard/profile"
           element={

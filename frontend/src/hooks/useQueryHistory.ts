@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { type QueryHistoryItem } from '../types/data';
+import { type QueryHistoryItem, type CachedQueryResponse } from '../types/data';
 
 const STORAGE_KEY = 'finq-query-history';
 const MAX_HISTORY_ITEMS = 50;
@@ -31,12 +31,13 @@ export function useQueryHistory() {
     }
   }, [history]);
 
-  const addQuery = (question: string, executionTime: number) => {
+  const addQuery = (question: string, executionTime: number, cachedResponse?: CachedQueryResponse) => {
     const newItem: QueryHistoryItem = {
       id: Date.now().toString(),
       question,
       timestamp: new Date(),
-      executionTime
+      executionTime,
+      cachedResponse
     };
 
     setHistory(prev => {
@@ -44,6 +45,10 @@ export function useQueryHistory() {
       // Keep only the most recent items
       return updated.slice(0, MAX_HISTORY_ITEMS);
     });
+  };
+
+  const getByQuestion = (question: string): QueryHistoryItem | undefined => {
+    return history.find(item => item.question === question);
   };
 
   const clearHistory = () => {
@@ -58,6 +63,7 @@ export function useQueryHistory() {
   return {
     history,
     addQuery,
-    clearHistory
+    clearHistory,
+    getByQuestion
   };
 }

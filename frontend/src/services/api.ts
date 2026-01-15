@@ -122,4 +122,26 @@ export const getExpenseBreakdown = async (year?: number) => {
   return response.data;
 };
 
+// NL2SQL API
+export const processNaturalLanguageQuery = async (question: string) => {
+  const response = await apiClient.post('/api/nl2sql/query', { question });
+  return response.data;
+};
+
+export const getNL2SQLHealth = async () => {
+  const response = await apiClient.get('/api/nl2sql/health');
+  return response.data;
+};
+
+export const getExampleStats = async () => {
+  const response = await apiClient.get('/api/nl2sql/examples/stats');
+  return response.data;
+};
+
+// Insights API
+export const getAutomatedInsights = async () => {
+  const response = await apiClient.get('/api/insights/automated');
+  return response.data;
+};
+
 export default apiClient;
