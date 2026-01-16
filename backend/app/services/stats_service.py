@@ -17,12 +17,13 @@ class StatsService:
                 org_filter = "AND gl.organization_id = %s"
                 org_params = [organization_id]
 
-            # Total revenue (Sales from Trading account)
+            # Total revenue (matching insights_service revenue condition)
             cursor.execute(f"""
-                SELECT SUM(gl.amount) as total_revenue
+                SELECT COALESCE(SUM(ABS(gl.amount)), 0) as total_revenue
                 FROM general_ledger gl
                 JOIN chart_of_accounts coa ON gl.account_key = coa.account_key
-                WHERE coa.class = 'Trading account' AND coa.subclass = 'Sales'
+                WHERE ((coa.class = 'Trading account' AND coa.subclass = 'Sales')
+                       OR coa.class = 'Revenue')
                 {org_filter}
             """, org_params)
             result = cursor.fetchone()

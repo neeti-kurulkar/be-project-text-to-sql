@@ -77,10 +77,15 @@ export function QueryMessage({ message }: QueryMessageProps) {
               dataKey={chart_config.x_axis?.dataKey}
               tick={{ fontSize: 12, fill: '#9ca3af' }}
             />
-            <YAxis tick={{ fontSize: 12, fill: '#9ca3af' }} />
+            <YAxis
+              tick={{ fontSize: 12, fill: '#9ca3af' }}
+              domain={[0, 'auto']}
+              tickFormatter={(value) => value >= 1000 ? `${(value / 1000).toFixed(0)}K` : value}
+            />
             <Tooltip
               contentStyle={{ backgroundColor: '#1f2937', border: '1px solid #374151' }}
               labelStyle={{ color: '#f3f4f6' }}
+              formatter={(value: number) => [value.toLocaleString(), '']}
             />
             <Legend />
             {chart_config.bars?.map((bar, index) => (

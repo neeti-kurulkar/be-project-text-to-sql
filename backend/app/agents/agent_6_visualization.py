@@ -229,6 +229,66 @@ class Agent6Visualization(BaseAgent):
 
         return None, None, None
 
+    def _create_composite_category(
+        self,
+        results: List[Dict[str, Any]],
+        columns: List[str]
+    ) -> tuple:
+        """
+        Create composite category labels for year+quarter or year+month data.
+        E.g., year=2019, quarter=Q1 -> period="2019 Q1"
+        Returns: (transformed_results, updated_columns, composite_category_name)
+        """
+        if not results:
+            return results, columns, None
+
+        columns_lower = [c.lower() for c in columns]
+
+        # Check for year + quarter combination
+        has_year = 'year' in columns_lower
+        has_quarter = 'quarter' in columns_lower
+        has_month = 'month' in columns_lower
+
+        if has_year and (has_quarter or has_month):
+            # Find the actual column names (case-sensitive)
+            year_col = columns[columns_lower.index('year')]
+            period_col = None
+            period_type = None
+
+            if has_quarter:
+                period_col = columns[columns_lower.index('quarter')]
+                period_type = 'quarter'
+            elif has_month:
+                period_col = columns[columns_lower.index('month')]
+                period_type = 'month'
+
+            if period_col:
+                # Create composite category
+                transformed_results = []
+                for row in results:
+                    new_row = dict(row)
+                    year_val = row.get(year_col, '')
+                    period_val = row.get(period_col, '')
+
+                    # Format the composite label
+                    if period_type == 'quarter':
+                        # Handle both "Q1" and "1" formats
+                        q_str = str(period_val)
+                        if not q_str.upper().startswith('Q'):
+                            q_str = f"Q{q_str}"
+                        new_row['period'] = f"{year_val} {q_str}"
+                    else:
+                        new_row['period'] = f"{year_val}-{period_val}"
+
+                    transformed_results.append(new_row)
+
+                # Update columns list
+                new_columns = ['period'] + [c for c in columns if c not in [year_col, period_col]]
+
+                return transformed_results, new_columns, 'period'
+
+        return results, columns, None
+
     def _generate_chart_config(
         self,
         chart_type: str,
@@ -246,8 +306,11 @@ class Agent6Visualization(BaseAgent):
             results = transformed_data
             columns = list(transformed_data[0].keys()) if transformed_data else columns
 
+        # Check for year+quarter data that needs composite x-axis labels
+        results, columns, composite_category = self._create_composite_category(results, columns)
+
         # Find the category column (usually the first non-numeric column)
-        category_col = transformed_category  # Use transformed if available
+        category_col = composite_category or transformed_category  # Use composite or transformed if available
         value_col = transformed_value  # Use transformed if available
 
         for col in columns:
