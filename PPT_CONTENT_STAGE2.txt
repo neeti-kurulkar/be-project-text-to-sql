@@ -1,0 +1,780 @@
+================================================================================
+        ENHANCING BUSINESS ANALYTICS WITH LLM-SQL
+        PROJECT STAGE-II PPT CONTENT
+        Updated: January 2026
+================================================================================
+
+================================================================================
+CLASS DIAGRAM vs DFD RECOMMENDATION
+================================================================================
+
+RECOMMENDATION: Use DFD (not Class Diagram)
+
+Reasons:
+- Your system is a DATA PROCESSING PIPELINE, not an OOP-heavy application
+- The core innovation is DATA FLOW THROUGH 6 AGENTS
+- DFDs better represent the NL -> SQL -> Results -> Insights -> Visualization flow
+- Class diagrams are better for systems with complex inheritance hierarchies
+
+================================================================================
+SLIDE 1: INTRODUCTION (Updated)
+================================================================================
+
+Content Points:
+- Data-driven decision making requires SQL expertise that most business users lack
+- 73% of business data remains unanalyzed due to technical barriers
+- Our system converts natural language to SQL using a 6-agent AI pipeline
+- RAG-enhanced few-shot learning improves SQL generation accuracy
+- Multi-tenant architecture enables secure, organization-specific analytics
+- End-to-end automation: Question -> SQL -> Results -> Insights -> Visualization
+
+================================================================================
+SLIDE 2: LITERATURE REVIEW
+================================================================================
+
+(Keep existing content - user requested to exclude this from updates)
+
+================================================================================
+SLIDE 3: NEED / OBJECTIVE AND SCOPE (Updated)
+================================================================================
+
+OBJECTIVES:
+- Design a production-ready 6-agent NL2SQL pipeline using LangGraph orchestration
+- Implement RAG-based few-shot learning with semantic example retrieval (ChromaDB)
+- Build multi-tenant architecture with organization-level data isolation
+- Automate the complete analytics pipeline from natural language to visualization
+- Achieve 85%+ first-attempt SQL accuracy with self-correcting validation loop
+
+SCOPE:
+- Financial domain analytics (revenue, expenses, profit, trends)
+- Support for aggregation, comparison, trend analysis, and ranking queries
+- React-based dashboard with real-time query interface
+- JWT-based authentication with role-based access control
+
+================================================================================
+SLIDE 4: PROBLEM STATEMENT (Updated)
+================================================================================
+
+MAIN STATEMENT:
+Design and implement a multi-tenant, multi-agent NL2SQL system that enables
+non-technical users to query financial databases using natural language, with
+automated insight generation and visualization.
+
+SUB-PROBLEMS:
+- Bridge the gap between natural language ambiguity and SQL precision
+- Ensure data isolation in multi-tenant environments
+- Generate contextually relevant, actionable business insights
+- Select appropriate visualizations based on data characteristics
+- Implement self-correcting SQL validation with retry mechanisms
+
+================================================================================
+SLIDE 5: ARCHITECTURE DIAGRAM
+================================================================================
+
+PLANTUML CODE:
+--------------------------------------------------------------------------------
+@startuml
+skinparam backgroundColor #FEFEFE
+skinparam componentStyle uml2
+
+package "Presentation Layer" #E3F2FD {
+    [React 19 Frontend] as Frontend
+    [Dashboard] as Dashboard
+    [Query Interface] as QueryUI
+    [Charts & Visualizations] as Charts
+}
+
+package "API Layer" #FFF3E0 {
+    [FastAPI Backend] as API
+    [JWT Auth Middleware] as Auth
+    [CORS Handler] as CORS
+}
+
+package "6-Agent Pipeline (LangGraph)" #E8F5E9 {
+    [Agent 1: Understanding] as A1
+    [Agent 2: Schema Navigation] as A2
+    [Agent 3: SQL Generation] as A3
+    [Agent 4: Validation] as A4
+    [Agent 5: Insights] as A5
+    [Agent 6: Visualization] as A6
+}
+
+package "RAG Layer" #FCE4EC {
+    [Sentence Transformers\n(all-MiniLM-L6-v2)] as Embeddings
+    [ChromaDB Vector Store] as VectorDB
+    [Few-Shot Examples] as Examples
+}
+
+package "Data Layer" #F3E5F5 {
+    database "PostgreSQL" as DB {
+        [organizations]
+        [users]
+        [general_ledger]
+        [chart_of_accounts]
+        [territory]
+        [calendar]
+    }
+}
+
+cloud "External Services" #ECEFF1 {
+    [OpenAI GPT-4o-mini] as LLM
+}
+
+Frontend --> API : REST/JSON
+API --> Auth
+Auth --> A1
+A1 --> A2 : Intent
+A2 --> A3 : Schema
+A3 --> A4 : SQL
+A4 --> A3 : Retry (if invalid)
+A4 --> DB : Execute SQL
+DB --> A5 : Results
+A5 --> A6 : Insights
+A6 --> API : Response
+
+A1 --> LLM
+A3 --> LLM
+A3 --> VectorDB : Retrieve Examples
+A5 --> LLM
+A6 --> LLM
+
+Embeddings --> VectorDB
+Examples --> VectorDB
+
+@enduml
+--------------------------------------------------------------------------------
+
+================================================================================
+SLIDE 6: MATHEMATICAL MODEL (Updated)
+================================================================================
+
+MODEL 1: SEMANTIC SIMILARITY FOR EXAMPLE RETRIEVAL
+--------------------------------------------------
+
+Embedding Generation:
+    q_emb = SentenceTransformer(query)
+    e_emb[i] = SentenceTransformer(example_i)
+
+Cosine Similarity:
+    sim_i = (q_emb . e_emb[i]) / (||q_emb|| x ||e_emb[i]||)
+
+Top-K Selection:
+    Selected = argmax_k(sim_i) for i in {1, ..., n}
+
+
+MODEL 2: MULTI-TENANT QUERY FILTERING
+-------------------------------------
+
+Let Q be the generated SQL query. The system enforces:
+    Q' = Q AND (organization_id = theta)
+
+Where theta is the authenticated user's organization ID from JWT token.
+
+
+MODEL 3: VALIDATION RETRY LOGIC
+-------------------------------
+
+for attempt in [0, max_retries]:
+    SQL = Agent3.generate(prompt, feedback)
+    valid, errors = Agent4.validate(SQL)
+    if valid:
+        return execute(SQL)
+    feedback = errors
+return Error("Max retries exceeded")
+
+
+MODEL 4: CHART TYPE SELECTION FUNCTION
+--------------------------------------
+
+ChartType(data, intent) =
+    | "line"  if has_temporal_dimension(data)
+    | "pie"   if intent.type == "composition" AND |categories| <= 5
+    | "bar"   otherwise
+
+================================================================================
+SLIDE 7: FEATURES - FUNCTIONALITY & ALGORITHMS (Updated)
+================================================================================
+
+CORE FEATURES TABLE:
+--------------------------------------------------------------------------------
+| Feature                  | Description                      | Technology           |
+|--------------------------|----------------------------------|----------------------|
+| Natural Language Queries | Ask questions in plain English   | GPT-4o-mini+LangChain|
+| 6-Agent Pipeline         | Specialized agents for each task | LangGraph            |
+| RAG-Enhanced SQL         | Few-shot via semantic search     | ChromaDB+Transformers|
+| Self-Correcting Valid.   | Retry loop for invalid SQL       | Agent 4 feedback     |
+| Multi-Tenant Isolation   | Organization-based separation    | JWT + WHERE clause   |
+| Auto-Visualization       | Intelligent chart selection      | Agent 6 logic        |
+| Business Insights        | Actionable analytics summaries   | GPT-4o-mini analysis |
+--------------------------------------------------------------------------------
+
+ALGORITHM: 6-AGENT PIPELINE FLOW
+--------------------------------
+
+1. UNDERSTANDING AGENT
+   Input: Natural language question
+   Process: Extract intent, metrics, filters, groupings
+   Output: Structured intent JSON
+
+2. SCHEMA AGENT
+   Input: Intent JSON
+   Process: Map intent to tables, determine JOINs
+   Output: Schema navigation plan
+
+3. SQL GENERATION AGENT
+   Input: Intent + Schema + RAG Examples
+   Process: Construct SQL with few-shot prompting
+   Output: SQL query with {org_id} placeholder
+
+4. VALIDATION AGENT
+   Input: Generated SQL
+   Process: Syntax check, security scan, multi-tenant verification
+   Output: Valid SQL or error feedback for retry
+
+5. INSIGHTS AGENT
+   Input: Query results
+   Process: Statistical analysis + LLM interpretation
+   Output: Summary, key insights, trends, anomalies
+
+6. VISUALIZATION AGENT
+   Input: Results + Intent
+   Process: Determine chart type, configure axes
+   Output: Chart configuration JSON
+
+================================================================================
+SLIDE 8: USE CASE DIAGRAM
+================================================================================
+
+PLANTUML CODE:
+--------------------------------------------------------------------------------
+@startuml
+skinparam actorStyle awesome
+skinparam usecase {
+    BackgroundColor<<core>> #E8F5E9
+    BackgroundColor<<admin>> #FFEBEE
+    BackgroundColor<<analytics>> #E3F2FD
+}
+
+left to right direction
+
+actor "Business User" as BU
+actor "Data Analyst" as DA
+actor "System Admin" as SA
+
+rectangle "Financial NL2SQL System" {
+
+    package "Query Operations" <<core>> {
+        usecase "Enter Natural Language Query" as UC1
+        usecase "View Query Results" as UC2
+        usecase "Export Results to CSV" as UC3
+        usecase "View Query History" as UC4
+    }
+
+    package "Analytics & Visualization" <<analytics>> {
+        usecase "View Dashboard KPIs" as UC5
+        usecase "Explore Pre-built Charts" as UC6
+        usecase "View AI-Generated Insights" as UC7
+        usecase "Browse Data Tables" as UC8
+    }
+
+    package "System Administration" <<admin>> {
+        usecase "Manage Few-Shot Examples" as UC9
+        usecase "Monitor System Performance" as UC10
+        usecase "Configure Organization Settings" as UC11
+        usecase "Manage Users" as UC12
+    }
+
+    package "Authentication" {
+        usecase "Login/Logout" as UC13
+        usecase "View Profile" as UC14
+    }
+
+    ' Pipeline sub-processes (included)
+    usecase "Generate SQL (6-Agent Pipeline)" as PIPE
+    usecase "Validate & Execute SQL" as EXEC
+    usecase "Generate Insights" as INS
+    usecase "Recommend Visualization" as VIS
+}
+
+' User relationships
+BU --> UC1
+BU --> UC2
+BU --> UC5
+BU --> UC6
+BU --> UC7
+BU --> UC13
+
+DA --> UC1
+DA --> UC2
+DA --> UC3
+DA --> UC4
+DA --> UC5
+DA --> UC6
+DA --> UC7
+DA --> UC8
+DA --> UC13
+DA --> UC14
+
+SA --> UC9
+SA --> UC10
+SA --> UC11
+SA --> UC12
+SA --> UC13
+
+' Include relationships
+UC1 ..> PIPE : <<include>>
+PIPE ..> EXEC : <<include>>
+EXEC ..> INS : <<include>>
+INS ..> VIS : <<include>>
+VIS ..> UC2 : <<include>>
+
+@enduml
+--------------------------------------------------------------------------------
+
+================================================================================
+SLIDE 9: DFD LEVEL 0 (Context Diagram)
+================================================================================
+
+PLANTUML CODE:
+--------------------------------------------------------------------------------
+@startuml
+skinparam rectangle {
+    BackgroundColor #E8F5E9
+    BorderColor #4CAF50
+}
+
+actor "Business User" as User
+actor "System Administrator" as Admin
+
+rectangle "0.0\nFinancial NL2SQL\nSystem" as System
+
+database "PostgreSQL\nDatabase" as DB
+cloud "OpenAI\nGPT-4o-mini" as LLM
+database "ChromaDB\nVector Store" as Vector
+
+User --> System : Natural Language Query
+System --> User : Results + Insights + Visualization
+
+Admin --> System : Configuration & Examples
+System --> Admin : System Metrics & Logs
+
+System <--> DB : SQL Queries / Results
+System <--> LLM : Prompts / Completions
+System <--> Vector : Query Embeddings / Similar Examples
+
+@enduml
+--------------------------------------------------------------------------------
+
+================================================================================
+SLIDE 10: DFD LEVEL 1 (Major Processes)
+================================================================================
+
+PLANTUML CODE:
+--------------------------------------------------------------------------------
+@startuml
+skinparam rectangle {
+    BackgroundColor #FFFDE7
+    BorderColor #FBC02D
+}
+
+actor "User" as User
+actor "Admin" as Admin
+
+rectangle "1.0\nAuthentication\n& Authorization" as P1
+rectangle "2.0\nQuery Understanding\n(Agent 1)" as P2
+rectangle "3.0\nSchema Navigation\n(Agent 2)" as P3
+rectangle "4.0\nSQL Generation\n(Agent 3)" as P4
+rectangle "5.0\nSQL Validation\n(Agent 4)" as P5
+rectangle "6.0\nQuery Execution" as P6
+rectangle "7.0\nInsights Generation\n(Agent 5)" as P7
+rectangle "8.0\nVisualization\n(Agent 6)" as P8
+rectangle "9.0\nSystem Administration" as P9
+
+database "D1: User Store" as D1
+database "D2: PostgreSQL" as D2
+database "D3: ChromaDB" as D3
+database "D4: Query History" as D4
+cloud "OpenAI API" as LLM
+
+User --> P1 : Credentials
+P1 --> D1 : Validate User
+P1 --> User : JWT Token
+
+User --> P2 : NL Query + JWT
+P2 --> LLM : Extract Intent
+P2 --> P3 : Intent JSON
+
+P3 --> D2 : Fetch Schema
+P3 --> P4 : Schema Plan
+
+P4 --> D3 : Retrieve Examples
+P4 --> LLM : Generate SQL
+P4 --> P5 : Raw SQL
+
+P5 --> P4 : Error Feedback (retry)
+P5 --> P6 : Validated SQL
+
+P6 --> D2 : Execute SQL
+P6 --> D4 : Log Query
+P6 --> P7 : Results
+
+P7 --> LLM : Analyze Results
+P7 --> P8 : Results + Insights
+
+P8 --> LLM : Chart Selection
+P8 --> User : Complete Response
+
+Admin --> P9 : Manage Examples
+P9 --> D3 : Update Examples
+
+@enduml
+--------------------------------------------------------------------------------
+
+================================================================================
+SLIDE 11: DFD LEVEL 2 (SQL Generation Process Detail)
+================================================================================
+
+PLANTUML CODE:
+--------------------------------------------------------------------------------
+@startuml
+skinparam rectangle {
+    BackgroundColor #E3F2FD
+    BorderColor #1976D2
+}
+
+rectangle "From Process 3.0" as Input
+
+rectangle "4.1\nCompute Query\nEmbedding" as P41
+rectangle "4.2\nSearch Similar\nExamples" as P42
+rectangle "4.3\nRetrieve Base\nExamples" as P43
+rectangle "4.4\nRetrieve Org\nExamples" as P44
+rectangle "4.5\nConstruct\nFew-Shot Prompt" as P45
+rectangle "4.6\nCall LLM API" as P46
+rectangle "4.7\nParse SQL\nResponse" as P47
+
+database "D3: ChromaDB" as D3
+database "base_examples\ncollection" as BaseCol
+database "org_{id}_examples\ncollection" as OrgCol
+cloud "OpenAI API" as LLM
+
+rectangle "To Process 5.0" as Output
+
+Input --> P41 : NL Query + Intent + Schema
+
+P41 --> P42 : Query Embedding (384-dim)
+
+P42 --> P43 : Similarity Search
+P42 --> P44 : Similarity Search
+
+P43 --> BaseCol : Top-K Query
+BaseCol --> P43 : Base Examples (K=2)
+
+P44 --> OrgCol : Top-K Query
+OrgCol --> P44 : Org Examples (K=2)
+
+P43 --> P45 : Base Examples
+P44 --> P45 : Org Examples
+
+P45 --> P46 : Complete Prompt\n(Schema + Examples + Query)
+
+P46 --> LLM : API Request
+LLM --> P46 : SQL Completion
+
+P46 --> P47 : Raw Response
+
+P47 --> Output : Parsed SQL Query
+
+note right of P45
+  Prompt Structure:
+  1. System instruction
+  2. Schema description
+  3. Few-shot examples (4 total)
+  4. Target query
+  5. Output format
+end note
+
+@enduml
+--------------------------------------------------------------------------------
+
+================================================================================
+SLIDE 12: ER DIAGRAM & MULTI-TENANT STRUCTURE
+================================================================================
+
+PLANTUML CODE FOR ER DIAGRAM:
+--------------------------------------------------------------------------------
+@startuml
+skinparam linetype ortho
+
+entity "organizations" as org {
+    * organization_id : SERIAL <<PK>>
+    --
+    name : VARCHAR(255)
+    slug : VARCHAR(100)
+    subscription_tier : VARCHAR(50)
+    settings : JSONB
+    created_at : TIMESTAMP
+}
+
+entity "users" as users {
+    * user_id : SERIAL <<PK>>
+    --
+    * organization_id : INT <<FK>>
+    email : VARCHAR(255)
+    password_hash : VARCHAR(255)
+    name : VARCHAR(255)
+    role : VARCHAR(50)
+    created_at : TIMESTAMP
+}
+
+entity "general_ledger" as gl {
+    * id : SERIAL <<PK>>
+    --
+    * organization_id : INT <<FK>>
+    date : DATE
+    amount : DECIMAL(15,2)
+    account_key : VARCHAR(50)
+    territory_key : VARCHAR(50)
+    description : TEXT
+}
+
+entity "chart_of_accounts" as coa {
+    * account_key : VARCHAR(50) <<PK>>
+    * organization_id : INT <<PK, FK>>
+    --
+    class : VARCHAR(100)
+    subclass : VARCHAR(100)
+    account : VARCHAR(100)
+    subaccount : VARCHAR(100)
+}
+
+entity "territory" as terr {
+    * territory_key : VARCHAR(50) <<PK>>
+    * organization_id : INT <<PK, FK>>
+    --
+    country : VARCHAR(100)
+    region : VARCHAR(100)
+    city : VARCHAR(100)
+}
+
+entity "calendar" as cal {
+    * date_key : DATE <<PK>>
+    --
+    year : INT
+    quarter : INT
+    month : INT
+    day_of_week : VARCHAR(20)
+}
+
+org ||--o{ users : "has"
+org ||--o{ gl : "owns"
+org ||--o{ coa : "defines"
+org ||--o{ terr : "manages"
+
+gl }o--|| coa : "categorized by"
+gl }o--|| terr : "located in"
+gl }o--|| cal : "dated"
+
+@enduml
+--------------------------------------------------------------------------------
+
+MULTI-TENANT STRUCTURE EXPLANATION:
+-----------------------------------
+
+Current Architecture (Shared Database):
+
++-------------------------------------------------------------+
+|                    PostgreSQL Database                       |
++-------------------------------------------------------------+
+|  Organization A (org_id=1)  |  Organization B (org_id=2)    |
+|  ---------------------------|------------------------------ |
+|  general_ledger (filtered)  |  general_ledger (filtered)    |
+|  chart_of_accounts          |  chart_of_accounts            |
+|  territory                  |  territory                    |
+|  users                      |  users                        |
++-------------------------------------------------------------+
+
+ISOLATION MECHANISM:
+1. Every table (except calendar) has organization_id column
+2. JWT token contains user's organization_id
+3. Middleware extracts org_id and injects into all queries
+4. All JOINs must include org_id matching:
+
+   JOIN chart_of_accounts coa ON
+       gl.organization_id = coa.organization_id AND
+       gl.account_key = coa.account_key
+
+
+SCALING STRATEGIES:
+-----------------------------------
+| Strategy              | Description                           | When to Use          |
+|-----------------------|---------------------------------------|----------------------|
+| Vertical Scaling      | Increase PostgreSQL resources         | < 100 organizations  |
+| Read Replicas         | Separate read/write workloads         | High read volume     |
+| Table Partitioning    | Partition by organization_id          | 100-1000 orgs        |
+| Schema-per-Tenant     | Separate schema per org               | Need strong isolation|
+| Database-per-Tenant   | Dedicated database per org            | Enterprise/compliance|
+| Sharding              | Distribute across multiple DB servers | > 1000 orgs          |
+
+RECOMMENDED SCALING PATH:
+
+Stage 1: Shared DB + Row-level filtering (Current)
+    |
+    v (>50 orgs)
+Stage 2: Add Read Replicas + Connection Pooling
+    |
+    v (>200 orgs)
+Stage 3: Partition tables by organization_id
+    |
+    v (>1000 orgs or compliance needs)
+Stage 4: Schema-per-Tenant or Database-per-Tenant
+
+================================================================================
+SLIDE 13: SYSTEM SPECIFICATIONS (Updated)
+================================================================================
+
+SOFTWARE REQUIREMENTS:
+--------------------------------------------------------------------------------
+| Category    | Technology            | Version      |
+|-------------|-----------------------|--------------|
+| Backend     | Python                | 3.9+         |
+|             | FastAPI               | 0.115+       |
+|             | LangChain             | Latest       |
+|             | LangGraph             | Latest       |
+|             | Pydantic              | 2.9+         |
+| Frontend    | React                 | 19.x         |
+|             | TypeScript            | 5.9+         |
+|             | Vite                  | 7.x          |
+|             | Tailwind CSS          | 4.x          |
+|             | Recharts              | 3.x          |
+| Database    | PostgreSQL            | 12+          |
+|             | ChromaDB              | Latest       |
+| AI/ML       | OpenAI API            | GPT-4o-mini  |
+|             | Sentence-Transformers | all-MiniLM-L6-v2 |
+| Security    | JWT                   | HS256        |
+|             | bcrypt                | Password hashing |
+--------------------------------------------------------------------------------
+
+HARDWARE REQUIREMENTS:
+--------------------------------------------------------------------------------
+| Environment | RAM            | CPU       | Storage   | Network         |
+|-------------|----------------|-----------|-----------|-----------------|
+| Development | 8GB min, 16GB rec | 4+ cores | 20GB      | Stable internet |
+| Production  | 32GB+          | 8+ cores  | 100GB SSD | Low latency     |
+--------------------------------------------------------------------------------
+
+================================================================================
+SLIDE 14: DATASETS (Updated)
+================================================================================
+
+DATASET COMPARISON:
+--------------------------------------------------------------------------------
+| Dataset          | Purpose                | Content                  | Records |
+|------------------|------------------------|--------------------------|---------|
+| Custom Financial | Primary evaluation     | General ledger, accounts | 10,000+ |
+| Few-Shot Examples| RAG retrieval          | Question-SQL pairs       | 80+     |
+| BIRD Benchmark   | Generalization testing | Cross-domain SQL queries | Standard|
+| SPIDER           | Baseline comparison    | Text-to-SQL pairs        | Standard|
+--------------------------------------------------------------------------------
+
+SCHEMA STRUCTURE:
+- general_ledger: 10,000+ financial transactions (2019-2024)
+- chart_of_accounts: 50+ account classifications
+- territory: 20+ geographic regions
+- calendar: Date dimension table
+
+================================================================================
+SLIDE 15: EXPECTED RESULTS
+================================================================================
+
+EXPECTED RESULTS TABLE:
+--------------------------------------------------------------------------------
+| Metric                     | Target    | Rationale                          |
+|----------------------------|-----------|------------------------------------|
+| First-attempt SQL accuracy | >= 80%    | Based on literature benchmarks     |
+| With retry accuracy        | >= 90%    | Validation feedback improves output|
+| Query response time        | < 10s     | Acceptable for interactive use     |
+| Multi-tenant isolation     | 100%      | Security requirement               |
+| Insight relevance score    | >= 4/5    | User satisfaction threshold        |
+| Chart appropriateness      | >= 90%    | Correct chart type selection       |
+--------------------------------------------------------------------------------
+
+EXPECTED KEY FINDINGS (Hypotheses):
+- Semantic example selection expected to outperform random selection
+- Optimal few-shot count expected between 2-4 examples (accuracy vs latency)
+- Validation retry mechanism expected to recover failed queries
+- Complex JOINs (3+ tables) expected to show lower accuracy than simple queries
+
+EVALUATION PLAN:
+- Test on custom financial benchmark dataset (80+ queries)
+- Compare against BIRD and SPIDER benchmarks for generalization
+- Measure execution accuracy, valid efficiency, and response latency
+- Conduct user study for insight quality assessment
+
+================================================================================
+SLIDE 16: CONCLUSION
+================================================================================
+
+WORK COMPLETED (Stage-II):
+- Designed and implemented 6-agent NL2SQL pipeline using LangGraph orchestration
+- Built RAG-enhanced SQL generation with ChromaDB vector store and semantic retrieval
+- Developed multi-tenant architecture with organization-level data isolation
+- Created end-to-end automation: NL -> SQL -> Results -> Insights -> Visualization
+- Implemented self-correcting validation loop with retry mechanism
+- Built React-based dashboard with real-time query interface
+
+PENDING WORK:
+- Comprehensive testing on benchmark datasets (Custom, BIRD, SPIDER)
+- Performance evaluation and accuracy measurements
+- User study for insight quality assessment
+- Fine-tuning based on evaluation results
+
+FUTURE ENHANCEMENTS:
+- Voice input for natural language queries
+- Fine-tuned domain-specific models to reduce API costs
+- Feedback loop learning from user corrections
+- Cross-database support (MySQL, SQL Server, BigQuery)
+- Mobile application development
+- ETL Pipeline Integration (Enterprise): Use Airflow/dbt to sync daily from
+  ERP systems (SAP, Oracle, NetSuite)
+- Scheduled Reports: Automated daily/weekly analytics reports via email
+- Query Caching: Redis-based caching for frequently asked queries
+- Role-based Query Restrictions: Limit data access based on user roles
+- Audit Trail: Complete logging of all queries for compliance
+- Multi-language Support: NL queries in regional languages
+
+================================================================================
+SLIDE 17: PAPER PUBLISHED
+================================================================================
+
+(Update with actual publication details if accepted)
+
+Title: "Modern Approaches to Text-to-SQL Translation: A Comprehensive Survey
+        of LLM-Based Techniques"
+Status: [Submitted/Accepted/Published]
+Conference/Journal: [Name]
+Date: [Date]
+DOI: [DOI if available]
+
+================================================================================
+SLIDE 18: REFERENCES
+================================================================================
+
+(Keep existing references and add any new ones used in Stage-II)
+
+================================================================================
+                           END OF DOCUMENT
+================================================================================
+
+HOW TO USE PLANTUML:
+--------------------
+1. Go to https://www.plantuml.com/plantuml/uml/
+2. Paste the code between @startuml and @enduml
+3. Click "Submit" to generate the diagram
+4. Download as PNG or SVG
+
+Alternative tools:
+- VS Code extension: "PlantUML"
+- IntelliJ IDEA plugin: "PlantUML Integration"
+- Online: https://plantuml-editor.kkeisuke.com/
+
+================================================================================
