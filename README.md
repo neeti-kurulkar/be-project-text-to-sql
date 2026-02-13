@@ -86,10 +86,10 @@ be-project-text-to-sql/
 
 ```bash
 # Create database
-psql -U postgres -c "CREATE DATABASE financial_analytics;"
+psql -U postgres -c "CREATE DATABASE financial_db;"
 
 # Run schema setup
-psql -U postgres -d financial_analytics -f setup_database_schema.sql
+psql -U postgres -d financial_db -f setup_database_schema.sql
 ```
 
 The schema creates:
