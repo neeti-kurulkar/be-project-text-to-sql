@@ -217,9 +217,9 @@ class ContextService:
 4. **calendar** - Date dimension
    - date (date): Primary key
    - year (int): Year number
-   - quarter (text): Quarter label (Qtr 1, Qtr 2, etc.)
-   - month (int): Month number (1-12)
-   - day (int): Day of month
+   - quarter (text): Quarter label (Qtr 1, Qtr 2, Qtr 3, Qtr 4)
+   - month (text): Month name (Jan, Feb, Mar, ...)
+   - day (text): Day of week (Mon, Tue, ...)
 
 ### Critical Join Rules:
 

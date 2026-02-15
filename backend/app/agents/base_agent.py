@@ -5,10 +5,58 @@ Base agent class with common functionality for all agents.
 from abc import ABC, abstractmethod
 from typing import Dict, Any, List
 import time
-from langchain_openai import ChatOpenAI
 from app.config import settings
 from app.retrieval import VectorStore
 from app.langgraph.state import QueryState
+
+
+def _create_llm():
+    """Create the LLM client based on LLM_PROVIDER (gemini, groq, openai)."""
+    provider = (settings.LLM_PROVIDER or "gemini").strip().lower()
+
+    if provider == "gemini":
+        api_key = (settings.GEMINI_API_KEY or "").strip()
+        if not api_key:
+            raise ValueError(
+                "GEMINI_API_KEY is required when LLM_PROVIDER=gemini. "
+                "Set GEMINI_API_KEY in .env (get a key at https://aistudio.google.com/apikey)."
+            )
+        from langchain_google_genai import ChatGoogleGenerativeAI
+        return ChatGoogleGenerativeAI(
+            model=settings.LLM_MODEL,
+            temperature=settings.LLM_TEMPERATURE,
+            google_api_key=api_key,
+        )
+
+    if provider == "groq":
+        api_key = (settings.GROQ_API_KEY or "").strip()
+        if not api_key:
+            raise ValueError(
+                "GROQ_API_KEY is required when LLM_PROVIDER=groq. "
+                "Set GROQ_API_KEY in .env (get a key at https://console.groq.com)."
+            )
+        from langchain_openai import ChatOpenAI
+        return ChatOpenAI(
+            api_key=api_key,
+            base_url=settings.OPENAI_BASE_URL or "https://api.groq.com/openai/v1",
+            model=settings.LLM_MODEL,
+            temperature=settings.LLM_TEMPERATURE,
+        )
+
+    # openai or fallback
+    api_key = (settings.OPENAI_API_KEY or "").strip()
+    if not api_key:
+        raise ValueError(
+            "OPENAI_API_KEY is required when LLM_PROVIDER=openai. "
+            "Set OPENAI_API_KEY in .env or use Gemini (LLM_PROVIDER=gemini) with GEMINI_API_KEY."
+        )
+    from langchain_openai import ChatOpenAI
+    return ChatOpenAI(
+        api_key=api_key,
+        base_url=settings.OPENAI_BASE_URL or None,
+        model=settings.LLM_MODEL,
+        temperature=settings.LLM_TEMPERATURE,
+    )
 
 
 class BaseAgent(ABC):
@@ -16,11 +64,7 @@ class BaseAgent(ABC):
 
     def __init__(self):
         """Initialize the agent with LLM and vector store."""
-        self.llm = ChatOpenAI(
-            api_key=settings.OPENAI_API_KEY,
-            model=settings.LLM_MODEL,
-            temperature=settings.LLM_TEMPERATURE
-        )
+        self.llm = _create_llm()
         self.vector_store = VectorStore()
         self.agent_name = self.__class__.__name__
 
@@ -103,7 +147,29 @@ class BaseAgent(ABC):
         for attempt in range(max_retries + 1):
             try:
                 response = self.llm.invoke(prompt)
-                return response.content
+                content = getattr(response, "content", response)
+                # Gemini/LangChain can return content as a list of blocks (e.g. [{"type": "text", "text": "..."}])
+                if isinstance(content, list):
+                    parts = []
+                    for block in content:
+                        text = None
+                        if isinstance(block, dict):
+                            text = block.get("text") or block.get("content")
+                            if text is None and block.get("parts"):
+                                p0 = block["parts"][0]
+                                text = p0.get("text") or p0.get("content") if isinstance(p0, dict) else None
+                        elif hasattr(block, "text"):
+                            text = getattr(block, "text", None)
+                        elif hasattr(block, "content"):
+                            text = getattr(block, "content", None)
+                        else:
+                            text = str(block) if block else None
+                        if text:
+                            parts.append(str(text))
+                    return "\n".join(parts) if parts else ""
+                if content is None:
+                    return ""
+                return content if isinstance(content, str) else str(content)
             except Exception as e:
                 error_str = str(e)
                 if "429" in error_str or "rate_limit" in error_str.lower():

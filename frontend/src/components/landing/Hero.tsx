@@ -11,22 +11,22 @@ export function Hero() {
         backgroundSize: '80px 80px'
       }} />
 
-      <div className="relative max-w-4xl mx-auto px-6 py-24 text-center flex flex-col items-center justify-center min-h-[90vh]">
-        {/* Headline */}
-        <h1 className="text-5xl md:text-6xl font-bold font-mono text-white mb-6 animate-fadeIn">
-          Ask Questions. Get Insights.
-          <br />
-          <span className="text-electric-400">Skip the SQL.</span>
+      <div className="relative max-w-4xl mx-auto px-6 py-24 flex flex-col items-center justify-center min-h-[90vh] text-center">
+        {/* Headline – three clear lines, balanced */}
+        <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold text-white mb-8 leading-tight tracking-tight font-sans animate-fadeIn">
+          <span className="block">Ask Questions.</span>
+          <span className="block">Get Insights.</span>
+          <span className="block text-electric-400">Skip the SQL.</span>
         </h1>
 
-        {/* Subheadline */}
-        <p className="text-xl md:text-2xl text-slate-300 mb-12 max-w-2xl animate-fadeIn" style={{ animationDelay: '0.2s' }}>
-          FinQ transforms your natural language questions into powerful SQL queries
-          and beautiful visualizations. No database expertise required.
+        {/* Subheadline – two lines, readable width */}
+        <p className="text-lg md:text-xl text-slate-300 mb-12 max-w-xl mx-auto leading-relaxed animate-fadeIn" style={{ animationDelay: '0.2s' }}>
+          FinQ transforms your natural language questions into powerful SQL queries and beautiful visualizations.
+          <span className="block mt-2 text-slate-400">No database expertise required.</span>
         </p>
 
         {/* CTA Buttons */}
-        <div className="flex flex-col sm:flex-row gap-4 animate-fadeIn" style={{ animationDelay: '0.4s' }}>
+        <div className="flex flex-col sm:flex-row gap-4 justify-center animate-fadeIn" style={{ animationDelay: '0.4s' }}>
           <Link to="/login">
             <Button variant="primary" className="text-lg px-8 py-4">
               Get Started

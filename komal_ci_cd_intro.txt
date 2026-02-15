@@ -1,0 +1,62 @@
+MEMBER 4: CI/CD Pipeline, Cost Estimation, and Project Setup
+================================================================================
+
+WHAT THIS IS ABOUT:
+
+CI/CD stands for Continuous Integration / Continuous Deployment. It means: every time we push code to GitHub, it automatically builds and deploys to Azure — no manual steps needed. You'll also be responsible for figuring out the overall Azure account setup and total cost.
+
+
+WHAT YOU NEED TO RESEARCH:
+
+1. Azure for Students
+   - We're students, so we get free Azure credits
+   - Go to https://azure.microsoft.com/en-us/free/students/
+   - Sign up with your college email and document the process
+   - How much free credit do we get? ($100 typically)
+   - What services are included for free? For how long?
+   - Can multiple team members sign up separately?
+
+2. Azure resource organization
+   - Everything in Azure lives inside a Resource Group (think of it as a folder)
+   - Research how to create a Resource Group
+   - Naming conventions — what should we name our resources? (e.g., finq-rg, finq-backend, finq-db)
+   - What region should we pick? (same region for everything — Central India or South India)
+
+3. GitHub Actions for automated deployment
+   - GitHub Actions is a free CI/CD service built into GitHub
+   - Research how to create a workflow file (.github/workflows/deploy.yml) that:
+     - Backend: On push to main, deploys the backend/ folder to Azure App Service
+     - Frontend: On push to main, builds and deploys the frontend/ folder to Azure Static Web Apps
+   - Azure Static Web Apps automatically creates a GitHub Actions workflow — research how this works
+   - For the backend, research Azure App Service Deployment Center — it can also auto-deploy from GitHub
+
+4. Secrets management in GitHub Actions
+   - The CI/CD pipeline needs credentials to deploy to Azure
+   - Research GitHub Secrets — how to store Azure credentials securely
+   - What credentials are needed? (Azure publish profile or service principal)
+   - Step-by-step: how to get the credentials from Azure and add them to GitHub
+
+5. Azure Key Vault (bonus)
+   - This is Azure's service for securely storing secrets (API keys, passwords)
+   - Instead of putting secrets in App Service settings, you can reference them from Key Vault
+   - Research: is this worth setting up for our project, or is App Service settings enough?
+   - If yes, how to create a Key Vault and connect it to App Service
+
+6. Total cost estimation
+   - Combine the cost estimates from Members 1, 2, and 3
+   - Create a table showing:
+     - Each Azure service we'll use
+     - The pricing tier selected
+     - Monthly cost (in INR and USD)
+     - What's covered by free/student credits
+     - When we'd start paying (after credits run out)
+   - Estimate: how many months can we run on the student credits?
+
+
+WHAT TO DELIVER:
+- Azure for Students signup guide (with screenshots)
+- Resource Group setup instructions
+- GitHub Actions workflow files (or at least the structure/template)
+- How to store and use deployment credentials
+- Complete cost breakdown table (combining all members' estimates)
+- Timeline: how long can we run for free?

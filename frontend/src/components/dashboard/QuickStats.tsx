@@ -91,7 +91,7 @@ export function QuickStats() {
               <p className="text-sm text-ocean-600 dark:text-slate-400 mb-1">
                 {stat.label}
               </p>
-              <p className="text-3xl font-bold font-mono text-ocean-900 dark:text-slate-100">
+              <p className="text-3xl font-bold text-ocean-900 dark:text-slate-100 font-sans">
                 {stat.value}
               </p>
             </div>

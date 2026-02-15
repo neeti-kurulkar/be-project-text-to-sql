@@ -86,10 +86,21 @@ class NL2SQLService:
             # Step 4: Check validation result
             validation_result = state.get("validation_result", {})
             if not validation_result.get("is_valid", False):
+                err_list = validation_result.get("errors", [])
+                error_msg = f"SQL validation failed: {err_list}"
+                # If SQL was empty, include any LLM/API error from the pipeline
+                if err_list and "SQL query is empty" in str(err_list):
+                    llm_error = state.get("error_feedback", "").strip()
+                    if llm_error:
+                        error_msg += f" LLM/API reported: {llm_error}"
+                    else:
+                        error_msg += (
+                            " The LLM did not return valid SQL. Check backend logs for [Agent3] Empty SQL or [Agent3] Exception."
+                        )
                 return self._build_error_response(
                     query_id=query_id,
                     question=question,
-                    error=f"SQL validation failed: {validation_result.get('errors', [])}",
+                    error=error_msg,
                     agent_trace=state.get("agent_trace", []),
                     total_time=time.time() - start_time
                 )

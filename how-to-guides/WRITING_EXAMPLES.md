@@ -18,6 +18,8 @@
 7. [Validating Your Examples](#validating-your-examples)
 8. [Common Mistakes to Avoid](#common-mistakes-to-avoid)
 9. [Example Templates by Difficulty](#example-templates-by-difficulty)
+10. [komal_db_egs (25 examples)](#10-komal_db_egs-25-examples)
+11. [Quick Reference Tables](#11-quick-reference-tables)
 
 ---
 
@@ -1358,9 +1360,473 @@ ORDER BY revenue DESC;
 
 ---
 
-## 10. Quick Reference Tables
+## 10. komal_db_egs (25 examples)
 
-### 10.1 Common Filters
+The following 25 examples follow the project database schema: **general_ledger** (gl), **chart_of_accounts** (coa), **territory** (t), **calendar** (c). All queries use multi-tenant JOINs with `organization_id` and the placeholder `{org_id}` in the WHERE clause.
+
+---
+
+### Example 1 — Count rows
+```
+NL: "How many transactions are in the general ledger?"
+
+SQL:
+SELECT COUNT(*) as total_transactions
+FROM general_ledger gl
+WHERE gl.organization_id = {org_id};
+```
+
+---
+
+### Example 2 — Count accounts
+```
+NL: "How many accounts are in our chart of accounts?"
+
+SQL:
+SELECT COUNT(*) as total_accounts
+FROM chart_of_accounts coa
+WHERE coa.organization_id = {org_id};
+```
+
+---
+
+### Example 3 — List distinct values
+```
+NL: "What are all the countries we operate in?"
+
+SQL:
+SELECT DISTINCT t.country
+FROM territory t
+WHERE t.organization_id = {org_id}
+ORDER BY t.country;
+```
+
+---
+
+### Example 4 — List regions
+```
+NL: "What regions do we have?"
+
+SQL:
+SELECT DISTINCT t.region
+FROM territory t
+WHERE t.organization_id = {org_id}
+ORDER BY t.region;
+```
+
+---
+
+### Example 5 — Simple filter (revenue accounts)
+```
+NL: "Show me all revenue accounts"
+
+SQL:
+SELECT coa.report, coa.class, coa.account, coa.subaccount
+FROM chart_of_accounts coa
+WHERE coa.organization_id = {org_id}
+  AND coa.class = 'Revenue'
+ORDER BY coa.account;
+```
+
+---
+
+### Example 6 — Date range
+```
+NL: "Show me transactions in January 2020"
+
+SQL:
+SELECT gl.date, gl.amount, gl.details
+FROM general_ledger gl
+JOIN calendar c ON gl.date = c.date
+WHERE gl.organization_id = {org_id}
+  AND c.year = 2020
+  AND c.month = 'Jan'
+ORDER BY gl.date;
+```
+
+---
+
+### Example 7 — Total revenue (single aggregate)
+```
+NL: "What was our total revenue in 2020?"
+
+SQL:
+SELECT SUM(gl.amount) as total_revenue
+FROM general_ledger gl
+JOIN chart_of_accounts coa ON gl.organization_id = coa.organization_id AND gl.account_key = coa.account_key
+JOIN calendar c ON gl.date = c.date
+WHERE (coa.class = 'Revenue' OR (coa.class = 'Trading account' AND coa.subclass = 'Sales'))
+  AND gl.organization_id = {org_id}
+  AND c.year = 2020;
+```
+
+---
+
+### Example 8 — Revenue by country
+```
+NL: "Show revenue by country for 2020"
+
+SQL:
+SELECT t.country,
+       SUM(gl.amount) as total_revenue
+FROM general_ledger gl
+JOIN chart_of_accounts coa ON gl.organization_id = coa.organization_id AND gl.account_key = coa.account_key
+JOIN territory t ON gl.organization_id = t.organization_id AND gl.territory_key = t.territory_key
+JOIN calendar c ON gl.date = c.date
+WHERE (coa.class = 'Revenue' OR (coa.class = 'Trading account' AND coa.subclass = 'Sales'))
+  AND gl.organization_id = {org_id}
+  AND c.year = 2020
+GROUP BY t.country
+ORDER BY total_revenue DESC;
+```
+
+---
+
+### Example 9 — Revenue by region
+```
+NL: "Show revenue by region"
+
+SQL:
+SELECT t.region,
+       SUM(gl.amount) as total_revenue
+FROM general_ledger gl
+JOIN chart_of_accounts coa ON gl.organization_id = coa.organization_id AND gl.account_key = coa.account_key
+JOIN territory t ON gl.organization_id = t.organization_id AND gl.territory_key = t.territory_key
+WHERE (coa.class = 'Revenue' OR (coa.class = 'Trading account' AND coa.subclass = 'Sales'))
+  AND gl.organization_id = {org_id}
+GROUP BY t.region
+ORDER BY total_revenue DESC;
+```
+
+---
+
+### Example 10 — Quarterly revenue by year
+```
+NL: "Show quarterly revenue by year"
+
+SQL:
+SELECT c.year,
+       c.quarter,
+       SUM(gl.amount) as quarterly_revenue
+FROM general_ledger gl
+JOIN chart_of_accounts coa ON gl.organization_id = coa.organization_id AND gl.account_key = coa.account_key
+JOIN calendar c ON gl.date = c.date
+WHERE (coa.class = 'Revenue' OR (coa.class = 'Trading account' AND coa.subclass = 'Sales'))
+  AND gl.organization_id = {org_id}
+GROUP BY c.year, c.quarter
+ORDER BY c.year, c.quarter;
+```
+
+---
+
+### Example 11 — Revenue by country and quarter
+```
+NL: "Show quarterly revenue by country for 2020"
+
+SQL:
+SELECT t.country,
+       c.quarter,
+       SUM(gl.amount) as quarterly_revenue
+FROM general_ledger gl
+JOIN chart_of_accounts coa ON gl.organization_id = coa.organization_id AND gl.account_key = coa.account_key
+JOIN territory t ON gl.organization_id = t.organization_id AND gl.territory_key = t.territory_key
+JOIN calendar c ON gl.date = c.date
+WHERE (coa.class = 'Revenue' OR (coa.class = 'Trading account' AND coa.subclass = 'Sales'))
+  AND gl.organization_id = {org_id}
+  AND c.year = 2020
+GROUP BY t.country, c.quarter
+ORDER BY t.country, c.quarter;
+```
+
+---
+
+### Example 12 — Top 5 countries by revenue
+```
+NL: "What are the top 5 countries by revenue?"
+
+SQL:
+SELECT t.country,
+       SUM(gl.amount) as total_revenue
+FROM general_ledger gl
+JOIN chart_of_accounts coa ON gl.organization_id = coa.organization_id AND gl.account_key = coa.account_key
+JOIN territory t ON gl.organization_id = t.organization_id AND gl.territory_key = t.territory_key
+WHERE (coa.class = 'Revenue' OR (coa.class = 'Trading account' AND coa.subclass = 'Sales'))
+  AND gl.organization_id = {org_id}
+GROUP BY t.country
+ORDER BY total_revenue DESC
+LIMIT 5;
+```
+
+---
+
+### Example 13 — Countries with revenue over threshold
+```
+NL: "Which countries had revenue over 100000 in 2020?"
+
+SQL:
+SELECT t.country,
+       SUM(gl.amount) as total_revenue
+FROM general_ledger gl
+JOIN chart_of_accounts coa ON gl.organization_id = coa.organization_id AND gl.account_key = coa.account_key
+JOIN territory t ON gl.organization_id = t.organization_id AND gl.territory_key = t.territory_key
+JOIN calendar c ON gl.date = c.date
+WHERE (coa.class = 'Revenue' OR (coa.class = 'Trading account' AND coa.subclass = 'Sales'))
+  AND gl.organization_id = {org_id}
+  AND c.year = 2020
+GROUP BY t.country
+HAVING SUM(gl.amount) > 100000
+ORDER BY total_revenue DESC;
+```
+
+---
+
+### Example 14 — Revenue for one country in one quarter
+```
+NL: "What was revenue for USA in Qtr 4 2020?"
+
+SQL:
+SELECT t.country,
+       c.quarter,
+       c.year,
+       SUM(gl.amount) as revenue
+FROM general_ledger gl
+JOIN chart_of_accounts coa ON gl.organization_id = coa.organization_id AND gl.account_key = coa.account_key
+JOIN territory t ON gl.organization_id = t.organization_id AND gl.territory_key = t.territory_key
+JOIN calendar c ON gl.date = c.date
+WHERE (coa.class = 'Revenue' OR (coa.class = 'Trading account' AND coa.subclass = 'Sales'))
+  AND gl.organization_id = {org_id}
+  AND t.country = 'USA'
+  AND c.quarter = 'Qtr 4'
+  AND c.year = 2020
+GROUP BY t.country, c.quarter, c.year;
+```
+
+---
+
+### Example 15 — Top expense categories
+```
+NL: "What are our top 5 expense categories by amount?"
+
+SQL:
+SELECT coa.account,
+       coa.subclass,
+       ABS(SUM(gl.amount)) as total_expense
+FROM general_ledger gl
+JOIN chart_of_accounts coa ON gl.organization_id = coa.organization_id AND gl.account_key = coa.account_key
+WHERE coa.class IN ('Expense', 'Operating account', 'Cost of Sales', 'Operating Expense')
+  AND gl.organization_id = {org_id}
+GROUP BY coa.account, coa.subclass
+ORDER BY total_expense DESC
+LIMIT 5;
+```
+
+---
+
+### Example 16 — Total expenses by year
+```
+NL: "What were total expenses in 2020?"
+
+SQL:
+SELECT ABS(SUM(gl.amount)) as total_expenses
+FROM general_ledger gl
+JOIN chart_of_accounts coa ON gl.organization_id = coa.organization_id AND gl.account_key = coa.account_key
+JOIN calendar c ON gl.date = c.date
+WHERE coa.class IN ('Expense', 'Operating account', 'Cost of Sales', 'Operating Expense')
+  AND gl.organization_id = {org_id}
+  AND c.year = 2020;
+```
+
+---
+
+### Example 17 — Compare revenue between two years
+```
+NL: "Compare revenue by country between 2019 and 2020"
+
+SQL:
+SELECT t.country,
+       SUM(CASE WHEN c.year = 2019 THEN gl.amount ELSE 0 END) as revenue_2019,
+       SUM(CASE WHEN c.year = 2020 THEN gl.amount ELSE 0 END) as revenue_2020,
+       SUM(CASE WHEN c.year = 2020 THEN gl.amount ELSE 0 END) - SUM(CASE WHEN c.year = 2019 THEN gl.amount ELSE 0 END) as yoy_change
+FROM general_ledger gl
+JOIN chart_of_accounts coa ON gl.organization_id = coa.organization_id AND gl.account_key = coa.account_key
+JOIN territory t ON gl.organization_id = t.organization_id AND gl.territory_key = t.territory_key
+JOIN calendar c ON gl.date = c.date
+WHERE (coa.class = 'Revenue' OR (coa.class = 'Trading account' AND coa.subclass = 'Sales'))
+  AND gl.organization_id = {org_id}
+  AND c.year IN (2019, 2020)
+GROUP BY t.country
+ORDER BY revenue_2020 DESC;
+```
+
+---
+
+### Example 18 — Rank countries by revenue
+```
+NL: "Rank countries by total revenue"
+
+SQL:
+SELECT t.country,
+       SUM(gl.amount) as total_revenue,
+       RANK() OVER (ORDER BY SUM(gl.amount) DESC) as revenue_rank
+FROM general_ledger gl
+JOIN chart_of_accounts coa ON gl.organization_id = coa.organization_id AND gl.account_key = coa.account_key
+JOIN territory t ON gl.organization_id = t.organization_id AND gl.territory_key = t.territory_key
+WHERE (coa.class = 'Revenue' OR (coa.class = 'Trading account' AND coa.subclass = 'Sales'))
+  AND gl.organization_id = {org_id}
+GROUP BY t.country
+ORDER BY revenue_rank;
+```
+
+---
+
+### Example 19 — Percentage of revenue by country
+```
+NL: "What percentage of total revenue came from each country in 2020?"
+
+SQL:
+WITH total_revenue AS (
+    SELECT SUM(gl.amount) as total
+    FROM general_ledger gl
+    JOIN chart_of_accounts coa ON gl.organization_id = coa.organization_id AND gl.account_key = coa.account_key
+    JOIN calendar c ON gl.date = c.date
+    WHERE (coa.class = 'Revenue' OR (coa.class = 'Trading account' AND coa.subclass = 'Sales'))
+      AND gl.organization_id = {org_id}
+      AND c.year = 2020
+)
+SELECT t.country,
+       SUM(gl.amount) as country_revenue,
+       ROUND(100.0 * SUM(gl.amount) / NULLIF(tr.total, 0), 2) as percentage
+FROM general_ledger gl
+JOIN chart_of_accounts coa ON gl.organization_id = coa.organization_id AND gl.account_key = coa.account_key
+JOIN territory t ON gl.organization_id = t.organization_id AND gl.territory_key = t.territory_key
+JOIN calendar c ON gl.date = c.date
+CROSS JOIN total_revenue tr
+WHERE (coa.class = 'Revenue' OR (coa.class = 'Trading account' AND coa.subclass = 'Sales'))
+  AND gl.organization_id = {org_id}
+  AND c.year = 2020
+GROUP BY t.country, tr.total
+ORDER BY percentage DESC;
+```
+
+---
+
+### Example 20 — Cumulative revenue by month
+```
+NL: "Show cumulative revenue by month for 2020"
+
+SQL:
+SELECT c.month,
+       c.date,
+       SUM(gl.amount) as monthly_revenue,
+       SUM(SUM(gl.amount)) OVER (ORDER BY c.date) as cumulative_revenue
+FROM general_ledger gl
+JOIN chart_of_accounts coa ON gl.organization_id = coa.organization_id AND gl.account_key = coa.account_key
+JOIN calendar c ON gl.date = c.date
+WHERE (coa.class = 'Revenue' OR (coa.class = 'Trading account' AND coa.subclass = 'Sales'))
+  AND gl.organization_id = {org_id}
+  AND c.year = 2020
+GROUP BY c.month, c.date
+ORDER BY c.date;
+```
+
+---
+
+### Example 21 — Revenue for Europe in Q4 or North America in Q1
+```
+NL: "Show revenue for European countries in Qtr 4 or North American countries in Qtr 1"
+
+SQL:
+SELECT t.country,
+       t.region,
+       c.quarter,
+       SUM(gl.amount) as revenue
+FROM general_ledger gl
+JOIN chart_of_accounts coa ON gl.organization_id = coa.organization_id AND gl.account_key = coa.account_key
+JOIN territory t ON gl.organization_id = t.organization_id AND gl.territory_key = t.territory_key
+JOIN calendar c ON gl.date = c.date
+WHERE (coa.class = 'Revenue' OR (coa.class = 'Trading account' AND coa.subclass = 'Sales'))
+  AND gl.organization_id = {org_id}
+  AND ((t.region = 'Europe' AND c.quarter = 'Qtr 4') OR (t.region = 'North America' AND c.quarter = 'Qtr 1'))
+GROUP BY t.country, t.region, c.quarter
+ORDER BY revenue DESC;
+```
+
+---
+
+### Example 22 — Distinct report types
+```
+NL: "What types of reports do we have in the chart of accounts?"
+
+SQL:
+SELECT DISTINCT coa.report
+FROM chart_of_accounts coa
+WHERE coa.organization_id = {org_id}
+ORDER BY coa.report;
+```
+
+---
+
+### Example 23 — Average transaction amount by country
+```
+NL: "What is the average transaction amount by country in 2020?"
+
+SQL:
+SELECT t.country,
+       COUNT(*) as transaction_count,
+       AVG(gl.amount) as avg_amount
+FROM general_ledger gl
+JOIN territory t ON gl.organization_id = t.organization_id AND gl.territory_key = t.territory_key
+JOIN calendar c ON gl.date = c.date
+WHERE gl.organization_id = {org_id}
+  AND c.year = 2020
+GROUP BY t.country
+ORDER BY avg_amount DESC;
+```
+
+---
+
+### Example 24 — Revenue by account (top 10)
+```
+NL: "Show top 10 revenue accounts by total amount"
+
+SQL:
+SELECT coa.account,
+       coa.subclass,
+       SUM(gl.amount) as total_revenue
+FROM general_ledger gl
+JOIN chart_of_accounts coa ON gl.organization_id = coa.organization_id AND gl.account_key = coa.account_key
+WHERE (coa.class = 'Revenue' OR (coa.class = 'Trading account' AND coa.subclass = 'Sales'))
+  AND gl.organization_id = {org_id}
+GROUP BY coa.account, coa.subclass
+ORDER BY total_revenue DESC
+LIMIT 10;
+```
+
+---
+
+### Example 25 — Monthly revenue trend for a year
+```
+NL: "Show monthly revenue for 2020"
+
+SQL:
+SELECT c.month,
+       c.year,
+       SUM(gl.amount) as monthly_revenue
+FROM general_ledger gl
+JOIN chart_of_accounts coa ON gl.organization_id = coa.organization_id AND gl.account_key = coa.account_key
+JOIN calendar c ON gl.date = c.date
+WHERE (coa.class = 'Revenue' OR (coa.class = 'Trading account' AND coa.subclass = 'Sales'))
+  AND gl.organization_id = {org_id}
+  AND c.year = 2020
+GROUP BY c.month, c.year
+ORDER BY MIN(c.date);
+```
+
+---
+
+## 11. Quick Reference Tables
+
+### 11.1 Common Filters
 
 | To Filter By | Use This Column | Example Value |
 |--------------|-----------------|---------------|
@@ -1373,7 +1839,7 @@ ORDER BY revenue DESC;
 | Report Type | `chart_of_accounts.report` | 'Balance Sheet' |
 | Date Range | `general_ledger.date` | BETWEEN '2020-01-01' AND '2020-12-31' |
 
-### 10.2 Common Aggregations
+### 11.2 Common Aggregations
 
 | What You Want | SQL Function | Example |
 |---------------|--------------|---------|
@@ -1383,7 +1849,7 @@ ORDER BY revenue DESC;
 | Maximum | `MAX(amount)` | Largest transaction |
 | Minimum | `MIN(amount)` | Smallest transaction |
 
-### 10.3 Common JOINs
+### 11.3 Common JOINs
 
 | To Get | Join This | On This |
 |--------|-----------|---------|
@@ -1393,7 +1859,7 @@ ORDER BY revenue DESC;
 
 ---
 
-## 11. Example Spreadsheet Template
+## 12. Example Spreadsheet Template
 
 Use this format in your shared spreadsheet:
 
@@ -1430,7 +1896,7 @@ Date_Tested: 2025-01-04
 
 ---
 
-## 12. Getting Help
+## 13. Getting Help
 
 ### 12.1 When Stuck on SQL
 
@@ -1470,7 +1936,7 @@ A: For our dataset size (27K rows), speed isn't critical. Focus on correctness f
 
 ---
 
-## 13. Quality Checklist
+## 14. Quality Checklist
 
 Before submitting each example, verify:
 
@@ -1503,7 +1969,7 @@ Before submitting each example, verify:
 
 ---
 
-## 14. Success Metrics
+## 15. Success Metrics
 
 **Your goal: 25 high-quality examples**
 
@@ -1524,7 +1990,7 @@ Before submitting each example, verify:
 
 ---
 
-## 15. Final Tips
+## 16. Final Tips
 
 ### Do's ✅
 - Start with simple examples to build confidence

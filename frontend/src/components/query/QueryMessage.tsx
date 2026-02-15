@@ -89,8 +89,26 @@ export function QueryMessage({ message }: QueryMessageProps) {
             />
             <Legend />
             {chart_config.bars?.map((bar, index) => (
-              <Bar key={bar.dataKey} dataKey={bar.dataKey} fill={bar.fill || colors[index]} name={bar.name} />
-            )) || <Bar dataKey={chart_config.y_axis?.dataKey} fill="#3b82f6" />}
+              <Bar
+                key={bar.dataKey}
+                dataKey={bar.dataKey}
+                fill={bar.fill || colors[index]}
+                name={bar.name}
+                isAnimationActive
+                animationBegin={0}
+                animationDuration={700}
+                animationEasing="ease-out"
+              />
+            )) || (
+              <Bar
+                dataKey={chart_config.y_axis?.dataKey}
+                fill="#3b82f6"
+                isAnimationActive
+                animationBegin={0}
+                animationDuration={700}
+                animationEasing="ease-out"
+              />
+            )}
           </BarChart>
         </ResponsiveContainer>
       );

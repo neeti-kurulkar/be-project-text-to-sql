@@ -26,13 +26,13 @@ export function ChartsPage() {
 
   return (
     <DashboardLayout title="Financial Dashboard">
-      <div className="max-w-7xl mx-auto px-6 py-8">
+      <div className="max-w-7xl mx-auto px-6 py-8 font-sans">
         <div className="flex justify-between items-start mb-6">
           <div>
-            <h2 className="text-xl font-semibold font-mono text-ocean-900 dark:text-slate-100 mb-2">
+            <h2 className="text-xl font-semibold text-ocean-900 dark:text-slate-100 mb-2 font-sans">
               Visual Analytics
             </h2>
-            <p className="text-ocean-600 dark:text-slate-400">
+            <p className="text-ocean-600 dark:text-slate-400 font-sans">
               Interactive charts and visualizations of your financial data
             </p>
           </div>
@@ -76,7 +76,7 @@ export function ChartsPage() {
           <>
             {/* Revenue Analysis Section */}
             <div className="mb-8">
-              <h3 className="text-lg font-semibold font-mono text-ocean-900 dark:text-slate-100 mb-4">
+              <h3 className="text-lg font-semibold text-ocean-900 dark:text-slate-100 mb-4 font-sans">
                 Revenue Analysis
               </h3>
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -89,7 +89,7 @@ export function ChartsPage() {
 
             {/* Expense Analysis Section */}
             <div className="mb-8">
-              <h3 className="text-lg font-semibold font-mono text-ocean-900 dark:text-slate-100 mb-4">
+              <h3 className="text-lg font-semibold text-ocean-900 dark:text-slate-100 mb-4 font-sans">
                 Expense Analysis
               </h3>
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -100,7 +100,7 @@ export function ChartsPage() {
 
             {/* Performance Analysis Section */}
             <div className="mb-8">
-              <h3 className="text-lg font-semibold font-mono text-ocean-900 dark:text-slate-100 mb-4">
+              <h3 className="text-lg font-semibold text-ocean-900 dark:text-slate-100 mb-4 font-sans">
                 Performance Analysis
               </h3>
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

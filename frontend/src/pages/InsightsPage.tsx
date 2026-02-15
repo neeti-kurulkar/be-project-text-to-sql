@@ -1,10 +1,10 @@
 import { useState, useEffect } from 'react';
 import { DashboardLayout } from '../components/dashboard/DashboardLayout';
 import { Card } from '../components/common/Card';
+import { NumberTicker } from '../components/common/NumberTicker';
 import {
   Lightbulb,
   TrendingUp,
-  TrendingDown,
   AlertTriangle,
   Target,
   RefreshCw,
@@ -12,9 +12,7 @@ import {
   ArrowUpRight,
   ArrowDownRight,
   Globe,
-  Calendar,
-  DollarSign,
-  PieChart
+  DollarSign
 } from 'lucide-react';
 import { getAutomatedInsights } from '../services/api';
 
@@ -112,21 +110,21 @@ export function InsightsPage() {
 
   return (
     <DashboardLayout title="AI Insights">
-      <div className="max-w-7xl mx-auto px-6 py-8">
+      <div className="max-w-7xl mx-auto px-6 py-8 font-sans">
         {/* Header */}
         <div className="flex justify-between items-start mb-8">
           <div>
-            <h2 className="text-2xl font-bold font-mono text-ocean-900 dark:text-slate-100 mb-2">
+            <h2 className="text-2xl font-bold text-ocean-900 dark:text-slate-100 mb-2 font-sans">
               AI-Powered Insights
             </h2>
-            <p className="text-ocean-600 dark:text-slate-400">
+            <p className="text-ocean-600 dark:text-slate-400 font-sans">
               Automated analysis of your financial data to surface opportunities, risks, and trends
             </p>
           </div>
           <button
             onClick={fetchInsights}
             disabled={loading}
-            className="flex items-center gap-2 px-4 py-2 rounded-lg border border-slate-300 dark:border-ocean-600 bg-white dark:bg-ocean-800 text-ocean-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-ocean-700 disabled:opacity-50 transition-colors"
+            className="flex items-center gap-2 px-4 py-2 rounded-xl border border-slate-200 dark:border-ocean-600 bg-white dark:bg-ocean-800 text-ocean-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-ocean-700 disabled:opacity-50 transition-smooth"
           >
             <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
             Refresh
@@ -146,79 +144,79 @@ export function InsightsPage() {
             <p className="text-red-600 dark:text-red-400 mb-4">{error}</p>
             <button
               onClick={fetchInsights}
-              className="px-4 py-2 bg-electric-500 text-white rounded-lg hover:bg-electric-600 transition-colors"
+              className="px-4 py-2 bg-electric-500 text-white rounded-xl hover:bg-electric-600 transition-smooth"
             >
               Try Again
             </button>
           </Card>
         ) : data ? (
           <>
-            {/* Summary Cards */}
+            {/* Summary Cards - NumberTicker + same font style */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-              <Card className="p-4">
+              <Card className="p-4 hover-lift transition-smooth">
                 <div className="flex items-center gap-3">
-                  <div className="p-3 rounded-lg bg-electric-100 dark:bg-electric-900/30">
+                  <div className="p-3 rounded-xl bg-electric-100 dark:bg-electric-900/30">
                     <DollarSign className="w-5 h-5 text-electric-600 dark:text-electric-400" />
                   </div>
                   <div>
-                    <p className="text-sm text-ocean-600 dark:text-slate-400">Total Revenue</p>
-                    <p className="text-xl font-bold font-mono text-ocean-900 dark:text-slate-100">
-                      ${(data.summary.total_revenue / 1000000).toFixed(1)}M
+                    <p className="text-sm text-ocean-600 dark:text-slate-400 font-sans">Total Revenue</p>
+                    <p className="text-xl font-bold text-ocean-900 dark:text-slate-100 font-sans tabular-nums">
+                      <NumberTicker value={data.summary.total_revenue / 1000000} prefix="$" suffix="M" decimals={1} duration={1000} />
                     </p>
-                    <div className={`flex items-center gap-1 text-sm ${data.summary.revenue_change >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>
+                    <div className={`flex items-center gap-1 text-sm font-sans ${data.summary.revenue_change >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>
                       {data.summary.revenue_change >= 0 ? <ArrowUpRight className="w-4 h-4" /> : <ArrowDownRight className="w-4 h-4" />}
-                      {Math.abs(data.summary.revenue_change).toFixed(1)}% YoY
+                      <NumberTicker value={Math.abs(data.summary.revenue_change)} suffix="% YoY" decimals={1} duration={800} />
                     </div>
                   </div>
                 </div>
               </Card>
 
-              <Card className="p-4">
+              <Card className="p-4 hover-lift transition-smooth">
                 <div className="flex items-center gap-3">
-                  <div className="p-3 rounded-lg bg-emerald-100 dark:bg-emerald-900/30">
+                  <div className="p-3 rounded-xl bg-emerald-100 dark:bg-emerald-900/30">
                     <Globe className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
                   </div>
                   <div>
-                    <p className="text-sm text-ocean-600 dark:text-slate-400">Top Market</p>
-                    <p className="text-xl font-bold font-mono text-ocean-900 dark:text-slate-100">
+                    <p className="text-sm text-ocean-600 dark:text-slate-400 font-sans">Top Market</p>
+                    <p className="text-xl font-bold text-ocean-900 dark:text-slate-100 font-sans">
                       {data.summary.top_market}
                     </p>
-                    <p className="text-sm text-ocean-500 dark:text-slate-500">
-                      {data.summary.top_market_share.toFixed(0)}% of revenue
+                    <p className="text-sm text-emerald-600 font-sans">
+                      <NumberTicker value={data.summary.top_market_share} suffix="% of revenue" decimals={0} duration={800} />
                     </p>
                   </div>
                 </div>
               </Card>
 
-              <Card className="p-4">
+              <Card className="p-4 hover-lift transition-smooth">
                 <div className="flex items-center gap-3">
-                  <div className="p-3 rounded-lg bg-blue-100 dark:bg-blue-900/30">
+                  <div className="p-3 rounded-xl bg-blue-100 dark:bg-blue-900/30">
                     <TrendingUp className="w-5 h-5 text-blue-600 dark:text-blue-400" />
                   </div>
                   <div>
-                    <p className="text-sm text-ocean-600 dark:text-slate-400">Fastest Growing</p>
-                    <p className="text-xl font-bold font-mono text-ocean-900 dark:text-slate-100">
+                    <p className="text-sm text-ocean-600 dark:text-slate-400 font-sans">Fastest Growing</p>
+                    <p className="text-xl font-bold text-ocean-900 dark:text-slate-100 font-sans">
                       {data.summary.fastest_growing}
                     </p>
-                    <p className="text-sm text-emerald-600">
-                      +{data.summary.growth_rate.toFixed(0)}% growth
+                    <p className="text-sm text-emerald-600 font-sans">
+                      +<NumberTicker value={data.summary.growth_rate} suffix="% growth" decimals={0} duration={800} />
                     </p>
                   </div>
                 </div>
               </Card>
 
-              <Card className="p-4">
+              <Card className="p-4 hover-lift transition-smooth">
                 <div className="flex items-center gap-3">
-                  <div className="p-3 rounded-lg bg-amber-100 dark:bg-amber-900/30">
+                  <div className="p-3 rounded-xl bg-amber-100 dark:bg-amber-900/30">
                     <Lightbulb className="w-5 h-5 text-amber-600 dark:text-amber-400" />
                   </div>
                   <div>
-                    <p className="text-sm text-ocean-600 dark:text-slate-400">Active Insights</p>
-                    <p className="text-xl font-bold font-mono text-ocean-900 dark:text-slate-100">
-                      {data.insights.length}
+                    <p className="text-sm text-ocean-600 dark:text-slate-400 font-sans">Active Insights</p>
+                    <p className="text-xl font-bold text-ocean-900 dark:text-slate-100 font-sans tabular-nums">
+                      <NumberTicker value={data.insights.length} duration={800} />
                     </p>
-                    <p className="text-sm text-ocean-500 dark:text-slate-500">
-                      {data.insights.filter(i => i.priority === 'high').length} high priority
+                    <p className="text-sm text-emerald-600 font-sans">
+                      <NumberTicker value={data.insights.filter(i => i.priority === 'high').length} duration={600} /> high priority
                     </p>
                   </div>
                 </div>
@@ -231,15 +229,15 @@ export function InsightsPage() {
                 <button
                   key={type}
                   onClick={() => setFilter(type)}
-                  className={`px-4 py-2 rounded-lg font-medium text-sm whitespace-nowrap transition-colors ${
+                  className={`px-4 py-2 rounded-xl font-medium text-sm whitespace-nowrap transition-smooth font-sans ${
                     filter === type
                       ? 'bg-electric-500 text-white'
                       : 'bg-white dark:bg-ocean-800 text-ocean-600 dark:text-slate-400 border border-slate-200 dark:border-ocean-700 hover:bg-slate-50 dark:hover:bg-ocean-700'
                   }`}
                 >
                   {type === 'all' ? 'All Insights' : type.charAt(0).toUpperCase() + type.slice(1) + 's'}
-                  <span className="ml-2 px-2 py-0.5 rounded-full text-xs bg-black/10 dark:bg-white/10">
-                    {insightCounts[type]}
+                  <span className="ml-2 px-2 py-0.5 rounded-full text-xs bg-black/10 dark:bg-white/10 tabular-nums">
+                    <NumberTicker value={insightCounts[type]} duration={400} />
                   </span>
                 </button>
               ))}
@@ -260,7 +258,7 @@ export function InsightsPage() {
                   return (
                     <Card
                       key={insight.id}
-                      className={`p-5 border-l-4 ${config.border} hover:shadow-md transition-shadow`}
+                      className={`p-5 border-l-4 ${config.border} hover-lift transition-smooth`}
                     >
                       <div className="flex items-start gap-4">
                         <div className={`p-3 rounded-lg ${config.bg} flex-shrink-0`}>
@@ -268,7 +266,7 @@ export function InsightsPage() {
                         </div>
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-3 mb-2">
-                            <h3 className="font-semibold text-ocean-900 dark:text-slate-100">
+                            <h3 className="font-semibold text-ocean-900 dark:text-slate-100 font-sans">
                               {insight.title}
                             </h3>
                             <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${priorityBadge[insight.priority]}`}>
@@ -281,12 +279,12 @@ export function InsightsPage() {
                           {insight.metric && (
                             <div className="flex items-center gap-4 text-sm">
                               <span className="text-ocean-500 dark:text-slate-500">
-                                Metric: <span className="font-mono font-medium text-ocean-700 dark:text-slate-300">{insight.metric}</span>
+                                Metric: <span className="font-medium text-ocean-700 dark:text-slate-300 font-sans">{insight.metric}</span>
                               </span>
                               {insight.change !== undefined && (
-                                <span className={`flex items-center gap-1 ${insight.change >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>
+                                <span className={`flex items-center gap-1 font-sans ${insight.change >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>
                                   {insight.change >= 0 ? <ArrowUpRight className="w-4 h-4" /> : <ArrowDownRight className="w-4 h-4" />}
-                                  {Math.abs(insight.change).toFixed(1)}%
+                                  <NumberTicker value={Math.abs(insight.change)} suffix="%" decimals={1} duration={600} />
                                 </span>
                               )}
                             </div>

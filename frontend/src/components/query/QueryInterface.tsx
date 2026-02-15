@@ -164,7 +164,7 @@ export function QueryInterface() {
             <div className="flex items-center justify-center min-h-[60vh]">
               <div className="max-w-2xl w-full">
                 <div className="text-center mb-8">
-                  <h2 className="text-2xl font-bold font-mono text-ocean-900 dark:text-slate-100 mb-2">
+                  <h2 className="text-2xl font-bold text-ocean-900 dark:text-slate-100 mb-2 font-sans">
                     Ask a Question
                   </h2>
                   <p className="text-ocean-600 dark:text-slate-400">

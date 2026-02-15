@@ -59,6 +59,10 @@ export function QuarterlyRevenue({ data }: QuarterlyRevenueProps) {
               fill={YEAR_COLORS[yearKey] || '#3B82F6'}
               name={yearKey.replace('y', '')}
               radius={[8, 8, 0, 0]}
+              isAnimationActive
+              animationBegin={0}
+              animationDuration={700}
+              animationEasing="ease-out"
             />
           ))}
         </BarChart>

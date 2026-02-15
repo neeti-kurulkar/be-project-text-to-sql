@@ -63,6 +63,10 @@ export function ProfitLossTrend({ data }: ProfitLossTrendProps) {
             stroke="#10B981"
             fill="url(#plRevenueGradient)"
             name="Revenue"
+            isAnimationActive
+            animationBegin={0}
+            animationDuration={700}
+            animationEasing="ease-out"
           />
           <Area
             type="monotone"
@@ -70,6 +74,10 @@ export function ProfitLossTrend({ data }: ProfitLossTrendProps) {
             stroke="#EF4444"
             fill="url(#plExpenseGradient)"
             name="Expenses"
+            isAnimationActive
+            animationBegin={0}
+            animationDuration={700}
+            animationEasing="ease-out"
           />
           <Line
             type="monotone"
@@ -78,6 +86,10 @@ export function ProfitLossTrend({ data }: ProfitLossTrendProps) {
             strokeWidth={2}
             name="Net Income"
             dot={false}
+            isAnimationActive
+            animationBegin={0}
+            animationDuration={700}
+            animationEasing="ease-out"
           />
         </ComposedChart>
       </ResponsiveContainer>

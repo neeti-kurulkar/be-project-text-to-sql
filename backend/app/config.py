@@ -22,10 +22,25 @@ class Settings(BaseSettings):
     JWT_ALGORITHM: str = "HS256"
     JWT_EXPIRATION_MINUTES: int = 60
 
-    # LLM Configuration
+   # LLM Configuration
+    # Provider: gemini | groq | openai (which LLM to use for NL2SQL)
+    LLM_PROVIDER: str = "gemini"
+
+    # Gemini (Google): get key at https://aistudio.google.com/apikey
+    GEMINI_API_KEY: str = ""
+
+    # Groq
+    GROQ_API_KEY: str = ""
+    OPENAI_BASE_URL: str = "https://api.groq.com/openai/v1"
+
+    # OpenAI (only when LLM_PROVIDER=openai)
     OPENAI_API_KEY: str = ""
-    LLM_MODEL: str = "gpt-4o-mini"
-    LLM_TEMPERATURE: float = 0.1
+
+    # Model: for Gemini use gemini-1.0-pro (stable) or gemini-pro; 1.5-flash may 404 on older SDK
+    LLM_MODEL: str = "gemini-1.0-pro"
+    LLM_TEMPERATURE: float = 0.0
+
+
 
     # Embeddings & Retrieval
     EMBEDDING_MODEL: str = "all-MiniLM-L6-v2"

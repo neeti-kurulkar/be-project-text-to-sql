@@ -182,6 +182,34 @@ Check that:
 2. The connection details in `import_financial_data.py` are correct
 3. The database `financial_db` exists
 
+### "No results found for your query" in the app
+This means the **SQL ran successfully but returned 0 rows**. Common causes:
+
+1. **Financial data was never imported**  
+   The schema creates empty tables. You must run the data import:
+   ```bash
+   cd be-project-text-to-sql
+   # Set password in import_financial_data.py (DB_CONFIG['password']) to match your Postgres password
+   python import_financial_data.py
+   ```
+   Then try your query again (e.g. "What is total revenue?").
+
+2. **Verify data exists**  
+   In psql or pgAdmin, run:
+   ```sql
+   SELECT COUNT(*) FROM general_ledger;
+   SELECT COUNT(*) FROM chart_of_accounts;
+   ```
+   If both are 0, run the import script (Step 5) and fix the script’s DB password if needed.
+
+3. **Wrong login**  
+   Use a user for an org that has data:
+   - **Kuvalis**: sarah.chen@kuvalis.com / password123  
+   - **Vandervort**: john.smith@vandervort.com / password123  
+
+4. **Year filter**  
+   If you asked for a specific year (e.g. "revenue in 2020") but your data is for other years, the result set can be empty. Try: "What is total revenue?" (no year) or use a year that exists in your data.
+
 ### Import seems slow
 This is normal. The script imports thousands of records:
 - Calendar: ~1,000 dates

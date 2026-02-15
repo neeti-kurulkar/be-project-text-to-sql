@@ -74,9 +74,34 @@ class Agent3SQLGeneration(BaseAgent):
 
             # Call LLM
             response = self.call_llm(prompt)
+            # Ensure string (e.g. Gemini may return different types)
+            response = (response or "").strip()
+            if not isinstance(response, str):
+                response = str(response).strip()
+
+            # Always log what we got so we can debug empty SQL (flush so it shows in terminal)
+            response_str = response if isinstance(response, str) else (str(response) if response else "")
+            preview = (response_str or "")[:400]
+            print(f"[Agent3] LLM response length={len(response_str)} preview={repr(preview)}", flush=True)
 
             # Parse SQL
             sql = self._parse_sql(response)
+
+            if not sql or not sql.strip():
+                print(f"[Agent3] Empty SQL - full response (first 600 chars):\n{(response_str or '')[:600]}\n---", flush=True)
+                state["sql"] = ""
+                state["error_feedback"] = (
+                    "The model did not return valid SQL (empty or no SELECT/WITH found). "
+                    "Try a shorter, simpler question (e.g. 'What is total revenue?'). "
+                    "If the response is empty, the API key may be invalid or the model may have blocked the output."
+                )
+                self.log_trace(
+                    state=state,
+                    duration=time.time() - start_time,
+                    status="error",
+                    details={"error": "Empty SQL parsed from LLM response", "response_preview": preview[:200]}
+                )
+                return state
 
             # Ensure {org_id} placeholder is present
             sql = self._ensure_org_id_placeholder(sql, organization_id)
@@ -100,6 +125,7 @@ class Agent3SQLGeneration(BaseAgent):
         except Exception as e:
             duration = time.time() - start_time
             error_msg = str(e)
+            print(f"[Agent3] Exception: {error_msg}")  # So backend logs show the real error
 
             # Check for rate limit errors
             if "429" in error_msg or "rate_limit" in error_msg.lower():
@@ -235,19 +261,27 @@ Generate ONLY the raw SQL query. The query MUST:
 4. Use ACTUAL account names from the organization context above - use coa.account = 'Sales' for revenue (NOT coa.class = 'Revenue')
 5. For simple aggregates like "total revenue", just return a single SUM without unnecessary GROUP BY
 
-IMPORTANT: Output ONLY the SQL. No explanations, no markdown, no comments, no preamble. Start directly with SELECT or WITH.
+IMPORTANT: Output ONLY the SQL. No explanations, no markdown headers, no comments, no preamble.
+Start directly with SELECT or WITH. You may wrap the SQL in a ```sql code block or output raw SQL.
+Reply with nothing else - only the SQL query.
 
 SQL:""")
 
         return "".join(prompt_parts)
 
     def _parse_sql(self, response: str) -> str:
-        """Parse the LLM response to extract SQL."""
+        """Parse the LLM response to extract SQL. Handles markdown code blocks and plain SQL."""
+        if not response:
+            return ""
         response = response.strip()
+        if not isinstance(response, str):
+            response = str(response).strip()
 
-        # Remove markdown code blocks
-        if "```sql" in response:
-            start = response.find("```sql") + 6
+        original = response
+
+        # Remove markdown code blocks (```sql ... ``` or ``` ... ```)
+        if "```sql" in response.lower():
+            start = response.lower().find("```sql") + 6
             end = response.find("```", start)
             if end > start:
                 response = response[start:end]
@@ -255,6 +289,9 @@ SQL:""")
                 response = response[start:]
         elif "```" in response:
             start = response.find("```") + 3
+            # Skip optional language tag (e.g. "sql\n")
+            while start < len(response) and response[start] in " \t\n":
+                start += 1
             end = response.find("```", start)
             if end > start:
                 response = response[start:end]
@@ -263,24 +300,27 @@ SQL:""")
 
         response = response.strip()
 
-        # If response still has text before SQL, find where SQL actually starts
-        # SQL should start with SELECT, WITH, or (SELECT for subqueries
+        # Find where SQL actually starts (SELECT or WITH) in case of leading text
         sql_start_patterns = [
             (response.upper().find("WITH "), "WITH "),
             (response.upper().find("SELECT "), "SELECT "),
         ]
-
-        # Find the earliest valid SQL start
         valid_starts = [(pos, pattern) for pos, pattern in sql_start_patterns if pos >= 0]
         if valid_starts:
             earliest_pos = min(valid_starts, key=lambda x: x[0])[0]
             if earliest_pos > 0:
-                # There's text before the SQL - remove it
                 response = response[earliest_pos:]
+        elif not response.upper().startswith(("SELECT ", "WITH ")):
+            # No code block and no SELECT/WITH at start - try finding SQL anywhere in original
+            for pattern in ("SELECT ", "WITH "):
+                idx = original.upper().find(pattern)
+                if idx >= 0:
+                    response = original[idx:].strip()
+                    break
 
         response = response.strip()
 
-        # Remove any trailing semicolons
+        # Remove trailing semicolon
         if response.endswith(";"):
             response = response[:-1].strip()
 

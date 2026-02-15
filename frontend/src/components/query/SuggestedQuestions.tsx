@@ -19,7 +19,7 @@ export function SuggestedQuestions({ onQuestionClick }: SuggestedQuestionsProps)
 
   return (
     <div>
-      <h2 className="text-xl font-semibold font-mono text-ocean-900 dark:text-slate-100 mb-4 flex items-center gap-2">
+      <h2 className="text-xl font-semibold text-ocean-900 dark:text-slate-100 mb-4 flex items-center gap-2 font-sans">
         <Sparkles className="w-5 h-5 text-electric-500" />
         Suggested Questions
       </h2>

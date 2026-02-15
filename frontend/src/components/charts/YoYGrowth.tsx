@@ -62,6 +62,10 @@ export function YoYGrowth({ data }: YoYGrowthProps) {
             fill="#3B82F6"
             name="Revenue"
             radius={[8, 8, 0, 0]}
+            isAnimationActive
+            animationBegin={0}
+            animationDuration={700}
+            animationEasing="ease-out"
           />
           <Line
             yAxisId="right"
@@ -72,6 +76,10 @@ export function YoYGrowth({ data }: YoYGrowthProps) {
             name="Growth Rate"
             dot={{ fill: '#10B981', r: 6 }}
             connectNulls
+            isAnimationActive
+            animationBegin={0}
+            animationDuration={700}
+            animationEasing="ease-out"
           />
         </ComposedChart>
       </ResponsiveContainer>

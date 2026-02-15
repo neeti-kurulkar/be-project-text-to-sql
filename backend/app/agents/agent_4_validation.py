@@ -40,11 +40,12 @@ class Agent4Validation(BaseAgent):
             syntax_errors = self._validate_syntax(sql)
             errors.extend(syntax_errors)
 
-            security_errors = self._validate_security(sql)
-            errors.extend(security_errors)
-
-            org_filter_errors = self._validate_org_filter(sql)
-            errors.extend(org_filter_errors)
+            # Only run security/org checks when we have non-empty SQL
+            if sql and sql.strip():
+                security_errors = self._validate_security(sql)
+                errors.extend(security_errors)
+                org_filter_errors = self._validate_org_filter(sql)
+                errors.extend(org_filter_errors)
 
             join_errors = self._validate_joins(sql)
             errors.extend(join_errors)
@@ -60,7 +61,10 @@ class Agent4Validation(BaseAgent):
             state["validation_result"] = validation_result
 
             if not is_valid:
-                state["error_feedback"] = "\n".join(errors)
+                # Keep any prior error (e.g. from Agent 3) and add validation errors
+                existing = (state.get("error_feedback") or "").strip()
+                validation_err = "\n".join(errors)
+                state["error_feedback"] = f"{existing}\n{validation_err}".strip() if existing else validation_err
 
             # Log trace
             duration = time.time() - start_time

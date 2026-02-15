@@ -18,7 +18,7 @@ export function ProfilePage() {
 
   return (
     <DashboardLayout title="Profile">
-      <div className="max-w-4xl mx-auto px-6 py-8 space-y-6">
+      <div className="max-w-4xl mx-auto px-6 py-8 space-y-6 font-sans">
         {/* Profile Header Card */}
         <Card>
           <div className="flex flex-col sm:flex-row items-center gap-6">
@@ -33,7 +33,7 @@ export function ProfilePage() {
 
             {/* User Info */}
             <div className="flex-1 text-center sm:text-left">
-              <h2 className="text-2xl font-bold font-mono text-ocean-900 dark:text-slate-100 mb-2">
+              <h2 className="text-2xl font-bold text-ocean-900 dark:text-slate-100 mb-2 font-sans">
                 {user.name}
               </h2>
               <p className="text-ocean-600 dark:text-slate-400 mb-3">
@@ -47,7 +47,7 @@ export function ProfilePage() {
         </Card>
 
         {/* Account Details */}
-        <Card title="Account Details" description="Your account information">
+        <Card title="Account Details" className="font-sans" description="Your account information">
           <div className="space-y-4">
             <div className="flex items-start gap-3 p-4 bg-slate-50 dark:bg-ocean-800 rounded-lg">
               <User className="w-5 h-5 text-ocean-600 dark:text-slate-400 mt-0.5" />
@@ -115,7 +115,7 @@ export function ProfilePage() {
         <Card title="Activity Overview" description="Your usage statistics">
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div className="p-4 bg-slate-50 dark:bg-ocean-800 rounded-lg text-center">
-              <div className="text-2xl font-bold font-mono text-electric-600 dark:text-electric-400 mb-1">
+              <div className="text-2xl font-bold text-electric-600 dark:text-electric-400 mb-1 font-sans">
                 142
               </div>
               <div className="text-sm text-ocean-600 dark:text-slate-400">
@@ -124,7 +124,7 @@ export function ProfilePage() {
             </div>
 
             <div className="p-4 bg-slate-50 dark:bg-ocean-800 rounded-lg text-center">
-              <div className="text-2xl font-bold font-mono text-emerald-600 dark:text-emerald-400 mb-1">
+              <div className="text-2xl font-bold text-emerald-600 dark:text-emerald-400 mb-1 font-sans">
                 28
               </div>
               <div className="text-sm text-ocean-600 dark:text-slate-400">

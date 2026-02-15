@@ -33,7 +33,7 @@ DB_CONFIG = {
     'port': 5432,
     'dbname': 'financial_db',
     'user': 'postgres',
-    'password': ''  # Change this to your PostgreSQL password
+    'password': 'postgres'  # Must match your PostgreSQL password (same as backend .env PGPASSWORD)
 }
 
 # Organization configurations

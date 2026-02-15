@@ -2,6 +2,9 @@
 Vector store interface using ChromaDB for semantic search.
 Implements singleton pattern for efficient database access.
 """
+# Disable ChromaDB telemetry before import to avoid "capture() takes 1 positional argument but 3 were given"
+import os
+os.environ["ANONYMIZED_TELEMETRY"] = "FALSE"
 
 import chromadb
 from chromadb.config import Settings as ChromaSettings

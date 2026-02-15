@@ -3,7 +3,7 @@
 @variant dark (.dark &);
 
 @theme {
-  /* Custom Color Palette - Ocean Blues & Electric Accents */
+  /* Custom Color Palette - Clean dashboard (Radar/Profile style) */
   --color-ocean-950: #020617;
   --color-ocean-900: #0F172A;
   --color-ocean-800: #1E293B;
@@ -11,17 +11,27 @@
   --color-ocean-600: #475569;
   --color-ocean-500: #64748B;
 
-  --color-electric-600: #2563EB;
-  --color-electric-500: #3B82F6;
-  --color-electric-400: #60A5FA;
-  --color-electric-100: #DBEAFE;
+  /* Primary blue - buttons, active states, links */
+  --color-electric-600: #4f46e5;
+  --color-electric-500: #4D70FA;
+  --color-electric-400: #6366f1;
+  --color-electric-100: #eef2ff;
+  --color-electric-50: #f5f3ff;
+
+  /* Surface - dashboard background */
+  --color-surface: #f9f9fb;
+  --color-surface-dark: #0f0f12;
+
+  /* Sidebar active - light purple/lavender */
+  --color-sidebar-active: #f5f3ff;
+  --color-sidebar-active-border: #4f46e5;
 
   --color-emerald-600: #059669;
   --color-emerald-500: #10B981;
   --color-emerald-400: #34D399;
 
   /* Typography */
-  --font-sans: "IBM Plex Sans", system-ui, -apple-system, sans-serif;
+  --font-sans: "Inter", "IBM Plex Sans", system-ui, -apple-system, sans-serif;
   --font-mono: "IBM Plex Mono", ui-monospace, monospace;
 }
 
@@ -35,6 +45,321 @@ body {
   @apply text-ocean-900 dark:text-slate-100;
   @apply bg-white dark:bg-ocean-950;
   transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Dashboard surface background */
+.bg-surface {
+  background-color: var(--color-surface);
+}
+.dark .bg-surface {
+  background-color: var(--color-surface-dark);
+}
+
+/* Smooth transitions for dashboard */
+.transition-smooth {
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.transition-smooth-slow {
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Card hover lift */
+.hover-lift {
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+.hover-lift:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 25px -5px rgb(0 0 0 / 0.08), 0 8px 10px -6px rgb(0 0 0 / 0.04);
+}
+.dark .hover-lift:hover {
+  box-shadow: 0 10px 25px -5px rgb(0 0 0 / 0.25);
+}
+
+/* ========== 3D Dashboard (depth, perspective, layered look) ========== */
+.dashboard-3d-root {
+  perspective: 1400px;
+  transform-style: preserve-3d;
+}
+
+.dashboard-3d-surface {
+  background: linear-gradient(165deg, #f9f9fb 0%, #f0f0f5 50%, #e8e8f0 100%);
+  position: relative;
+  min-height: 100%;
+}
+.dark .dashboard-3d-surface {
+  background: linear-gradient(165deg, #0f0f12 0%, #14141a 50%, #1a1a22 100%);
+}
+
+/* Subtle depth background glow (matches electric blue accent) */
+.dashboard-3d-surface::before {
+  content: '';
+  position: fixed;
+  top: -30%;
+  right: -20%;
+  width: 60%;
+  height: 60%;
+  background: radial-gradient(ellipse, rgba(79, 70, 229, 0.06) 0%, transparent 70%);
+  pointer-events: none;
+  z-index: 0;
+}
+.dark .dashboard-3d-surface::before {
+  background: radial-gradient(ellipse, rgba(99, 102, 241, 0.08) 0%, transparent 70%);
+}
+
+/* Sidebar 3D elevation */
+.sidebar-3d {
+  box-shadow: 4px 0 24px -4px rgb(0 0 0 / 0.06), 8px 0 40px -8px rgb(0 0 0 / 0.04);
+  transform: translateZ(0);
+}
+.dark .sidebar-3d {
+  box-shadow: 4px 0 32px -4px rgb(0 0 0 / 0.3);
+}
+
+/* Topbar 3D - slight elevation above content */
+.topbar-3d {
+  box-shadow: 0 4px 20px -4px rgb(0 0 0 / 0.06);
+  transform: translateZ(1px);
+}
+
+/* Card 3D - layered depth and hover lift */
+.card-3d {
+  transform-style: preserve-3d;
+  transform: translateZ(0);
+  transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.35s ease;
+  box-shadow:
+    0 1px 2px rgb(0 0 0 / 0.04),
+    0 4px 12px rgb(0 0 0 / 0.04),
+    0 8px 24px -8px rgb(0 0 0 / 0.06);
+}
+.card-3d:hover {
+  transform: translateY(-4px) translateZ(8px);
+  box-shadow:
+    0 4px 8px rgb(0 0 0 / 0.04),
+    0 12px 28px -4px rgb(0 0 0 / 0.08),
+    0 24px 48px -12px rgb(0 0 0 / 0.1);
+}
+.dark .card-3d {
+  box-shadow:
+    0 1px 2px rgb(0 0 0 / 0.2),
+    0 4px 12px rgb(0 0 0 / 0.15),
+    0 8px 24px -8px rgb(0 0 0 / 0.2);
+}
+.dark .card-3d:hover {
+  box-shadow:
+    0 4px 8px rgb(0 0 0 / 0.2),
+    0 12px 28px -4px rgb(0 0 0 / 0.25),
+    0 24px 48px -12px rgb(0 0 0 / 0.3);
+}
+
+/* Main content area - subtle perspective */
+.dashboard-3d-main {
+  position: relative;
+  z-index: 1;
+  transform-style: preserve-3d;
+}
+
+/* Conveyor belt - infinite horizontal scroll (Built for Modern Teams) */
+@keyframes conveyor {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+.animate-conveyor {
+  animation: conveyor 35s linear infinite;
+}
+
+/* ========== Magic UI–inspired dashboard ========== */
+.dashboard-hero-title {
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+}
+.dashboard-trust-strip {
+  background: linear-gradient(90deg, transparent, rgba(79, 70, 229, 0.04), transparent);
+  border-top: 1px solid rgba(0, 0, 0, 0.04);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.04);
+}
+.dark .dashboard-trust-strip {
+  background: linear-gradient(90deg, transparent, rgba(99, 102, 241, 0.06), transparent);
+  border-top-color: rgba(255, 255, 255, 0.06);
+  border-bottom-color: rgba(255, 255, 255, 0.06);
+}
+.magic-card {
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.3s ease, border-color 0.2s ease;
+}
+.magic-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 20px 40px -12px rgba(79, 70, 229, 0.12);
+  border-color: rgba(79, 70, 229, 0.2);
+}
+.dark .magic-card:hover {
+  box-shadow: 0 20px 40px -12px rgba(0, 0, 0, 0.4);
+  border-color: rgba(99, 102, 241, 0.25);
+}
+.magic-section-title {
+  font-size: 1.125rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--color-ocean-900);
+}
+.dark .magic-section-title {
+  color: #f1f5f9;
+}
+.magic-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.25rem 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+  border-radius: 9999px;
+  background: rgba(79, 70, 229, 0.1);
+  color: #4f46e5;
+}
+.dark .magic-badge {
+  background: rgba(99, 102, 241, 0.2);
+  color: #818cf8;
+}
+
+/* ========== Fintech 3D blocks (stacked metallic + glow) ========== */
+.fintech-3d-root {
+  perspective: 400px;
+  transform-style: preserve-3d;
+}
+
+.fintech-3d-block {
+  transform-style: preserve-3d;
+  transform: rotateX(8deg) rotateY(-4deg);
+  transition: transform 0.3s ease;
+}
+.fintech-3d-root:hover .fintech-3d-block {
+  transform: rotateX(6deg) rotateY(-2deg) translateZ(4px);
+}
+
+.fintech-3d-face {
+  background: linear-gradient(145deg, #1e293b 0%, #0f172a 40%, #1e293b 100%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.06),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.3),
+    0 4px 12px rgba(0, 0, 0, 0.25);
+  border: 1px solid rgba(255, 255, 255, 0.04);
+}
+.dark .fintech-3d-face {
+  background: linear-gradient(145deg, #334155 0%, #0f172a 50%, #1e293b 100%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.05),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.4),
+    0 6px 20px rgba(0, 0, 0, 0.4);
+}
+
+.fintech-3d-glow {
+  background: linear-gradient(135deg, #6366f1 0%, #4f46e5 50%, #4338ca 100%);
+  box-shadow:
+    0 0 20px rgba(79, 70, 229, 0.7),
+    0 0 40px rgba(99, 102, 241, 0.4),
+    inset 0 0 12px rgba(255, 255, 255, 0.15);
+  animation: fintech-glow-pulse 3s ease-in-out infinite;
+}
+.fintech-3d-block:nth-child(2) .fintech-3d-glow {
+  animation-delay: 0.2s;
+}
+.fintech-3d-block:nth-child(3) .fintech-3d-glow {
+  animation-delay: 0.4s;
+}
+
+@keyframes fintech-glow-pulse {
+  0%, 100% {
+    box-shadow: 0 0 20px rgba(79, 70, 229, 0.7), 0 0 40px rgba(99, 102, 241, 0.4), inset 0 0 12px rgba(255, 255, 255, 0.15);
+    opacity: 1;
+  }
+  50% {
+    box-shadow: 0 0 28px rgba(79, 70, 229, 0.85), 0 0 50px rgba(99, 102, 241, 0.5), inset 0 0 14px rgba(255, 255, 255, 0.2);
+    opacity: 0.95;
+  }
+}
+
+/* ========== Login – Fintech background (same as dashboard 3D / insights) ========== */
+.login-fintech-bg {
+  background: #0a0a0f;
+}
+
+.login-fintech-panel {
+  background: linear-gradient(180deg, #0f0f18 0%, #0a0a12 50%, #050508 100%);
+  border-right: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.login-fintech-glow {
+  background: radial-gradient(ellipse 80% 50% at 50% 40%, rgba(79, 70, 229, 0.15) 0%, transparent 55%);
+  pointer-events: none;
+}
+
+.login-fintech-form {
+  background: linear-gradient(180deg, #0c0c14 0%, #08080e 50%, #050508 100%);
+}
+
+.login-fintech-glow-subtle {
+  background: radial-gradient(ellipse 60% 40% at 80% 50%, rgba(79, 70, 229, 0.08) 0%, transparent 60%);
+  pointer-events: none;
+}
+
+/* Form on login fintech background: force light text/inputs */
+.login-fintech-form [class*="text-ocean-900"] {
+  color: #f1f5f9;
+}
+.login-fintech-form [class*="text-ocean-600"],
+.login-fintech-form [class*="text-ocean-700"] {
+  color: #94a3b8;
+}
+.login-fintech-form [class*="text-ocean-500"] {
+  color: #64748b;
+}
+.login-fintech-form input,
+.login-fintech-form input::placeholder {
+  background: rgba(30, 41, 59, 0.6);
+  border-color: rgba(71, 85, 105, 0.5);
+  color: #f1f5f9;
+}
+.login-fintech-form input::placeholder {
+  color: #64748b;
+}
+.login-fintech-form label {
+  color: #cbd5e1;
+}
+.login-fintech-form .border-slate-300 {
+  border-color: rgba(71, 85, 105, 0.5);
+}
+.login-fintech-form button[type="submit"] {
+  background: #4f46e5;
+  color: white;
+}
+.login-fintech-form button[type="submit"]:hover:not(:disabled) {
+  background: #4338ca;
+}
+.login-fintech-form .bg-red-50 {
+  background: rgba(185, 28, 28, 0.2);
+}
+.login-fintech-form .text-red-600 {
+  color: #f87171;
+}
+.login-fintech-form .border-red-200 {
+  border-color: rgba(248, 113, 113, 0.3);
+}
+
+/* Stagger animation for list items */
+@keyframes fade-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.animate-fade-in-up {
+  animation: fade-in-up 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
 }
 
 /* Dark Mode */

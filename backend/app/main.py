@@ -1,3 +1,11 @@
+# Disable ChromaDB telemetry to avoid "Failed to send telemetry event" errors (must be before chromadb is imported)
+import os
+os.environ["ANONYMIZED_TELEMETRY"] = "FALSE"
+
+# Suppress FutureWarning from langchain-google-genai about deprecated google.generativeai package
+import warnings
+warnings.filterwarnings("ignore", message=".*google.generativeai.*", category=FutureWarning)
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager

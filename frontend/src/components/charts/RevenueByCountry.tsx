@@ -34,7 +34,15 @@ export function RevenueByCountry({ data }: RevenueByCountryProps) {
             }}
             formatter={(value) => [`$${Number(value || 0).toFixed(2)}K`, 'Revenue']}
           />
-          <Bar dataKey="revenue" fill="#3B82F6" radius={[8, 8, 0, 0]} />
+          <Bar
+            dataKey="revenue"
+            fill="#3B82F6"
+            radius={[8, 8, 0, 0]}
+            isAnimationActive
+            animationBegin={0}
+            animationDuration={700}
+            animationEasing="ease-out"
+          />
         </BarChart>
       </ResponsiveContainer>
     </ChartContainer>

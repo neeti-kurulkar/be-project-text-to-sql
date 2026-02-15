@@ -29,6 +29,10 @@ export function RegionalDistribution({ data }: RegionalDistributionProps) {
             innerRadius={60}
             fill="#8884d8"
             dataKey="value"
+            isAnimationActive
+            animationBegin={0}
+            animationDuration={700}
+            animationEasing="ease-out"
           >
             {data.map((_entry, index) => (
               <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />

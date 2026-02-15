@@ -40,7 +40,15 @@ export function TopExpenses({ data }: TopExpensesProps) {
             }}
             formatter={(value) => [`$${Number(value || 0).toFixed(2)}K`, 'Amount']}
           />
-          <Bar dataKey="amount" fill="#F59E0B" radius={[0, 8, 8, 0]} />
+          <Bar
+            dataKey="amount"
+            fill="#F59E0B"
+            radius={[0, 8, 8, 0]}
+            isAnimationActive
+            animationBegin={0}
+            animationDuration={700}
+            animationEasing="ease-out"
+          />
         </BarChart>
       </ResponsiveContainer>
     </ChartContainer>

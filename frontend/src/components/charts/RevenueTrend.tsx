@@ -47,6 +47,10 @@ export function RevenueTrend({ data }: RevenueTrendProps) {
             stroke="#10B981"
             strokeWidth={3}
             fill="url(#revenueGradient)"
+            isAnimationActive
+            animationBegin={0}
+            animationDuration={700}
+            animationEasing="ease-out"
           />
         </AreaChart>
       </ResponsiveContainer>

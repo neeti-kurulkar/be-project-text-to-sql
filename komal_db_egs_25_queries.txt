@@ -1,0 +1,28 @@
+# komal_db_egs — 25 queries to test on the app (Query page)
+# Copy each line into the app and run. Use sarah.chen@kuvalis.com or john.smith@vandervort.com / password123
+
+1. How many transactions are in the general ledger?
+2. How many accounts are in our chart of accounts?
+3. What are all the countries we operate in?
+4. What regions do we have?
+5. Show me all revenue accounts
+6. Show me transactions in January 2020
+7. What was our total revenue in 2020?
+8. Show revenue by country for 2020
+9. Show revenue by region
+10. Show quarterly revenue by year
+11. Show quarterly revenue by country for 2020
+12. What are the top 5 countries by revenue?
+13. Which countries had revenue over 100000 in 2020?
+14. What was revenue for USA in Qtr 4 2020?
+15. What are our top 5 expense categories by amount?
+16. What were total expenses in 2020?
+17. Compare revenue by country between 2019 and 2020
+18. Rank countries by total revenue
+19. What percentage of total revenue came from each country in 2020?
+20. Show cumulative revenue by month for 2020
+21. Show revenue for European countries in Qtr 4 or North American countries in Qtr 1
+22. What types of reports do we have in the chart of accounts?
+23. What is the average transaction amount by country in 2020?
+24. Show top 10 revenue accounts by total amount
+25. Show monthly revenue for 2020

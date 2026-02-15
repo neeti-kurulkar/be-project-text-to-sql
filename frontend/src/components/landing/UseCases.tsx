@@ -18,11 +18,35 @@ const useCases = [
   }
 ];
 
-export function UseCases() {
+function UseCaseCard({ useCase }: { useCase: (typeof useCases)[0] }) {
+  const Icon = useCase.icon;
   return (
-    <section className="py-24 bg-slate-50 dark:bg-ocean-800/50 transition-colors duration-300">
+    <div
+      className="flex-shrink-0 w-[min(340px,85vw)] md:w-[380px] p-8 rounded-2xl border-2 border-slate-200 dark:border-ocean-700
+                hover:border-emerald-500 dark:hover:border-emerald-500
+                hover:shadow-xl transition-all duration-300
+                bg-white dark:bg-ocean-900 group"
+    >
+      <div className="w-14 h-14 rounded-lg bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300">
+        <Icon className="w-7 h-7 text-emerald-600 dark:text-emerald-400" />
+      </div>
+      <h3 className="text-xl font-semibold font-mono text-ocean-900 dark:text-slate-100 mb-3">
+        {useCase.title}
+      </h3>
+      <p className="text-ocean-600 dark:text-slate-400 leading-relaxed">
+        {useCase.description}
+      </p>
+    </div>
+  );
+}
+
+export function UseCases() {
+  /* Conveyor: duplicate items so we can scroll infinitely; animation moves by 50% then loops */
+  const conveyorItems = [...useCases, ...useCases];
+
+  return (
+    <section className="py-24 bg-slate-50 dark:bg-ocean-800/50 transition-colors duration-300 overflow-hidden">
       <div className="max-w-7xl mx-auto px-6">
-        {/* Section Title */}
         <div className="text-center mb-16">
           <h2 className="text-4xl font-bold font-mono text-ocean-900 dark:text-slate-100 mb-4">
             Built for Modern Teams
@@ -32,37 +56,20 @@ export function UseCases() {
           </p>
         </div>
 
-        {/* Use Cases Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          {useCases.map((useCase, index) => {
-            const Icon = useCase.icon;
-            return (
-              <div
-                key={index}
-                className="p-8 rounded-2xl border-2 border-slate-200 dark:border-ocean-700
-                          hover:border-emerald-500 dark:hover:border-emerald-500
-                          hover:shadow-xl transition-all duration-300
-                          bg-white dark:bg-ocean-900 group"
-              >
-                {/* Icon */}
-                <div className="w-14 h-14 rounded-lg bg-emerald-100 dark:bg-emerald-900/30
-                               flex items-center justify-center mb-4
-                               group-hover:scale-110 transition-transform duration-300">
-                  <Icon className="w-7 h-7 text-emerald-600 dark:text-emerald-400" />
-                </div>
-
-                {/* Title */}
-                <h3 className="text-xl font-semibold font-mono text-ocean-900 dark:text-slate-100 mb-3">
-                  {useCase.title}
-                </h3>
-
-                {/* Description */}
-                <p className="text-ocean-600 dark:text-slate-400 leading-relaxed">
-                  {useCase.description}
-                </p>
-              </div>
-            );
-          })}
+        {/* Conveyor belt: infinite horizontal scroll */}
+        <div className="relative -mx-6 md:-mx-8">
+          <div className="overflow-hidden">
+            <div
+              className="flex gap-6 md:gap-8 py-2 w-max animate-conveyor"
+              style={{
+                width: 'max-content'
+              }}
+            >
+              {conveyorItems.map((useCase, index) => (
+                <UseCaseCard key={index} useCase={useCase} />
+              ))}
+            </div>
+          </div>
         </div>
       </div>
     </section>

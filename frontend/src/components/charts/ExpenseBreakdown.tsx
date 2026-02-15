@@ -59,6 +59,10 @@ export function ExpenseBreakdown({ data }: ExpenseBreakdownProps) {
               stroke={COLORS[index % COLORS.length]}
               fill={COLORS[index % COLORS.length]}
               fillOpacity={0.6}
+              isAnimationActive
+              animationBegin={0}
+              animationDuration={700}
+              animationEasing="ease-out"
             />
           ))}
         </AreaChart>
