@@ -1,5 +1,4 @@
 print("🔥 Script started")
-
 import sys
 import os
 import json
@@ -8,12 +7,8 @@ import time
 # Fix import path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '../../'))
 
-# Load env
 from dotenv import load_dotenv
 load_dotenv(os.path.join(os.path.dirname(__file__), '../../.env'))
-
-# 🔥 IMPORTANT: DB INIT
-from app.database import init_db
 
 from app.services.nl2sql_service import NL2SQLService
 from app.services.query_service import QueryService
@@ -44,13 +39,8 @@ def results_match(generated_rows, ground_truth_rows):
 def run_evaluation(test_set_path, output_path):
     print("Starting Evaluation...\n")
 
-    # 🔥 FIX: Initialize DB
-    init_db()
-
-    # Initialize AI service
     service = NL2SQLService()
 
-    # Load questions
     with open(test_set_path, 'r') as f:
         test_set = json.load(f)
 
@@ -71,13 +61,15 @@ def run_evaluation(test_set_path, output_path):
                 user_id=1
             )
         except Exception as e:
-            print("❌ Pipeline crashed:", e)
+            print("Pipeline error:", e)
             continue
 
         if not output.get("success", False):
             print("❌ Pipeline failed")
             print("ERROR:", output.get("error"))
             print("TRACE:", output.get("agent_trace"))
+            print("SQL:", output.get("sql"))
+            print("RESULTS:", output.get("results"))
             print("-" * 50)
             continue
 
