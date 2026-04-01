@@ -7,7 +7,6 @@ Usage:
     cd backend
     python scripts/load_examples.py
 """
-
 import sys
 import os
 
