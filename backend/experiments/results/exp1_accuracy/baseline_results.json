@@ -1,0 +1,3019 @@
+{
+  "summary": {
+    "variant": "baseline_full_pipeline",
+    "total": 30,
+    "pipeline_success": 30,
+    "execution_match": 21,
+    "validation_failed": 0,
+    "execution_error": 0,
+    "pipeline_error": 0,
+    "wrong_results": 9,
+    "by_category": {
+      "revenue": {
+        "total": 11,
+        "correct": 8,
+        "accuracy_pct": 72.73
+      },
+      "expenses": {
+        "total": 7,
+        "correct": 4,
+        "accuracy_pct": 57.14
+      },
+      "profit": {
+        "total": 1,
+        "correct": 0,
+        "accuracy_pct": 0.0
+      },
+      "transactions": {
+        "total": 2,
+        "correct": 2,
+        "accuracy_pct": 100.0
+      },
+      "territory": {
+        "total": 9,
+        "correct": 7,
+        "accuracy_pct": 77.78
+      }
+    },
+    "by_difficulty": {
+      "easy": {
+        "total": 6,
+        "correct": 5,
+        "accuracy_pct": 83.33
+      },
+      "hard": {
+        "total": 1,
+        "correct": 0,
+        "accuracy_pct": 0.0
+      },
+      "medium": {
+        "total": 23,
+        "correct": 16,
+        "accuracy_pct": 69.57
+      }
+    },
+    "by_organization": {
+      "1": {
+        "total": 30,
+        "correct": 21
+      }
+    },
+    "execution_accuracy_pct": 70.0,
+    "pipeline_success_rate_pct": 100.0,
+    "validation_failure_rate_pct": 0.0
+  },
+  "results": [
+    {
+      "id": "test_001",
+      "question": "What is the total revenue for 2020?",
+      "category": "revenue",
+      "difficulty": "easy",
+      "organization_id": 1,
+      "ground_truth_sql": "SELECT SUM(gl.amount) AS total_revenue FROM general_ledger gl JOIN chart_of_accounts coa ON gl.organization_id = coa.organization_id AND gl.account_key = coa.account_key JOIN calendar c ON gl.date = c.date WHERE coa.class = 'Trading account' AND c.year = 2020 AND gl.organization_id = 1",
+      "generated_sql": "SELECT SUM(gl.amount) as total_revenue \nFROM general_ledger gl \nJOIN chart_of_accounts coa ON gl.organization_id = coa.organization_id AND gl.account_key = coa.account_key \nJOIN calendar c ON gl.date = c.date \nWHERE coa.class = 'Trading account' AND coa.account ILIKE '%Sales%' AND gl.organization_id = {org_id} AND c.year = 2020",
+      "pipeline_success": true,
+      "execution_match": true,
+      "total_time": 11.298,
+      "agent_trace": [
+        {
+          "agent": "Agent1Understanding",
+          "duration": 2.445,
+          "status": "success",
+          "details": {
+            "examples_retrieved": 4,
+            "intent_type": "aggregate_by_dimension"
+          }
+        },
+        {
+          "agent": "Agent2Schema",
+          "duration": 2.571,
+          "status": "success",
+          "details": {
+            "tables_selected": [
+              "general_ledger",
+              "chart_of_accounts",
+              "calendar"
+            ],
+            "join_count": 2
+          }
+        },
+        {
+          "agent": "Agent3SQLGeneration",
+          "duration": 2.703,
+          "status": "success",
+          "details": {
+            "sql": "SELECT SUM(gl.amount) as total_revenue \nFROM general_ledger gl \nJOIN chart_of_accounts coa ON gl.organization_id = coa.organization_id AND gl.account_key = coa.account_key \nJOIN calendar c ON gl.date "
+          }
+        },
+        {
+          "agent": "Agent4Validation",
+          "duration": 0.037,
+          "status": "success",
+          "details": {
+            "is_valid": true,
+            "errors": []
+          }
+        },
+        {
+          "agent": "SQLExecution",
+          "duration": 0.012655496597290039,
+          "status": "success",
+          "details": {
+            "row_count": 1,
+            "error": null
+          }
+        },
+        {
+          "agent": "Agent5Insights",
+          "duration": 3.304,
+          "status": "success",
+          "details": {
+            "rows_analyzed": 1,
+            "insights_count": 3
+          }
+        },
+        {
+          "agent": "Agent6Visualization",
+          "duration": 0.0,
+          "status": "skipped",
+          "details": {
+            "reason": "Single value result - no visualization needed"
+          }
+        }
+      ],
+      "intent": {
+        "intent_type": "aggregate_by_dimension",
+        "metric": "revenue",
+        "aggregation": "sum",
+        "group_by": [],
+        "filters": {
+          "year": 2020
+        },
+        "order": null,
+        "limit": null,
+        "comparison": null,
+        "visualization_suitable": true
+      },
+      "failure_stage": null,
+      "failure_reason": null,
+      "generated_row_count": 1,
+      "ground_truth_row_count": 1
+    },
+    {
+      "id": "test_002",
+      "question": "What is the total revenue for 2019?",
+      "category": "revenue",
+      "difficulty": "easy",
+      "organization_id": 1,
+      "ground_truth_sql": "SELECT SUM(gl.amount) AS total_revenue FROM general_ledger gl JOIN chart_of_accounts coa ON gl.organization_id = coa.organization_id AND gl.account_key = coa.account_key JOIN calendar c ON gl.date = c.date WHERE coa.class = 'Trading account' AND c.year = 2019 AND gl.organization_id = 1",
+      "generated_sql": "SELECT SUM(gl.amount) as total_revenue\nFROM general_ledger gl\nJOIN chart_of_accounts coa ON gl.organization_id = coa.organization_id AND gl.account_key = coa.account_key\nJOIN calendar c ON gl.date = c.date\nWHERE coa.class = 'Trading account' AND coa.account ILIKE '%Sales%' AND gl.organization_id = {org_id} AND c.year = 2019",
+      "pipeline_success": true,
+      "execution_match": true,
+      "total_time": 10.686,
+      "agent_trace": [
+        {
+          "agent": "Agent1Understanding",
+          "duration": 2.254,
+          "status": "success",
+          "details": {
+            "examples_retrieved": 4,
+            "intent_type": "aggregate_by_dimension"
+          }
+        },
+        {
+          "agent": "Agent2Schema",
+          "duration": 1.909,
+          "status": "success",
+          "details": {
+            "tables_selected": [
+              "general_ledger",
+              "chart_of_accounts",
+              "calendar"
+            ],
+            "join_count": 2
+          }
+        },
+        {
+          "agent": "Agent3SQLGeneration",
+          "duration": 2.82,
+          "status": "success",
+          "details": {
+            "sql": "SELECT SUM(gl.amount) as total_revenue\nFROM general_ledger gl\nJOIN chart_of_accounts coa ON gl.organization_id = coa.organization_id AND gl.account_key = coa.account_key\nJOIN calendar c ON gl.date = c"
+          }
+        },
+        {
+          "agent": "Agent4Validation",
+          "duration": 0.006,
+          "status": "success",
+          "details": {
+            "is_valid": true,
+            "errors": []
+          }
+        },
+        {
+          "agent": "SQLExecution",
+          "duration": 0.003840923309326172,
+          "status": "success",
+          "details": {
+            "row_count": 1,
+            "error": null
+          }
+        },
+        {
+          "agent": "Agent5Insights",
+          "duration": 3.678,
+          "status": "success",
+          "details": {
+            "rows_analyzed": 1,
+            "insights_count": 3
+          }
+        },
+        {
+          "agent": "Agent6Visualization",
+          "duration": 0.0,
+          "status": "skipped",
+          "details": {
+            "reason": "Single value result - no visualization needed"
+          }
+        }
+      ],
+      "intent": {
+        "intent_type": "aggregate_by_dimension",
+        "metric": "revenue",
+        "aggregation": "sum",
+        "group_by": [],
+        "filters": {
+          "year": 2019
+        },
+        "order": null,
+        "limit": null,
+        "comparison": null,
+        "visualization_suitable": true
+      },
+      "failure_stage": null,
+      "failure_reason": null,
+      "generated_row_count": 1,
+      "ground_truth_row_count": 1
+    },
+    {
+      "id": "test_003",
+      "question": "What is the total revenue for 2021?",
+      "category": "revenue",
+      "difficulty": "easy",
+      "organization_id": 1,
+      "ground_truth_sql": "SELECT SUM(gl.amount) AS total_revenue FROM general_ledger gl JOIN chart_of_accounts coa ON gl.organization_id = coa.organization_id AND gl.account_key = coa.account_key JOIN calendar c ON gl.date = c.date WHERE coa.class = 'Trading account' AND c.year = 2021 AND gl.organization_id = 1",
+      "generated_sql": "SELECT SUM(gl.amount) as total_revenue \nFROM general_ledger gl \nJOIN chart_of_accounts coa ON gl.organization_id = coa.organization_id AND gl.account_key = coa.account_key \nJOIN calendar c ON gl.date = c.date \nWHERE coa.class = 'Trading account' AND coa.account ILIKE '%Sales%' AND gl.organization_id = {org_id} AND c.year = 2021",
+      "pipeline_success": true,
+      "execution_match": true,
+      "total_time": 10.66,
+      "agent_trace": [
+        {
+          "agent": "Agent1Understanding",
+          "duration": 3.883,
+          "status": "success",
+          "details": {
+            "examples_retrieved": 4,
+            "intent_type": "aggregate_by_dimension"
+          }
+        },
+        {
+          "agent": "Agent2Schema",
+          "duration": 1.9,
+          "status": "success",
+          "details": {
+            "tables_selected": [
+              "general_ledger",
+              "chart_of_accounts",
+              "calendar"
+            ],
+            "join_count": 2
+          }
+        },
+        {
+          "agent": "Agent3SQLGeneration",
+          "duration": 1.839,
+          "status": "success",
+          "details": {
+            "sql": "SELECT SUM(gl.amount) as total_revenue \nFROM general_ledger gl \nJOIN chart_of_accounts coa ON gl.organization_id = coa.organization_id AND gl.account_key = coa.account_key \nJOIN calendar c ON gl.date "
+          }
+        },
+        {
+          "agent": "Agent4Validation",
+          "duration": 0.009,
+          "status": "success",
+          "details": {
+            "is_valid": true,
+            "errors": []
+          }
+        },
+        {
+          "agent": "SQLExecution",
+          "duration": 0.0031921863555908203,
+          "status": "success",
+          "details": {
+            "row_count": 1,
+            "error": null
+          }
+        },
+        {
+          "agent": "Agent5Insights",
+          "duration": 3.0,
+          "status": "success",
+          "details": {
+            "rows_analyzed": 1,
+            "insights_count": 3
+          }
+        },
+        {
+          "agent": "Agent6Visualization",
+          "duration": 0.0,
+          "status": "skipped",
+          "details": {
+            "reason": "Single value result - no visualization needed"
+          }
+        }
+      ],
+      "intent": {
+        "intent_type": "aggregate_by_dimension",
+        "metric": "revenue",
+        "aggregation": "sum",
+        "group_by": [],
+        "filters": {
+          "year": 2021
+        },
+        "order": null,
+        "limit": null,
+        "comparison": null,
+        "visualization_suitable": true
+      },
+      "failure_stage": null,
+      "failure_reason": null,
+      "generated_row_count": 1,
+      "ground_truth_row_count": 1
+    },
+    {
+      "id": "test_004",
+      "question": "What are the total operating expenses for 2020?",
+      "category": "expenses",
+      "difficulty": "easy",
+      "organization_id": 1,
+      "ground_truth_sql": "SELECT ABS(SUM(gl.amount)) AS total_expenses FROM general_ledger gl JOIN chart_of_accounts coa ON gl.organization_id = coa.organization_id AND gl.account_key = coa.account_key JOIN calendar c ON gl.date = c.date WHERE coa.class = 'Operating account' AND c.year = 2020 AND gl.organization_id = 1",
+      "generated_sql": "SELECT ABS(SUM(gl.amount)) as total_operating_expenses\nFROM general_ledger gl\nJOIN chart_of_accounts coa ON gl.organization_id = coa.organization_id AND gl.account_key = coa.account_key\nJOIN calendar c ON gl.date = c.date\nWHERE coa.class = 'Operating account' AND gl.organization_id = {org_id} AND c.year = 2020",
+      "pipeline_success": true,
+      "execution_match": true,
+      "total_time": 9.306,
+      "agent_trace": [
+        {
+          "agent": "Agent1Understanding",
+          "duration": 1.879,
+          "status": "success",
+          "details": {
+            "examples_retrieved": 4,
+            "intent_type": "aggregate_by_dimension"
+          }
+        },
+        {
+          "agent": "Agent2Schema",
+          "duration": 2.547,
+          "status": "success",
+          "details": {
+            "tables_selected": [
+              "general_ledger",
+              "chart_of_accounts",
+              "territory",
+              "calendar"
+            ],
+            "join_count": 3
+          }
+        },
+        {
+          "agent": "Agent3SQLGeneration",
+          "duration": 2.051,
+          "status": "success",
+          "details": {
+            "sql": "SELECT ABS(SUM(gl.amount)) as total_operating_expenses\nFROM general_ledger gl\nJOIN chart_of_accounts coa ON gl.organization_id = coa.organization_id AND gl.account_key = coa.account_key\nJOIN calendar "
+          }
+        },
+        {
+          "agent": "Agent4Validation",
+          "duration": 0.009,
+          "status": "success",
+          "details": {
+            "is_valid": true,
+            "errors": []
+          }
+        },
+        {
+          "agent": "SQLExecution",
+          "duration": 0.017491579055786133,
+          "status": "success",
+          "details": {
+            "row_count": 1,
+            "error": null
+          }
+        },
+        {
+          "agent": "Agent5Insights",
+          "duration": 2.781,
+          "status": "success",
+          "details": {
+            "rows_analyzed": 1,
+            "insights_count": 3
+          }
+        },
+        {
+          "agent": "Agent6Visualization",
+          "duration": 0.0,
+          "status": "skipped",
+          "details": {
+            "reason": "Single value result - no visualization needed"
+          }
+        }
+      ],
+      "intent": {
+        "intent_type": "aggregate_by_dimension",
+        "metric": "operating_expenses",
+        "aggregation": "sum",
+        "group_by": [],
+        "filters": {
+          "year": 2020
+        },
+        "order": null,
+        "limit": null,
+        "comparison": null,
+        "visualization_suitable": true
+      },
+      "failure_stage": null,
+      "failure_reason": null,
+      "generated_row_count": 1,
+      "ground_truth_row_count": 1
+    },
+    {
+      "id": "test_005",
+      "question": "What is the total cost of sales for 2020?",
+      "category": "revenue",
+      "difficulty": "easy",
+      "organization_id": 1,
+      "ground_truth_sql": "SELECT ABS(SUM(gl.amount)) AS total_cost_of_sales FROM general_ledger gl JOIN chart_of_accounts coa ON gl.organization_id = coa.organization_id AND gl.account_key = coa.account_key JOIN calendar c ON gl.date = c.date WHERE coa.class = 'Trading account' AND c.year = 2020 AND gl.organization_id = 1",
+      "generated_sql": "SELECT ABS(SUM(gl.amount)) as total_cost_of_sales\nFROM general_ledger gl\nJOIN chart_of_accounts coa ON gl.organization_id = coa.organization_id AND gl.account_key = coa.account_key\nJOIN calendar c ON gl.date = c.date\nWHERE coa.class = 'Trading account' AND coa.account NOT ILIKE '%Sales%' AND gl.organization_id = {org_id} AND c.year = 2020",
+      "pipeline_success": true,
+      "execution_match": false,
+      "total_time": 10.906,
+      "agent_trace": [
+        {
+          "agent": "Agent1Understanding",
+          "duration": 2.541,
+          "status": "success",
+          "details": {
+            "examples_retrieved": 4,
+            "intent_type": "aggregate_by_dimension"
+          }
+        },
+        {
+          "agent": "Agent2Schema",
+          "duration": 2.316,
+          "status": "success",
+          "details": {
+            "tables_selected": [
+              "general_ledger",
+              "chart_of_accounts",
+              "territory",
+              "calendar"
+            ],
+            "join_count": 3
+          }
+        },
+        {
+          "agent": "Agent3SQLGeneration",
+          "duration": 2.638,
+          "status": "success",
+          "details": {
+            "sql": "SELECT ABS(SUM(gl.amount)) as total_cost_of_sales\nFROM general_ledger gl\nJOIN chart_of_accounts coa ON gl.organization_id = coa.organization_id AND gl.account_key = coa.account_key\nJOIN calendar c ON "
+          }
+        },
+        {
+          "agent": "Agent4Validation",
+          "duration": 0.011,
+          "status": "success",
+          "details": {
+            "is_valid": true,
+            "errors": []
+          }
+        },
+        {
+          "agent": "SQLExecution",
+          "duration": 0.0027923583984375,
+          "status": "success",
+          "details": {
+            "row_count": 1,
+            "error": null
+          }
+        },
+        {
+          "agent": "Agent5Insights",
+          "duration": 3.368,
+          "status": "success",
+          "details": {
+            "rows_analyzed": 1,
+            "insights_count": 3
+          }
+        },
+        {
+          "agent": "Agent6Visualization",
+          "duration": 0.0,
+          "status": "skipped",
+          "details": {
+            "reason": "Single value result - no visualization needed"
+          }
+        }
+      ],
+      "intent": {
+        "intent_type": "aggregate_by_dimension",
+        "metric": "cost_of_sales",
+        "aggregation": "sum",
+        "group_by": [],
+        "filters": {
+          "year": 2020
+        },
+        "order": null,
+        "limit": null,
+        "comparison": null,
+        "visualization_suitable": true
+      },
+      "failure_stage": null,
+      "failure_reason": null,
+      "generated_row_count": 1,
+      "ground_truth_row_count": 1
+    },
+    {
+      "id": "test_006",
+      "question": "What is the net profit for 2020?",
+      "category": "profit",
+      "difficulty": "hard",
+      "organization_id": 1,
+      "ground_truth_sql": "SELECT SUM(CASE WHEN coa.class = 'Trading account' THEN gl.amount ELSE 0 END) + SUM(CASE WHEN coa.class != 'Trading account' THEN gl.amount ELSE 0 END) AS net_profit FROM general_ledger gl JOIN chart_of_accounts coa ON gl.organization_id = coa.organization_id AND gl.account_key = coa.account_key JOIN calendar c ON gl.date = c.date WHERE c.year = 2020 AND gl.organization_id = 1",
+      "generated_sql": "SELECT SUM(gl.amount) as net_profit\nFROM general_ledger gl\nJOIN chart_of_accounts coa ON gl.organization_id = coa.organization_id AND gl.account_key = coa.account_key\nJOIN calendar c ON gl.date = c.date\nWHERE (coa.class = 'Trading account' OR coa.class = 'Operating account') \nAND gl.organization_id = {org_id} \nAND c.year = 2020",
+      "pipeline_success": true,
+      "execution_match": false,
+      "total_time": 9.993,
+      "agent_trace": [
+        {
+          "agent": "Agent1Understanding",
+          "duration": 2.177,
+          "status": "success",
+          "details": {
+            "examples_retrieved": 4,
+            "intent_type": "aggregate_by_dimension"
+          }
+        },
+        {
+          "agent": "Agent2Schema",
+          "duration": 2.117,
+          "status": "success",
+          "details": {
+            "tables_selected": [
+              "general_ledger",
+              "chart_of_accounts",
+              "territory",
+              "calendar"
+            ],
+            "join_count": 3
+          }
+        },
+        {
+          "agent": "Agent3SQLGeneration",
+          "duration": 2.311,
+          "status": "success",
+          "details": {
+            "sql": "SELECT SUM(gl.amount) as net_profit\nFROM general_ledger gl\nJOIN chart_of_accounts coa ON gl.organization_id = coa.organization_id AND gl.account_key = coa.account_key\nJOIN calendar c ON gl.date = c.da"
+          }
+        },
+        {
+          "agent": "Agent4Validation",
+          "duration": 0.008,
+          "status": "success",
+          "details": {
+            "is_valid": true,
+            "errors": []
+          }
+        },
+        {
+          "agent": "SQLExecution",
+          "duration": 0.017880678176879883,
+          "status": "success",
+          "details": {
+            "row_count": 1,
+            "error": null
+          }
+        },
+        {
+          "agent": "Agent5Insights",
+          "duration": 3.328,
+          "status": "success",
+          "details": {
+            "rows_analyzed": 1,
+            "insights_count": 3
+          }
+        },
+        {
+          "agent": "Agent6Visualization",
+          "duration": 0.0,
+          "status": "skipped",
+          "details": {
+            "reason": "Single value result - no visualization needed"
+          }
+        }
+      ],
+      "intent": {
+        "intent_type": "aggregate_by_dimension",
+        "metric": "net_profit",
+        "aggregation": "sum",
+        "group_by": [],
+        "filters": {
+          "year": 2020
+        },
+        "order": null,
+        "limit": null,
+        "comparison": null,
+        "visualization_suitable": true
+      },
+      "failure_stage": null,
+      "failure_reason": null,
+      "generated_row_count": 1,
+      "ground_truth_row_count": 1
+    },
+    {
+      "id": "test_007",
+      "question": "How many transactions were recorded in 2020?",
+      "category": "transactions",
+      "difficulty": "easy",
+      "organization_id": 1,
+      "ground_truth_sql": "SELECT COUNT(*) AS total_transactions FROM general_ledger gl JOIN calendar c ON gl.date = c.date WHERE c.year = 2020 AND gl.organization_id = 1",
+      "generated_sql": "SELECT COUNT(*) as transaction_count \nFROM general_ledger gl \nWHERE gl.organization_id = {org_id} \nAND gl.date BETWEEN '2020-01-01' AND '2020-12-31'",
+      "pipeline_success": true,
+      "execution_match": true,
+      "total_time": 10.986,
+      "agent_trace": [
+        {
+          "agent": "Agent1Understanding",
+          "duration": 2.362,
+          "status": "success",
+          "details": {
+            "examples_retrieved": 4,
+            "intent_type": "aggregate_by_dimension"
+          }
+        },
+        {
+          "agent": "Agent2Schema",
+          "duration": 2.829,
+          "status": "success",
+          "details": {
+            "tables_selected": [
+              "general_ledger",
+              "chart_of_accounts",
+              "territory",
+              "calendar"
+            ],
+            "join_count": 3
+          }
+        },
+        {
+          "agent": "Agent3SQLGeneration",
+          "duration": 1.918,
+          "status": "success",
+          "details": {
+            "sql": "SELECT COUNT(*) as transaction_count \nFROM general_ledger gl \nWHERE gl.organization_id = {org_id} \nAND gl.date BETWEEN '2020-01-01' AND '2020-12-31'"
+          }
+        },
+        {
+          "agent": "Agent4Validation",
+          "duration": 0.002,
+          "status": "success",
+          "details": {
+            "is_valid": true,
+            "errors": []
+          }
+        },
+        {
+          "agent": "SQLExecution",
+          "duration": 0.004644632339477539,
+          "status": "success",
+          "details": {
+            "row_count": 1,
+            "error": null
+          }
+        },
+        {
+          "agent": "Agent5Insights",
+          "duration": 3.839,
+          "status": "success",
+          "details": {
+            "rows_analyzed": 1,
+            "insights_count": 3
+          }
+        },
+        {
+          "agent": "Agent6Visualization",
+          "duration": 0.0,
+          "status": "skipped",
+          "details": {
+            "reason": "Single value result - no visualization needed"
+          }
+        }
+      ],
+      "intent": {
+        "intent_type": "aggregate_by_dimension",
+        "metric": "transactions",
+        "aggregation": "count",
+        "group_by": [],
+        "filters": {
+          "year": 2020
+        },
+        "order": null,
+        "limit": null,
+        "comparison": null,
+        "visualization_suitable": true
+      },
+      "failure_stage": null,
+      "failure_reason": null,
+      "generated_row_count": 1,
+      "ground_truth_row_count": 1
+    },
+    {
+      "id": "test_008",
+      "question": "What is the average transaction amount in 2020?",
+      "category": "transactions",
+      "difficulty": "medium",
+      "organization_id": 1,
+      "ground_truth_sql": "SELECT AVG(gl.amount) AS avg_amount FROM general_ledger gl JOIN calendar c ON gl.date = c.date WHERE c.year = 2020 AND gl.organization_id = 1",
+      "generated_sql": "SELECT AVG(gl.amount) as avg_transaction_amount\nFROM general_ledger gl\nJOIN chart_of_accounts coa ON gl.organization_id = coa.organization_id AND gl.account_key = coa.account_key\nJOIN calendar c ON gl.date = c.date\nWHERE gl.organization_id = {org_id} AND c.year = 2020",
+      "pipeline_success": true,
+      "execution_match": true,
+      "total_time": 12.592,
+      "agent_trace": [
+        {
+          "agent": "Agent1Understanding",
+          "duration": 3.085,
+          "status": "success",
+          "details": {
+            "examples_retrieved": 4,
+            "intent_type": "aggregate_by_dimension"
+          }
+        },
+        {
+          "agent": "Agent2Schema",
+          "duration": 2.314,
+          "status": "success",
+          "details": {
+            "tables_selected": [
+              "general_ledger",
+              "chart_of_accounts",
+              "territory",
+              "calendar"
+            ],
+            "join_count": 3
+          }
+        },
+        {
+          "agent": "Agent3SQLGeneration",
+          "duration": 2.377,
+          "status": "success",
+          "details": {
+            "sql": "SELECT AVG(gl.amount) as avg_transaction_amount\nFROM general_ledger gl\nJOIN chart_of_accounts coa ON gl.organization_id = coa.organization_id AND gl.account_key = coa.account_key\nJOIN calendar c ON gl"
+          }
+        },
+        {
+          "agent": "Agent4Validation",
+          "duration": 0.008,
+          "status": "success",
+          "details": {
+            "is_valid": true,
+            "errors": []
+          }
+        },
+        {
+          "agent": "SQLExecution",
+          "duration": 0.012574911117553711,
+          "status": "success",
+          "details": {
+            "row_count": 1,
+            "error": null
+          }
+        },
+        {
+          "agent": "Agent5Insights",
+          "duration": 4.774,
+          "status": "success",
+          "details": {
+            "rows_analyzed": 1,
+            "insights_count": 3
+          }
+        },
+        {
+          "agent": "Agent6Visualization",
+          "duration": 0.0,
+          "status": "skipped",
+          "details": {
+            "reason": "Single value result - no visualization needed"
+          }
+        }
+      ],
+      "intent": {
+        "intent_type": "aggregate_by_dimension",
+        "metric": "transaction_amount",
+        "aggregation": "avg",
+        "group_by": [],
+        "filters": {
+          "year": 2020
+        },
+        "order": null,
+        "limit": null,
+        "comparison": null,
+        "visualization_suitable": true
+      },
+      "failure_stage": null,
+      "failure_reason": null,
+      "generated_row_count": 1,
+      "ground_truth_row_count": 1
+    },
+    {
+      "id": "test_009",
+      "question": "What is the total revenue for Q1 2020?",
+      "category": "revenue",
+      "difficulty": "medium",
+      "organization_id": 1,
+      "ground_truth_sql": "SELECT SUM(gl.amount) AS total_revenue FROM general_ledger gl JOIN chart_of_accounts coa ON gl.organization_id = coa.organization_id AND gl.account_key = coa.account_key JOIN calendar c ON gl.date = c.date WHERE coa.class = 'Trading account' AND c.year = 2020 AND c.quarter = 'Qtr 1' AND gl.organization_id = 1",
+      "generated_sql": "SELECT SUM(gl.amount) as total_revenue \nFROM general_ledger gl \nJOIN chart_of_accounts coa ON gl.organization_id = coa.organization_id AND gl.account_key = coa.account_key \nJOIN calendar c ON gl.date = c.date \nWHERE coa.class = 'Trading account' AND coa.account ILIKE '%Sales%' AND c.year = 2020 AND c.quarter = 'Qtr 1' AND gl.organization_id = {org_id}",
+      "pipeline_success": true,
+      "execution_match": true,
+      "total_time": 11.378,
+      "agent_trace": [
+        {
+          "agent": "Agent1Understanding",
+          "duration": 2.474,
+          "status": "success",
+          "details": {
+            "examples_retrieved": 4,
+            "intent_type": "aggregate_by_dimension"
+          }
+        },
+        {
+          "agent": "Agent2Schema",
+          "duration": 2.129,
+          "status": "success",
+          "details": {
+            "tables_selected": [
+              "general_ledger",
+              "chart_of_accounts",
+              "territory",
+              "calendar"
+            ],
+            "join_count": 3
+          }
+        },
+        {
+          "agent": "Agent3SQLGeneration",
+          "duration": 2.446,
+          "status": "success",
+          "details": {
+            "sql": "SELECT SUM(gl.amount) as total_revenue \nFROM general_ledger gl \nJOIN chart_of_accounts coa ON gl.organization_id = coa.organization_id AND gl.account_key = coa.account_key \nJOIN calendar c ON gl.date "
+          }
+        },
+        {
+          "agent": "Agent4Validation",
+          "duration": 0.007,
+          "status": "success",
+          "details": {
+            "is_valid": true,
+            "errors": []
+          }
+        },
+        {
+          "agent": "SQLExecution",
+          "duration": 0.002312898635864258,
+          "status": "success",
+          "details": {
+            "row_count": 1,
+            "error": null
+          }
+        },
+        {
+          "agent": "Agent5Insights",
+          "duration": 4.293,
+          "status": "success",
+          "details": {
+            "rows_analyzed": 1,
+            "insights_count": 3
+          }
+        },
+        {
+          "agent": "Agent6Visualization",
+          "duration": 0.0,
+          "status": "skipped",
+          "details": {
+            "reason": "Single value result - no visualization needed"
+          }
+        }
+      ],
+      "intent": {
+        "intent_type": "aggregate_by_dimension",
+        "metric": "revenue",
+        "aggregation": "sum",
+        "group_by": [
+          "quarter"
+        ],
+        "filters": {
+          "year": 2020
+        },
+        "order": null,
+        "limit": null,
+        "comparison": null,
+        "visualization_suitable": true
+      },
+      "failure_stage": null,
+      "failure_reason": null,
+      "generated_row_count": 1,
+      "ground_truth_row_count": 1
+    },
+    {
+      "id": "test_010",
+      "question": "What are the operating expenses for Q2 2021?",
+      "category": "expenses",
+      "difficulty": "medium",
+      "organization_id": 1,
+      "ground_truth_sql": "SELECT ABS(SUM(gl.amount)) AS total_expenses FROM general_ledger gl JOIN chart_of_accounts coa ON gl.organization_id = coa.organization_id AND gl.account_key = coa.account_key JOIN calendar c ON gl.date = c.date WHERE coa.class = 'Operating account' AND c.year = 2021 AND c.quarter = 'Qtr 2' AND gl.organization_id = 1",
+      "generated_sql": "SELECT coa.account, ABS(SUM(gl.amount)) as total_expense\nFROM general_ledger gl\nJOIN chart_of_accounts coa ON gl.organization_id = coa.organization_id AND gl.account_key = coa.account_key\nJOIN calendar c ON gl.date = c.date\nWHERE coa.class = 'Operating account' AND gl.organization_id = {org_id} AND c.year = 2021 AND c.quarter = 'Qtr 2'\nGROUP BY coa.account\nORDER BY total_expense DESC",
+      "pipeline_success": true,
+      "execution_match": false,
+      "total_time": 6.465,
+      "agent_trace": [
+        {
+          "agent": "Agent1Understanding",
+          "duration": 2.108,
+          "status": "success",
+          "details": {
+            "examples_retrieved": 4,
+            "intent_type": "aggregate_by_dimension"
+          }
+        },
+        {
+          "agent": "Agent2Schema",
+          "duration": 1.953,
+          "status": "success",
+          "details": {
+            "tables_selected": [
+              "general_ledger",
+              "chart_of_accounts",
+              "calendar"
+            ],
+            "join_count": 2
+          }
+        },
+        {
+          "agent": "Agent3SQLGeneration",
+          "duration": 2.347,
+          "status": "success",
+          "details": {
+            "sql": "SELECT coa.account, ABS(SUM(gl.amount)) as total_expense\nFROM general_ledger gl\nJOIN chart_of_accounts coa ON gl.organization_id = coa.organization_id AND gl.account_key = coa.account_key\nJOIN calenda"
+          }
+        },
+        {
+          "agent": "Agent4Validation",
+          "duration": 0.009,
+          "status": "success",
+          "details": {
+            "is_valid": true,
+            "errors": []
+          }
+        },
+        {
+          "agent": "SQLExecution",
+          "duration": 0.009282350540161133,
+          "status": "success",
+          "details": {
+            "row_count": 0,
+            "error": null
+          }
+        },
+        {
+          "agent": "Agent5Insights",
+          "duration": 0.0,
+          "status": "skipped",
+          "details": {
+            "reason": "No results"
+          }
+        },
+        {
+          "agent": "Agent6Visualization",
+          "duration": 0.0,
+          "status": "skipped",
+          "details": {
+            "reason": "No data to visualize"
+          }
+        }
+      ],
+      "intent": {
+        "intent_type": "aggregate_by_dimension",
+        "metric": "operating_expenses",
+        "aggregation": "sum",
+        "group_by": [
+          "quarter"
+        ],
+        "filters": {
+          "year": 2021
+        },
+        "order": null,
+        "limit": null,
+        "comparison": null,
+        "visualization_suitable": true
+      },
+      "failure_stage": null,
+      "failure_reason": null,
+      "generated_row_count": 0,
+      "ground_truth_row_count": 1
+    },
+    {
+      "id": "test_011",
+      "question": "What is the revenue by country for 2020?",
+      "category": "territory",
+      "difficulty": "medium",
+      "organization_id": 1,
+      "ground_truth_sql": "SELECT t.country, SUM(gl.amount) AS revenue FROM general_ledger gl JOIN chart_of_accounts coa ON gl.organization_id = coa.organization_id AND gl.account_key = coa.account_key JOIN calendar c ON gl.date = c.date JOIN territory t ON gl.organization_id = t.organization_id AND gl.territory_key = t.territory_key WHERE coa.class = 'Trading account' AND c.year = 2020 AND gl.organization_id = 1 GROUP BY t.country",
+      "generated_sql": "SELECT t.country, SUM(gl.amount) as revenue \nFROM general_ledger gl \nJOIN chart_of_accounts coa ON gl.organization_id = coa.organization_id AND gl.account_key = coa.account_key \nJOIN territory t ON gl.organization_id = t.organization_id AND gl.territory_key = t.territory_key \nJOIN calendar c ON gl.date = c.date \nWHERE coa.class = 'Trading account' AND coa.account ILIKE '%Sales%' AND gl.organization_id = {org_id} AND c.year = 2020 \nGROUP BY t.country \nORDER BY revenue DESC",
+      "pipeline_success": true,
+      "execution_match": true,
+      "total_time": 11.284,
+      "agent_trace": [
+        {
+          "agent": "Agent1Understanding",
+          "duration": 2.063,
+          "status": "success",
+          "details": {
+            "examples_retrieved": 4,
+            "intent_type": "aggregate_by_dimension"
+          }
+        },
+        {
+          "agent": "Agent2Schema",
+          "duration": 2.689,
+          "status": "success",
+          "details": {
+            "tables_selected": [
+              "general_ledger",
+              "chart_of_accounts",
+              "territory",
+              "calendar"
+            ],
+            "join_count": 3
+          }
+        },
+        {
+          "agent": "Agent3SQLGeneration",
+          "duration": 3.241,
+          "status": "success",
+          "details": {
+            "sql": "SELECT t.country, SUM(gl.amount) as revenue \nFROM general_ledger gl \nJOIN chart_of_accounts coa ON gl.organization_id = coa.organization_id AND gl.account_key = coa.account_key \nJOIN territory t ON gl"
+          }
+        },
+        {
+          "agent": "Agent4Validation",
+          "duration": 0.01,
+          "status": "success",
+          "details": {
+            "is_valid": true,
+            "errors": []
+          }
+        },
+        {
+          "agent": "SQLExecution",
+          "duration": 0.01154780387878418,
+          "status": "success",
+          "details": {
+            "row_count": 7,
+            "error": null
+          }
+        },
+        {
+          "agent": "Agent5Insights",
+          "duration": 3.247,
+          "status": "success",
+          "details": {
+            "rows_analyzed": 7,
+            "insights_count": 3
+          }
+        },
+        {
+          "agent": "Agent6Visualization",
+          "duration": 0.0,
+          "status": "success",
+          "details": {
+            "chart_type": "bar",
+            "data_points": 7
+          }
+        }
+      ],
+      "intent": {
+        "intent_type": "aggregate_by_dimension",
+        "metric": "revenue",
+        "aggregation": "sum",
+        "group_by": [
+          "country"
+        ],
+        "filters": {
+          "year": 2020
+        },
+        "order": null,
+        "limit": null,
+        "comparison": null,
+        "visualization_suitable": true
+      },
+      "failure_stage": null,
+      "failure_reason": null,
+      "generated_row_count": 7,
+      "ground_truth_row_count": 7
+    },
+    {
+      "id": "test_012",
+      "question": "What is the revenue by region for 2021?",
+      "category": "territory",
+      "difficulty": "medium",
+      "organization_id": 1,
+      "ground_truth_sql": "SELECT t.region, SUM(gl.amount) AS revenue FROM general_ledger gl JOIN chart_of_accounts coa ON gl.organization_id = coa.organization_id AND gl.account_key = coa.account_key JOIN calendar c ON gl.date = c.date JOIN territory t ON gl.organization_id = t.organization_id AND gl.territory_key = t.territory_key WHERE coa.class = 'Trading account' AND c.year = 2021 AND gl.organization_id = 1 GROUP BY t.region",
+      "generated_sql": "SELECT t.region, SUM(gl.amount) as revenue, COUNT(*) as transaction_count \nFROM general_ledger gl \nJOIN chart_of_accounts coa ON gl.organization_id = coa.organization_id AND gl.account_key = coa.account_key \nJOIN territory t ON gl.organization_id = t.organization_id AND gl.territory_key = t.territory_key \nJOIN calendar c ON gl.date = c.date \nWHERE coa.class = 'Trading account' AND coa.account ILIKE '%Sales%' AND gl.organization_id = {org_id} AND c.year = 2021 \nGROUP BY t.region \nORDER BY revenue DESC",
+      "pipeline_success": true,
+      "execution_match": true,
+      "total_time": 7.379,
+      "agent_trace": [
+        {
+          "agent": "Agent1Understanding",
+          "duration": 2.328,
+          "status": "success",
+          "details": {
+            "examples_retrieved": 4,
+            "intent_type": "aggregate_by_dimension"
+          }
+        },
+        {
+          "agent": "Agent2Schema",
+          "duration": 1.776,
+          "status": "success",
+          "details": {
+            "tables_selected": [
+              "general_ledger",
+              "chart_of_accounts",
+              "territory",
+              "calendar"
+            ],
+            "join_count": 3
+          }
+        },
+        {
+          "agent": "Agent3SQLGeneration",
+          "duration": 3.234,
+          "status": "success",
+          "details": {
+            "sql": "SELECT t.region, SUM(gl.amount) as revenue, COUNT(*) as transaction_count \nFROM general_ledger gl \nJOIN chart_of_accounts coa ON gl.organization_id = coa.organization_id AND gl.account_key = coa.accou"
+          }
+        },
+        {
+          "agent": "Agent4Validation",
+          "duration": 0.007,
+          "status": "success",
+          "details": {
+            "is_valid": true,
+            "errors": []
+          }
+        },
+        {
+          "agent": "SQLExecution",
+          "duration": 0.0039904117584228516,
+          "status": "success",
+          "details": {
+            "row_count": 0,
+            "error": null
+          }
+        },
+        {
+          "agent": "Agent5Insights",
+          "duration": 0.0,
+          "status": "skipped",
+          "details": {
+            "reason": "No results"
+          }
+        },
+        {
+          "agent": "Agent6Visualization",
+          "duration": 0.0,
+          "status": "skipped",
+          "details": {
+            "reason": "No data to visualize"
+          }
+        }
+      ],
+      "intent": {
+        "intent_type": "aggregate_by_dimension",
+        "metric": "revenue",
+        "aggregation": "sum",
+        "group_by": [
+          "region"
+        ],
+        "filters": {
+          "year": 2021
+        },
+        "order": null,
+        "limit": null,
+        "comparison": null,
+        "visualization_suitable": true
+      },
+      "failure_stage": null,
+      "failure_reason": null,
+      "generated_row_count": 0,
+      "ground_truth_row_count": 0
+    },
+    {
+      "id": "test_013",
+      "question": "What are the operating expenses by account type for 2020?",
+      "category": "expenses",
+      "difficulty": "medium",
+      "organization_id": 1,
+      "ground_truth_sql": "SELECT coa.account, ABS(SUM(gl.amount)) AS expenses FROM general_ledger gl JOIN chart_of_accounts coa ON gl.organization_id = coa.organization_id AND gl.account_key = coa.account_key JOIN calendar c ON gl.date = c.date WHERE coa.class = 'Operating account' AND c.year = 2020 AND gl.organization_id = 1 GROUP BY coa.account",
+      "generated_sql": "SELECT coa.account, ABS(SUM(gl.amount)) as total_expense\nFROM general_ledger gl\nJOIN chart_of_accounts coa ON gl.organization_id = coa.organization_id AND gl.account_key = coa.account_key\nJOIN calendar c ON gl.date = c.date\nWHERE coa.class = 'Operating account' AND c.year = 2020 AND gl.organization_id = {org_id}\nGROUP BY coa.account\nORDER BY total_expense DESC",
+      "pipeline_success": true,
+      "execution_match": true,
+      "total_time": 11.731,
+      "agent_trace": [
+        {
+          "agent": "Agent1Understanding",
+          "duration": 3.298,
+          "status": "success",
+          "details": {
+            "examples_retrieved": 4,
+            "intent_type": "aggregate_by_dimension"
+          }
+        },
+        {
+          "agent": "Agent2Schema",
+          "duration": 2.76,
+          "status": "success",
+          "details": {
+            "tables_selected": [
+              "general_ledger",
+              "chart_of_accounts",
+              "territory",
+              "calendar"
+            ],
+            "join_count": 3
+          }
+        },
+        {
+          "agent": "Agent3SQLGeneration",
+          "duration": 2.236,
+          "status": "success",
+          "details": {
+            "sql": "SELECT coa.account, ABS(SUM(gl.amount)) as total_expense\nFROM general_ledger gl\nJOIN chart_of_accounts coa ON gl.organization_id = coa.organization_id AND gl.account_key = coa.account_key\nJOIN calenda"
+          }
+        },
+        {
+          "agent": "Agent4Validation",
+          "duration": 0.004,
+          "status": "success",
+          "details": {
+            "is_valid": true,
+            "errors": []
+          }
+        },
+        {
+          "agent": "SQLExecution",
+          "duration": 0.00769495964050293,
+          "status": "success",
+          "details": {
+            "row_count": 12,
+            "error": null
+          }
+        },
+        {
+          "agent": "Agent5Insights",
+          "duration": 3.401,
+          "status": "success",
+          "details": {
+            "rows_analyzed": 12,
+            "insights_count": 3
+          }
+        },
+        {
+          "agent": "Agent6Visualization",
+          "duration": 0.0,
+          "status": "success",
+          "details": {
+            "chart_type": "bar",
+            "data_points": 12
+          }
+        }
+      ],
+      "intent": {
+        "intent_type": "aggregate_by_dimension",
+        "metric": "operating_expenses",
+        "aggregation": "sum",
+        "group_by": [
+          "account"
+        ],
+        "filters": {
+          "year": 2020
+        },
+        "order": null,
+        "limit": null,
+        "comparison": null,
+        "visualization_suitable": true
+      },
+      "failure_stage": null,
+      "failure_reason": null,
+      "generated_row_count": 12,
+      "ground_truth_row_count": 12
+    },
+    {
+      "id": "test_014",
+      "question": "What is the revenue by quarter for 2020?",
+      "category": "revenue",
+      "difficulty": "medium",
+      "organization_id": 1,
+      "ground_truth_sql": "SELECT c.quarter, SUM(gl.amount) AS revenue FROM general_ledger gl JOIN chart_of_accounts coa ON gl.organization_id = coa.organization_id AND gl.account_key = coa.account_key JOIN calendar c ON gl.date = c.date WHERE coa.class = 'Trading account' AND c.year = 2020 AND gl.organization_id = 1 GROUP BY c.quarter",
+      "generated_sql": "SELECT c.quarter, SUM(gl.amount) as revenue\nFROM general_ledger gl\nJOIN chart_of_accounts coa ON gl.organization_id = coa.organization_id AND gl.account_key = coa.account_key\nJOIN calendar c ON gl.date = c.date\nWHERE coa.class = 'Trading account' AND coa.account ILIKE '%Sales%' AND gl.organization_id = {org_id} AND c.year = 2020\nGROUP BY c.quarter\nORDER BY c.quarter",
+      "pipeline_success": true,
+      "execution_match": true,
+      "total_time": 13.789,
+      "agent_trace": [
+        {
+          "agent": "Agent1Understanding",
+          "duration": 2.711,
+          "status": "success",
+          "details": {
+            "examples_retrieved": 4,
+            "intent_type": "aggregate_by_dimension"
+          }
+        },
+        {
+          "agent": "Agent2Schema",
+          "duration": 2.399,
+          "status": "success",
+          "details": {
+            "tables_selected": [
+              "general_ledger",
+              "chart_of_accounts",
+              "territory",
+              "calendar"
+            ],
+            "join_count": 3
+          }
+        },
+        {
+          "agent": "Agent3SQLGeneration",
+          "duration": 2.749,
+          "status": "success",
+          "details": {
+            "sql": "SELECT c.quarter, SUM(gl.amount) as revenue\nFROM general_ledger gl\nJOIN chart_of_accounts coa ON gl.organization_id = coa.organization_id AND gl.account_key = coa.account_key\nJOIN calendar c ON gl.dat"
+          }
+        },
+        {
+          "agent": "Agent4Validation",
+          "duration": 0.004,
+          "status": "success",
+          "details": {
+            "is_valid": true,
+            "errors": []
+          }
+        },
+        {
+          "agent": "SQLExecution",
+          "duration": 0.004235029220581055,
+          "status": "success",
+          "details": {
+            "row_count": 4,
+            "error": null
+          }
+        },
+        {
+          "agent": "Agent5Insights",
+          "duration": 5.902,
+          "status": "success",
+          "details": {
+            "rows_analyzed": 4,
+            "insights_count": 3
+          }
+        },
+        {
+          "agent": "Agent6Visualization",
+          "duration": 0.0,
+          "status": "success",
+          "details": {
+            "chart_type": "pie",
+            "data_points": 4
+          }
+        }
+      ],
+      "intent": {
+        "intent_type": "aggregate_by_dimension",
+        "metric": "revenue",
+        "aggregation": "sum",
+        "group_by": [
+          "quarter"
+        ],
+        "filters": {
+          "year": 2020
+        },
+        "order": null,
+        "limit": null,
+        "comparison": null,
+        "visualization_suitable": true
+      },
+      "failure_stage": null,
+      "failure_reason": null,
+      "generated_row_count": 4,
+      "ground_truth_row_count": 4
+    },
+    {
+      "id": "test_015",
+      "question": "What is the revenue by month for 2020?",
+      "category": "revenue",
+      "difficulty": "medium",
+      "organization_id": 1,
+      "ground_truth_sql": "SELECT c.month, SUM(gl.amount) AS revenue FROM general_ledger gl JOIN chart_of_accounts coa ON gl.organization_id = coa.organization_id AND gl.account_key = coa.account_key JOIN calendar c ON gl.date = c.date WHERE coa.class = 'Trading account' AND c.year = 2020 AND gl.organization_id = 1 GROUP BY c.month ORDER BY MIN(gl.date)",
+      "generated_sql": "SELECT c.year, c.month, SUM(gl.amount) as revenue\nFROM general_ledger gl\nJOIN chart_of_accounts coa ON gl.organization_id = coa.organization_id AND gl.account_key = coa.account_key\nJOIN calendar c ON gl.date = c.date\nWHERE coa.class = 'Trading account' AND coa.account ILIKE '%Sales%' AND gl.organization_id = {org_id} AND c.year = 2020\nGROUP BY c.year, c.month\nORDER BY c.month",
+      "pipeline_success": true,
+      "execution_match": false,
+      "total_time": 11.416,
+      "agent_trace": [
+        {
+          "agent": "Agent1Understanding",
+          "duration": 2.35,
+          "status": "success",
+          "details": {
+            "examples_retrieved": 4,
+            "intent_type": "aggregate_by_dimension"
+          }
+        },
+        {
+          "agent": "Agent2Schema",
+          "duration": 2.152,
+          "status": "success",
+          "details": {
+            "tables_selected": [
+              "general_ledger",
+              "chart_of_accounts",
+              "calendar"
+            ],
+            "join_count": 2
+          }
+        },
+        {
+          "agent": "Agent3SQLGeneration",
+          "duration": 3.239,
+          "status": "success",
+          "details": {
+            "sql": "SELECT c.year, c.month, SUM(gl.amount) as revenue\nFROM general_ledger gl\nJOIN chart_of_accounts coa ON gl.organization_id = coa.organization_id AND gl.account_key = coa.account_key\nJOIN calendar c ON "
+          }
+        },
+        {
+          "agent": "Agent4Validation",
+          "duration": 0.011,
+          "status": "success",
+          "details": {
+            "is_valid": true,
+            "errors": []
+          }
+        },
+        {
+          "agent": "SQLExecution",
+          "duration": 0.007638454437255859,
+          "status": "success",
+          "details": {
+            "row_count": 12,
+            "error": null
+          }
+        },
+        {
+          "agent": "Agent5Insights",
+          "duration": 3.633,
+          "status": "success",
+          "details": {
+            "rows_analyzed": 12,
+            "insights_count": 3
+          }
+        },
+        {
+          "agent": "Agent6Visualization",
+          "duration": 0.0,
+          "status": "success",
+          "details": {
+            "chart_type": "bar",
+            "data_points": 12
+          }
+        }
+      ],
+      "intent": {
+        "intent_type": "aggregate_by_dimension",
+        "metric": "revenue",
+        "aggregation": "sum",
+        "group_by": [
+          "month"
+        ],
+        "filters": {
+          "year": 2020
+        },
+        "order": null,
+        "limit": null,
+        "comparison": null,
+        "visualization_suitable": true
+      },
+      "failure_stage": null,
+      "failure_reason": null,
+      "generated_row_count": 12,
+      "ground_truth_row_count": 12
+    },
+    {
+      "id": "test_016",
+      "question": "What are the operating expenses by account for 2019?",
+      "category": "expenses",
+      "difficulty": "medium",
+      "organization_id": 1,
+      "ground_truth_sql": "SELECT coa.account, ABS(SUM(gl.amount)) AS expenses FROM general_ledger gl JOIN chart_of_accounts coa ON gl.organization_id = coa.organization_id AND gl.account_key = coa.account_key JOIN calendar c ON gl.date = c.date WHERE coa.class = 'Operating account' AND c.year = 2019 AND gl.organization_id = 1 GROUP BY coa.account",
+      "generated_sql": "SELECT coa.account, ABS(SUM(gl.amount)) as total_expense\nFROM general_ledger gl\nJOIN chart_of_accounts coa ON gl.organization_id = coa.organization_id AND gl.account_key = coa.account_key\nJOIN calendar c ON gl.date = c.date\nWHERE coa.class = 'Operating account' AND gl.organization_id = {org_id} AND c.year = 2019\nGROUP BY coa.account\nORDER BY total_expense DESC",
+      "pipeline_success": true,
+      "execution_match": true,
+      "total_time": 10.221,
+      "agent_trace": [
+        {
+          "agent": "Agent1Understanding",
+          "duration": 2.28,
+          "status": "success",
+          "details": {
+            "examples_retrieved": 4,
+            "intent_type": "aggregate_by_dimension"
+          }
+        },
+        {
+          "agent": "Agent2Schema",
+          "duration": 2.58,
+          "status": "success",
+          "details": {
+            "tables_selected": [
+              "general_ledger",
+              "chart_of_accounts",
+              "territory",
+              "calendar"
+            ],
+            "join_count": 3
+          }
+        },
+        {
+          "agent": "Agent3SQLGeneration",
+          "duration": 2.685,
+          "status": "success",
+          "details": {
+            "sql": "SELECT coa.account, ABS(SUM(gl.amount)) as total_expense\nFROM general_ledger gl\nJOIN chart_of_accounts coa ON gl.organization_id = coa.organization_id AND gl.account_key = coa.account_key\nJOIN calenda"
+          }
+        },
+        {
+          "agent": "Agent4Validation",
+          "duration": 0.01,
+          "status": "success",
+          "details": {
+            "is_valid": true,
+            "errors": []
+          }
+        },
+        {
+          "agent": "SQLExecution",
+          "duration": 0.009231805801391602,
+          "status": "success",
+          "details": {
+            "row_count": 12,
+            "error": null
+          }
+        },
+        {
+          "agent": "Agent5Insights",
+          "duration": 2.631,
+          "status": "success",
+          "details": {
+            "rows_analyzed": 12,
+            "insights_count": 3
+          }
+        },
+        {
+          "agent": "Agent6Visualization",
+          "duration": 0.0,
+          "status": "success",
+          "details": {
+            "chart_type": "bar",
+            "data_points": 12
+          }
+        }
+      ],
+      "intent": {
+        "intent_type": "aggregate_by_dimension",
+        "metric": "operating_expenses",
+        "aggregation": "sum",
+        "group_by": [
+          "account"
+        ],
+        "filters": {
+          "year": 2019
+        },
+        "order": null,
+        "limit": null,
+        "comparison": null,
+        "visualization_suitable": true
+      },
+      "failure_stage": null,
+      "failure_reason": null,
+      "generated_row_count": 12,
+      "ground_truth_row_count": 12
+    },
+    {
+      "id": "test_017",
+      "question": "What is the revenue by country for 2019?",
+      "category": "territory",
+      "difficulty": "medium",
+      "organization_id": 1,
+      "ground_truth_sql": "SELECT t.country, SUM(gl.amount) AS revenue FROM general_ledger gl JOIN chart_of_accounts coa ON gl.organization_id = coa.organization_id AND gl.account_key = coa.account_key JOIN calendar c ON gl.date = c.date JOIN territory t ON gl.organization_id = t.organization_id AND gl.territory_key = t.territory_key WHERE coa.class = 'Trading account' AND c.year = 2019 AND gl.organization_id = 1 GROUP BY t.country",
+      "generated_sql": "SELECT t.country, SUM(gl.amount) as revenue \nFROM general_ledger gl \nJOIN chart_of_accounts coa ON gl.organization_id = coa.organization_id AND gl.account_key = coa.account_key \nJOIN territory t ON gl.organization_id = t.organization_id AND gl.territory_key = t.territory_key \nJOIN calendar c ON gl.date = c.date \nWHERE coa.class = 'Revenue' AND gl.organization_id = {org_id} AND c.year = 2019 \nGROUP BY t.country \nORDER BY revenue DESC",
+      "pipeline_success": true,
+      "execution_match": false,
+      "total_time": 8.192,
+      "agent_trace": [
+        {
+          "agent": "Agent1Understanding",
+          "duration": 2.161,
+          "status": "success",
+          "details": {
+            "examples_retrieved": 4,
+            "intent_type": "aggregate_by_dimension"
+          }
+        },
+        {
+          "agent": "Agent2Schema",
+          "duration": 2.74,
+          "status": "success",
+          "details": {
+            "tables_selected": [
+              "general_ledger",
+              "chart_of_accounts",
+              "territory",
+              "calendar"
+            ],
+            "join_count": 3
+          }
+        },
+        {
+          "agent": "Agent3SQLGeneration",
+          "duration": 3.264,
+          "status": "success",
+          "details": {
+            "sql": "SELECT t.country, SUM(gl.amount) as revenue \nFROM general_ledger gl \nJOIN chart_of_accounts coa ON gl.organization_id = coa.organization_id AND gl.account_key = coa.account_key \nJOIN territory t ON gl"
+          }
+        },
+        {
+          "agent": "Agent4Validation",
+          "duration": 0.006,
+          "status": "success",
+          "details": {
+            "is_valid": true,
+            "errors": []
+          }
+        },
+        {
+          "agent": "SQLExecution",
+          "duration": 0.0030965805053710938,
+          "status": "success",
+          "details": {
+            "row_count": 0,
+            "error": null
+          }
+        },
+        {
+          "agent": "Agent5Insights",
+          "duration": 0.0,
+          "status": "skipped",
+          "details": {
+            "reason": "No results"
+          }
+        },
+        {
+          "agent": "Agent6Visualization",
+          "duration": 0.0,
+          "status": "skipped",
+          "details": {
+            "reason": "No data to visualize"
+          }
+        }
+      ],
+      "intent": {
+        "intent_type": "aggregate_by_dimension",
+        "metric": "revenue",
+        "aggregation": "sum",
+        "group_by": [
+          "country"
+        ],
+        "filters": {
+          "year": 2019
+        },
+        "order": null,
+        "limit": null,
+        "comparison": null,
+        "visualization_suitable": true
+      },
+      "failure_stage": null,
+      "failure_reason": null,
+      "generated_row_count": 0,
+      "ground_truth_row_count": 7
+    },
+    {
+      "id": "test_018",
+      "question": "What are the cost of sales by account for 2020?",
+      "category": "revenue",
+      "difficulty": "medium",
+      "organization_id": 1,
+      "ground_truth_sql": "SELECT coa.account, ABS(SUM(gl.amount)) AS cost_of_sales FROM general_ledger gl JOIN chart_of_accounts coa ON gl.organization_id = coa.organization_id AND gl.account_key = coa.account_key JOIN calendar c ON gl.date = c.date WHERE coa.class = 'Trading account' AND c.year = 2020 AND gl.organization_id = 1 GROUP BY coa.account",
+      "generated_sql": "SELECT coa.account, ABS(SUM(gl.amount)) as total_cost_of_sales\nFROM general_ledger gl\nJOIN chart_of_accounts coa ON gl.organization_id = coa.organization_id AND gl.account_key = coa.account_key\nJOIN calendar c ON gl.date = c.date\nWHERE coa.class = 'Trading account' AND coa.account NOT ILIKE '%Sales%' AND gl.organization_id = {org_id} AND c.year = 2020\nGROUP BY coa.account\nORDER BY total_cost_of_sales DESC",
+      "pipeline_success": true,
+      "execution_match": false,
+      "total_time": 6.819,
+      "agent_trace": [
+        {
+          "agent": "Agent1Understanding",
+          "duration": 2.302,
+          "status": "success",
+          "details": {
+            "examples_retrieved": 4,
+            "intent_type": "aggregate_by_dimension"
+          }
+        },
+        {
+          "agent": "Agent2Schema",
+          "duration": 2.009,
+          "status": "success",
+          "details": {
+            "tables_selected": [
+              "general_ledger",
+              "chart_of_accounts",
+              "calendar"
+            ],
+            "join_count": 2
+          }
+        },
+        {
+          "agent": "Agent3SQLGeneration",
+          "duration": 2.47,
+          "status": "success",
+          "details": {
+            "sql": "SELECT coa.account, ABS(SUM(gl.amount)) as total_cost_of_sales\nFROM general_ledger gl\nJOIN chart_of_accounts coa ON gl.organization_id = coa.organization_id AND gl.account_key = coa.account_key\nJOIN c"
+          }
+        },
+        {
+          "agent": "Agent4Validation",
+          "duration": 0.012,
+          "status": "success",
+          "details": {
+            "is_valid": true,
+            "errors": []
+          }
+        },
+        {
+          "agent": "SQLExecution",
+          "duration": 0.0025000572204589844,
+          "status": "success",
+          "details": {
+            "row_count": 0,
+            "error": null
+          }
+        },
+        {
+          "agent": "Agent5Insights",
+          "duration": 0.0,
+          "status": "skipped",
+          "details": {
+            "reason": "No results"
+          }
+        },
+        {
+          "agent": "Agent6Visualization",
+          "duration": 0.0,
+          "status": "skipped",
+          "details": {
+            "reason": "No data to visualize"
+          }
+        }
+      ],
+      "intent": {
+        "intent_type": "aggregate_by_dimension",
+        "metric": "cost_of_sales",
+        "aggregation": "sum",
+        "group_by": [
+          "account"
+        ],
+        "filters": {
+          "year": 2020
+        },
+        "order": null,
+        "limit": null,
+        "comparison": null,
+        "visualization_suitable": true
+      },
+      "failure_stage": null,
+      "failure_reason": null,
+      "generated_row_count": 0,
+      "ground_truth_row_count": 3
+    },
+    {
+      "id": "test_019",
+      "question": "What is the revenue by quarter for 2021?",
+      "category": "revenue",
+      "difficulty": "medium",
+      "organization_id": 1,
+      "ground_truth_sql": "SELECT c.quarter, SUM(gl.amount) AS revenue FROM general_ledger gl JOIN chart_of_accounts coa ON gl.organization_id = coa.organization_id AND gl.account_key = coa.account_key JOIN calendar c ON gl.date = c.date WHERE coa.class = 'Trading account' AND c.year = 2021 AND gl.organization_id = 1 GROUP BY c.quarter",
+      "generated_sql": "SELECT c.quarter, SUM(gl.amount) as quarterly_revenue\nFROM general_ledger gl\nJOIN chart_of_accounts coa ON gl.organization_id = coa.organization_id AND gl.account_key = coa.account_key\nJOIN calendar c ON gl.date = c.date\nWHERE coa.class = 'Trading account' AND coa.account ILIKE '%Sales%' AND c.year = 2021 AND gl.organization_id = {org_id}\nGROUP BY c.quarter\nORDER BY c.quarter",
+      "pipeline_success": true,
+      "execution_match": true,
+      "total_time": 6.797,
+      "agent_trace": [
+        {
+          "agent": "Agent1Understanding",
+          "duration": 2.6,
+          "status": "success",
+          "details": {
+            "examples_retrieved": 4,
+            "intent_type": "aggregate_by_dimension"
+          }
+        },
+        {
+          "agent": "Agent2Schema",
+          "duration": 1.895,
+          "status": "success",
+          "details": {
+            "tables_selected": [
+              "general_ledger",
+              "chart_of_accounts",
+              "territory",
+              "calendar"
+            ],
+            "join_count": 3
+          }
+        },
+        {
+          "agent": "Agent3SQLGeneration",
+          "duration": 2.245,
+          "status": "success",
+          "details": {
+            "sql": "SELECT c.quarter, SUM(gl.amount) as quarterly_revenue\nFROM general_ledger gl\nJOIN chart_of_accounts coa ON gl.organization_id = coa.organization_id AND gl.account_key = coa.account_key\nJOIN calendar c"
+          }
+        },
+        {
+          "agent": "Agent4Validation",
+          "duration": 0.024,
+          "status": "success",
+          "details": {
+            "is_valid": true,
+            "errors": []
+          }
+        },
+        {
+          "agent": "SQLExecution",
+          "duration": 0.005477428436279297,
+          "status": "success",
+          "details": {
+            "row_count": 0,
+            "error": null
+          }
+        },
+        {
+          "agent": "Agent5Insights",
+          "duration": 0.0,
+          "status": "skipped",
+          "details": {
+            "reason": "No results"
+          }
+        },
+        {
+          "agent": "Agent6Visualization",
+          "duration": 0.0,
+          "status": "skipped",
+          "details": {
+            "reason": "No data to visualize"
+          }
+        }
+      ],
+      "intent": {
+        "intent_type": "aggregate_by_dimension",
+        "metric": "revenue",
+        "aggregation": "sum",
+        "group_by": [
+          "quarter"
+        ],
+        "filters": {
+          "year": 2021
+        },
+        "order": null,
+        "limit": null,
+        "comparison": null,
+        "visualization_suitable": true
+      },
+      "failure_stage": null,
+      "failure_reason": null,
+      "generated_row_count": 0,
+      "ground_truth_row_count": 0
+    },
+    {
+      "id": "test_020",
+      "question": "What is the revenue by region for 2020?",
+      "category": "territory",
+      "difficulty": "medium",
+      "organization_id": 1,
+      "ground_truth_sql": "SELECT t.region, SUM(gl.amount) AS revenue FROM general_ledger gl JOIN chart_of_accounts coa ON gl.organization_id = coa.organization_id AND gl.account_key = coa.account_key JOIN calendar c ON gl.date = c.date JOIN territory t ON gl.organization_id = t.organization_id AND gl.territory_key = t.territory_key WHERE coa.class = 'Trading account' AND c.year = 2020 AND gl.organization_id = 1 GROUP BY t.region",
+      "generated_sql": "SELECT t.region, SUM(gl.amount) as revenue, COUNT(*) as transaction_count \nFROM general_ledger gl \nJOIN chart_of_accounts coa ON gl.organization_id = coa.organization_id AND gl.account_key = coa.account_key \nJOIN territory t ON gl.organization_id = t.organization_id AND gl.territory_key = t.territory_key \nJOIN calendar c ON gl.date = c.date \nWHERE coa.class = 'Trading account' AND coa.account ILIKE '%Sales%' AND gl.organization_id = {org_id} AND c.year = 2020 \nGROUP BY t.region \nORDER BY revenue DESC",
+      "pipeline_success": true,
+      "execution_match": false,
+      "total_time": 11.825,
+      "agent_trace": [
+        {
+          "agent": "Agent1Understanding",
+          "duration": 2.261,
+          "status": "success",
+          "details": {
+            "examples_retrieved": 4,
+            "intent_type": "aggregate_by_dimension"
+          }
+        },
+        {
+          "agent": "Agent2Schema",
+          "duration": 2.345,
+          "status": "success",
+          "details": {
+            "tables_selected": [
+              "general_ledger",
+              "chart_of_accounts",
+              "territory",
+              "calendar"
+            ],
+            "join_count": 3
+          }
+        },
+        {
+          "agent": "Agent3SQLGeneration",
+          "duration": 2.543,
+          "status": "success",
+          "details": {
+            "sql": "SELECT t.region, SUM(gl.amount) as revenue, COUNT(*) as transaction_count \nFROM general_ledger gl \nJOIN chart_of_accounts coa ON gl.organization_id = coa.organization_id AND gl.account_key = coa.accou"
+          }
+        },
+        {
+          "agent": "Agent4Validation",
+          "duration": 0.028,
+          "status": "success",
+          "details": {
+            "is_valid": true,
+            "errors": []
+          }
+        },
+        {
+          "agent": "SQLExecution",
+          "duration": 0.009207487106323242,
+          "status": "success",
+          "details": {
+            "row_count": 3,
+            "error": null
+          }
+        },
+        {
+          "agent": "Agent5Insights",
+          "duration": 4.616,
+          "status": "success",
+          "details": {
+            "rows_analyzed": 3,
+            "insights_count": 3
+          }
+        },
+        {
+          "agent": "Agent6Visualization",
+          "duration": 0.0,
+          "status": "success",
+          "details": {
+            "chart_type": "pie",
+            "data_points": 3
+          }
+        }
+      ],
+      "intent": {
+        "intent_type": "aggregate_by_dimension",
+        "metric": "revenue",
+        "aggregation": "sum",
+        "group_by": [
+          "region"
+        ],
+        "filters": {
+          "year": 2020
+        },
+        "order": null,
+        "limit": null,
+        "comparison": null,
+        "visualization_suitable": true
+      },
+      "failure_stage": null,
+      "failure_reason": null,
+      "generated_row_count": 3,
+      "ground_truth_row_count": 3
+    },
+    {
+      "id": "test_021",
+      "question": "What is the revenue from USA in 2020?",
+      "category": "territory",
+      "difficulty": "medium",
+      "organization_id": 1,
+      "ground_truth_sql": "SELECT SUM(gl.amount) AS revenue FROM general_ledger gl JOIN chart_of_accounts coa ON gl.organization_id = coa.organization_id AND gl.account_key = coa.account_key JOIN calendar c ON gl.date = c.date JOIN territory t ON gl.organization_id = t.organization_id AND gl.territory_key = t.territory_key WHERE coa.class = 'Trading account' AND c.year = 2020 AND t.country = 'USA' AND gl.organization_id = 1",
+      "generated_sql": "SELECT SUM(gl.amount) as revenue\nFROM general_ledger gl\nJOIN chart_of_accounts coa ON gl.organization_id = coa.organization_id AND gl.account_key = coa.account_key\nJOIN territory t ON gl.organization_id = t.organization_id AND gl.territory_key = t.territory_key\nJOIN calendar c ON gl.date = c.date\nWHERE coa.class = 'Trading account' AND coa.account ILIKE '%Sales%'\nAND gl.organization_id = {org_id}\nAND t.country = 'USA'\nAND c.year = 2020",
+      "pipeline_success": true,
+      "execution_match": true,
+      "total_time": 10.71,
+      "agent_trace": [
+        {
+          "agent": "Agent1Understanding",
+          "duration": 2.384,
+          "status": "success",
+          "details": {
+            "examples_retrieved": 4,
+            "intent_type": "aggregate_by_dimension"
+          }
+        },
+        {
+          "agent": "Agent2Schema",
+          "duration": 1.989,
+          "status": "success",
+          "details": {
+            "tables_selected": [
+              "general_ledger",
+              "chart_of_accounts",
+              "territory",
+              "calendar"
+            ],
+            "join_count": 3
+          }
+        },
+        {
+          "agent": "Agent3SQLGeneration",
+          "duration": 2.605,
+          "status": "success",
+          "details": {
+            "sql": "SELECT SUM(gl.amount) as revenue\nFROM general_ledger gl\nJOIN chart_of_accounts coa ON gl.organization_id = coa.organization_id AND gl.account_key = coa.account_key\nJOIN territory t ON gl.organization_"
+          }
+        },
+        {
+          "agent": "Agent4Validation",
+          "duration": 0.009,
+          "status": "success",
+          "details": {
+            "is_valid": true,
+            "errors": []
+          }
+        },
+        {
+          "agent": "SQLExecution",
+          "duration": 0.004076242446899414,
+          "status": "success",
+          "details": {
+            "row_count": 1,
+            "error": null
+          }
+        },
+        {
+          "agent": "Agent5Insights",
+          "duration": 3.698,
+          "status": "success",
+          "details": {
+            "rows_analyzed": 1,
+            "insights_count": 3
+          }
+        },
+        {
+          "agent": "Agent6Visualization",
+          "duration": 0.0,
+          "status": "skipped",
+          "details": {
+            "reason": "Single value result - no visualization needed"
+          }
+        }
+      ],
+      "intent": {
+        "intent_type": "aggregate_by_dimension",
+        "metric": "revenue",
+        "aggregation": "sum",
+        "group_by": [
+          "country"
+        ],
+        "filters": {
+          "year": 2020,
+          "country": "USA"
+        },
+        "order": null,
+        "limit": null,
+        "comparison": null,
+        "visualization_suitable": true
+      },
+      "failure_stage": null,
+      "failure_reason": null,
+      "generated_row_count": 1,
+      "ground_truth_row_count": 1
+    },
+    {
+      "id": "test_022",
+      "question": "What is the revenue from North America in 2020?",
+      "category": "territory",
+      "difficulty": "medium",
+      "organization_id": 1,
+      "ground_truth_sql": "SELECT SUM(gl.amount) AS revenue FROM general_ledger gl JOIN chart_of_accounts coa ON gl.organization_id = coa.organization_id AND gl.account_key = coa.account_key JOIN calendar c ON gl.date = c.date JOIN territory t ON gl.organization_id = t.organization_id AND gl.territory_key = t.territory_key WHERE coa.class = 'Trading account' AND c.year = 2020 AND t.region = 'North America' AND gl.organization_id = 1",
+      "generated_sql": "SELECT SUM(gl.amount) as revenue \nFROM general_ledger gl \nJOIN chart_of_accounts coa ON gl.organization_id = coa.organization_id AND gl.account_key = coa.account_key \nJOIN territory t ON gl.organization_id = t.organization_id AND gl.territory_key = t.territory_key \nJOIN calendar c ON gl.date = c.date \nWHERE coa.class = 'Trading account' AND coa.account ILIKE '%Sales%' \nAND t.region = 'North America' \nAND gl.organization_id = {org_id} \nAND c.year = 2020",
+      "pipeline_success": true,
+      "execution_match": true,
+      "total_time": 11.83,
+      "agent_trace": [
+        {
+          "agent": "Agent1Understanding",
+          "duration": 2.455,
+          "status": "success",
+          "details": {
+            "examples_retrieved": 4,
+            "intent_type": "aggregate_by_dimension"
+          }
+        },
+        {
+          "agent": "Agent2Schema",
+          "duration": 1.932,
+          "status": "success",
+          "details": {
+            "tables_selected": [
+              "general_ledger",
+              "chart_of_accounts",
+              "territory",
+              "calendar"
+            ],
+            "join_count": 3
+          }
+        },
+        {
+          "agent": "Agent3SQLGeneration",
+          "duration": 3.505,
+          "status": "success",
+          "details": {
+            "sql": "SELECT SUM(gl.amount) as revenue \nFROM general_ledger gl \nJOIN chart_of_accounts coa ON gl.organization_id = coa.organization_id AND gl.account_key = coa.account_key \nJOIN territory t ON gl.organizati"
+          }
+        },
+        {
+          "agent": "Agent4Validation",
+          "duration": 0.009,
+          "status": "success",
+          "details": {
+            "is_valid": true,
+            "errors": []
+          }
+        },
+        {
+          "agent": "SQLExecution",
+          "duration": 0.004304647445678711,
+          "status": "success",
+          "details": {
+            "row_count": 1,
+            "error": null
+          }
+        },
+        {
+          "agent": "Agent5Insights",
+          "duration": 3.903,
+          "status": "success",
+          "details": {
+            "rows_analyzed": 1,
+            "insights_count": 3
+          }
+        },
+        {
+          "agent": "Agent6Visualization",
+          "duration": 0.0,
+          "status": "skipped",
+          "details": {
+            "reason": "Single value result - no visualization needed"
+          }
+        }
+      ],
+      "intent": {
+        "intent_type": "aggregate_by_dimension",
+        "metric": "revenue",
+        "aggregation": "sum",
+        "group_by": [
+          "region"
+        ],
+        "filters": {
+          "year": 2020,
+          "territory": "North America"
+        },
+        "order": null,
+        "limit": null,
+        "comparison": null,
+        "visualization_suitable": true
+      },
+      "failure_stage": null,
+      "failure_reason": null,
+      "generated_row_count": 1,
+      "ground_truth_row_count": 1
+    },
+    {
+      "id": "test_023",
+      "question": "What is the revenue from USA in 2021?",
+      "category": "territory",
+      "difficulty": "medium",
+      "organization_id": 1,
+      "ground_truth_sql": "SELECT SUM(gl.amount) AS revenue FROM general_ledger gl JOIN chart_of_accounts coa ON gl.organization_id = coa.organization_id AND gl.account_key = coa.account_key JOIN calendar c ON gl.date = c.date JOIN territory t ON gl.organization_id = t.organization_id AND gl.territory_key = t.territory_key WHERE coa.class = 'Trading account' AND c.year = 2021 AND t.country = 'USA' AND gl.organization_id = 1",
+      "generated_sql": "SELECT SUM(gl.amount) as revenue\nFROM general_ledger gl\nJOIN chart_of_accounts coa ON gl.organization_id = coa.organization_id AND gl.account_key = coa.account_key\nJOIN territory t ON gl.organization_id = t.organization_id AND gl.territory_key = t.territory_key\nJOIN calendar c ON gl.date = c.date\nWHERE coa.class = 'Trading account' AND coa.account ILIKE '%Sales%'\nAND gl.organization_id = {org_id}\nAND t.country = 'USA'\nAND c.year = 2021",
+      "pipeline_success": true,
+      "execution_match": true,
+      "total_time": 10.258,
+      "agent_trace": [
+        {
+          "agent": "Agent1Understanding",
+          "duration": 1.896,
+          "status": "success",
+          "details": {
+            "examples_retrieved": 4,
+            "intent_type": "aggregate_by_dimension"
+          }
+        },
+        {
+          "agent": "Agent2Schema",
+          "duration": 2.29,
+          "status": "success",
+          "details": {
+            "tables_selected": [
+              "general_ledger",
+              "chart_of_accounts",
+              "territory",
+              "calendar"
+            ],
+            "join_count": 3
+          }
+        },
+        {
+          "agent": "Agent3SQLGeneration",
+          "duration": 2.785,
+          "status": "success",
+          "details": {
+            "sql": "SELECT SUM(gl.amount) as revenue\nFROM general_ledger gl\nJOIN chart_of_accounts coa ON gl.organization_id = coa.organization_id AND gl.account_key = coa.account_key\nJOIN territory t ON gl.organization_"
+          }
+        },
+        {
+          "agent": "Agent4Validation",
+          "duration": 0.01,
+          "status": "success",
+          "details": {
+            "is_valid": true,
+            "errors": []
+          }
+        },
+        {
+          "agent": "SQLExecution",
+          "duration": 0.0036668777465820312,
+          "status": "success",
+          "details": {
+            "row_count": 1,
+            "error": null
+          }
+        },
+        {
+          "agent": "Agent5Insights",
+          "duration": 3.241,
+          "status": "success",
+          "details": {
+            "rows_analyzed": 1,
+            "insights_count": 3
+          }
+        },
+        {
+          "agent": "Agent6Visualization",
+          "duration": 0.0,
+          "status": "skipped",
+          "details": {
+            "reason": "Single value result - no visualization needed"
+          }
+        }
+      ],
+      "intent": {
+        "intent_type": "aggregate_by_dimension",
+        "metric": "revenue",
+        "aggregation": "sum",
+        "group_by": [
+          "country"
+        ],
+        "filters": {
+          "year": 2021
+        },
+        "order": null,
+        "limit": null,
+        "comparison": null,
+        "visualization_suitable": true
+      },
+      "failure_stage": null,
+      "failure_reason": null,
+      "generated_row_count": 1,
+      "ground_truth_row_count": 1
+    },
+    {
+      "id": "test_024",
+      "question": "What are the staff costs in 2020?",
+      "category": "expenses",
+      "difficulty": "medium",
+      "organization_id": 1,
+      "ground_truth_sql": "SELECT ABS(SUM(gl.amount)) AS staff_costs FROM general_ledger gl JOIN chart_of_accounts coa ON gl.organization_id = coa.organization_id AND gl.account_key = coa.account_key JOIN calendar c ON gl.date = c.date WHERE coa.account = 'Staff Costs' AND c.year = 2020 AND gl.organization_id = 1",
+      "generated_sql": "SELECT coa.account, ABS(SUM(gl.amount)) as total_staff_costs\nFROM general_ledger gl\nJOIN chart_of_accounts coa ON gl.organization_id = coa.organization_id AND gl.account_key = coa.account_key\nJOIN calendar c ON gl.date = c.date\nWHERE coa.account = 'Staff Costs' AND gl.organization_id = {org_id} AND c.year = 2020\nGROUP BY coa.account",
+      "pipeline_success": true,
+      "execution_match": false,
+      "total_time": 12.025,
+      "agent_trace": [
+        {
+          "agent": "Agent1Understanding",
+          "duration": 2.225,
+          "status": "success",
+          "details": {
+            "examples_retrieved": 4,
+            "intent_type": "aggregate_by_dimension"
+          }
+        },
+        {
+          "agent": "Agent2Schema",
+          "duration": 4.184,
+          "status": "success",
+          "details": {
+            "tables_selected": [
+              "general_ledger",
+              "chart_of_accounts",
+              "territory",
+              "calendar"
+            ],
+            "join_count": 3
+          }
+        },
+        {
+          "agent": "Agent3SQLGeneration",
+          "duration": 2.206,
+          "status": "success",
+          "details": {
+            "sql": "SELECT coa.account, ABS(SUM(gl.amount)) as total_staff_costs\nFROM general_ledger gl\nJOIN chart_of_accounts coa ON gl.organization_id = coa.organization_id AND gl.account_key = coa.account_key\nJOIN cal"
+          }
+        },
+        {
+          "agent": "Agent4Validation",
+          "duration": 0.015,
+          "status": "success",
+          "details": {
+            "is_valid": true,
+            "errors": []
+          }
+        },
+        {
+          "agent": "SQLExecution",
+          "duration": 0.0027022361755371094,
+          "status": "success",
+          "details": {
+            "row_count": 1,
+            "error": null
+          }
+        },
+        {
+          "agent": "Agent5Insights",
+          "duration": 3.372,
+          "status": "success",
+          "details": {
+            "rows_analyzed": 1,
+            "insights_count": 3
+          }
+        },
+        {
+          "agent": "Agent6Visualization",
+          "duration": 0.0,
+          "status": "skipped",
+          "details": {
+            "reason": "Single value result - no visualization needed"
+          }
+        }
+      ],
+      "intent": {
+        "intent_type": "aggregate_by_dimension",
+        "metric": "staff_costs",
+        "aggregation": "sum",
+        "group_by": [],
+        "filters": {
+          "year": 2020
+        },
+        "order": null,
+        "limit": null,
+        "comparison": null,
+        "visualization_suitable": true
+      },
+      "failure_stage": null,
+      "failure_reason": null,
+      "generated_row_count": 1,
+      "ground_truth_row_count": 1
+    },
+    {
+      "id": "test_025",
+      "question": "What is the revenue in Q3 2020?",
+      "category": "revenue",
+      "difficulty": "medium",
+      "organization_id": 1,
+      "ground_truth_sql": "SELECT SUM(gl.amount) AS revenue FROM general_ledger gl JOIN chart_of_accounts coa ON gl.organization_id = coa.organization_id AND gl.account_key = coa.account_key JOIN calendar c ON gl.date = c.date WHERE coa.class = 'Trading account' AND c.year = 2020 AND c.quarter = 'Qtr 3' AND gl.organization_id = 1",
+      "generated_sql": "SELECT SUM(gl.amount) as revenue \nFROM general_ledger gl \nJOIN chart_of_accounts coa ON gl.organization_id = coa.organization_id AND gl.account_key = coa.account_key \nJOIN calendar c ON gl.date = c.date \nWHERE coa.class = 'Trading account' AND coa.account ILIKE '%Sales%' \nAND c.year = 2020 AND c.quarter = 'Qtr 3' \nAND gl.organization_id = {org_id}",
+      "pipeline_success": true,
+      "execution_match": true,
+      "total_time": 11.646,
+      "agent_trace": [
+        {
+          "agent": "Agent1Understanding",
+          "duration": 2.411,
+          "status": "success",
+          "details": {
+            "examples_retrieved": 4,
+            "intent_type": "aggregate_by_dimension"
+          }
+        },
+        {
+          "agent": "Agent2Schema",
+          "duration": 2.364,
+          "status": "success",
+          "details": {
+            "tables_selected": [
+              "general_ledger",
+              "chart_of_accounts",
+              "territory",
+              "calendar"
+            ],
+            "join_count": 3
+          }
+        },
+        {
+          "agent": "Agent3SQLGeneration",
+          "duration": 3.256,
+          "status": "success",
+          "details": {
+            "sql": "SELECT SUM(gl.amount) as revenue \nFROM general_ledger gl \nJOIN chart_of_accounts coa ON gl.organization_id = coa.organization_id AND gl.account_key = coa.account_key \nJOIN calendar c ON gl.date = c.da"
+          }
+        },
+        {
+          "agent": "Agent4Validation",
+          "duration": 0.01,
+          "status": "success",
+          "details": {
+            "is_valid": true,
+            "errors": []
+          }
+        },
+        {
+          "agent": "SQLExecution",
+          "duration": 0.005690574645996094,
+          "status": "success",
+          "details": {
+            "row_count": 1,
+            "error": null
+          }
+        },
+        {
+          "agent": "Agent5Insights",
+          "duration": 3.574,
+          "status": "success",
+          "details": {
+            "rows_analyzed": 1,
+            "insights_count": 3
+          }
+        },
+        {
+          "agent": "Agent6Visualization",
+          "duration": 0.0,
+          "status": "skipped",
+          "details": {
+            "reason": "Single value result - no visualization needed"
+          }
+        }
+      ],
+      "intent": {
+        "intent_type": "aggregate_by_dimension",
+        "metric": "revenue",
+        "aggregation": "sum",
+        "group_by": [
+          "quarter"
+        ],
+        "filters": {
+          "year": 2020
+        },
+        "order": null,
+        "limit": null,
+        "comparison": null,
+        "visualization_suitable": true
+      },
+      "failure_stage": null,
+      "failure_reason": null,
+      "generated_row_count": 1,
+      "ground_truth_row_count": 1
+    },
+    {
+      "id": "test_026",
+      "question": "What is the revenue in Q4 2021?",
+      "category": "revenue",
+      "difficulty": "medium",
+      "organization_id": 1,
+      "ground_truth_sql": "SELECT SUM(gl.amount) AS revenue FROM general_ledger gl JOIN chart_of_accounts coa ON gl.organization_id = coa.organization_id AND gl.account_key = coa.account_key JOIN calendar c ON gl.date = c.date WHERE coa.class = 'Trading account' AND c.year = 2021 AND c.quarter = 'Qtr 4' AND gl.organization_id = 1",
+      "generated_sql": "SELECT SUM(gl.amount) as revenue\nFROM general_ledger gl\nJOIN chart_of_accounts coa ON gl.organization_id = coa.organization_id AND gl.account_key = coa.account_key\nJOIN calendar c ON gl.date = c.date\nWHERE coa.class = 'Trading account' AND coa.account ILIKE '%Sales%' \nAND c.year = 2021 AND c.quarter = 'Qtr 4' \nAND gl.organization_id = {org_id}",
+      "pipeline_success": true,
+      "execution_match": true,
+      "total_time": 9.394,
+      "agent_trace": [
+        {
+          "agent": "Agent1Understanding",
+          "duration": 2.29,
+          "status": "success",
+          "details": {
+            "examples_retrieved": 4,
+            "intent_type": "time_series"
+          }
+        },
+        {
+          "agent": "Agent2Schema",
+          "duration": 2.416,
+          "status": "success",
+          "details": {
+            "tables_selected": [
+              "general_ledger",
+              "chart_of_accounts",
+              "territory",
+              "calendar"
+            ],
+            "join_count": 3
+          }
+        },
+        {
+          "agent": "Agent3SQLGeneration",
+          "duration": 2.31,
+          "status": "success",
+          "details": {
+            "sql": "SELECT SUM(gl.amount) as revenue\nFROM general_ledger gl\nJOIN chart_of_accounts coa ON gl.organization_id = coa.organization_id AND gl.account_key = coa.account_key\nJOIN calendar c ON gl.date = c.date\n"
+          }
+        },
+        {
+          "agent": "Agent4Validation",
+          "duration": 0.011,
+          "status": "success",
+          "details": {
+            "is_valid": true,
+            "errors": []
+          }
+        },
+        {
+          "agent": "SQLExecution",
+          "duration": 0.003454446792602539,
+          "status": "success",
+          "details": {
+            "row_count": 1,
+            "error": null
+          }
+        },
+        {
+          "agent": "Agent5Insights",
+          "duration": 2.344,
+          "status": "success",
+          "details": {
+            "rows_analyzed": 1,
+            "insights_count": 1
+          }
+        },
+        {
+          "agent": "Agent6Visualization",
+          "duration": 0.0,
+          "status": "skipped",
+          "details": {
+            "reason": "Single value result - no visualization needed"
+          }
+        }
+      ],
+      "intent": {
+        "intent_type": "time_series",
+        "metric": "revenue",
+        "aggregation": "sum",
+        "group_by": [
+          "year",
+          "quarter"
+        ],
+        "filters": {
+          "year": 2021,
+          "quarter": 4
+        },
+        "visualization_suitable": true,
+        "order": null,
+        "limit": null,
+        "comparison": null
+      },
+      "failure_stage": null,
+      "failure_reason": null,
+      "generated_row_count": 1,
+      "ground_truth_row_count": 1
+    },
+    {
+      "id": "test_027",
+      "question": "What are the operating expenses in Q1 2020?",
+      "category": "expenses",
+      "difficulty": "medium",
+      "organization_id": 1,
+      "ground_truth_sql": "SELECT ABS(SUM(gl.amount)) AS expenses FROM general_ledger gl JOIN chart_of_accounts coa ON gl.organization_id = coa.organization_id AND gl.account_key = coa.account_key JOIN calendar c ON gl.date = c.date WHERE coa.class = 'Operating account' AND c.year = 2020 AND c.quarter = 'Qtr 1' AND gl.organization_id = 1",
+      "generated_sql": "SELECT coa.account, ABS(SUM(gl.amount)) as total_expense\nFROM general_ledger gl\nJOIN chart_of_accounts coa ON gl.organization_id = coa.organization_id AND gl.account_key = coa.account_key\nJOIN calendar c ON gl.date = c.date\nWHERE coa.class = 'Operating account' AND gl.organization_id = {org_id} AND c.year = 2020 AND c.quarter = 'Qtr 1'\nGROUP BY coa.account\nORDER BY total_expense DESC",
+      "pipeline_success": true,
+      "execution_match": false,
+      "total_time": 11.424,
+      "agent_trace": [
+        {
+          "agent": "Agent1Understanding",
+          "duration": 2.626,
+          "status": "success",
+          "details": {
+            "examples_retrieved": 4,
+            "intent_type": "aggregate_by_dimension"
+          }
+        },
+        {
+          "agent": "Agent2Schema",
+          "duration": 1.905,
+          "status": "success",
+          "details": {
+            "tables_selected": [
+              "general_ledger",
+              "chart_of_accounts",
+              "calendar"
+            ],
+            "join_count": 2
+          }
+        },
+        {
+          "agent": "Agent3SQLGeneration",
+          "duration": 2.319,
+          "status": "success",
+          "details": {
+            "sql": "SELECT coa.account, ABS(SUM(gl.amount)) as total_expense\nFROM general_ledger gl\nJOIN chart_of_accounts coa ON gl.organization_id = coa.organization_id AND gl.account_key = coa.account_key\nJOIN calenda"
+          }
+        },
+        {
+          "agent": "Agent4Validation",
+          "duration": 0.01,
+          "status": "success",
+          "details": {
+            "is_valid": true,
+            "errors": []
+          }
+        },
+        {
+          "agent": "SQLExecution",
+          "duration": 0.006990194320678711,
+          "status": "success",
+          "details": {
+            "row_count": 11,
+            "error": null
+          }
+        },
+        {
+          "agent": "Agent5Insights",
+          "duration": 4.532,
+          "status": "success",
+          "details": {
+            "rows_analyzed": 11,
+            "insights_count": 3
+          }
+        },
+        {
+          "agent": "Agent6Visualization",
+          "duration": 0.0,
+          "status": "success",
+          "details": {
+            "chart_type": "bar",
+            "data_points": 11
+          }
+        }
+      ],
+      "intent": {
+        "intent_type": "aggregate_by_dimension",
+        "metric": "operating_expenses",
+        "aggregation": "sum",
+        "group_by": [
+          "quarter"
+        ],
+        "filters": {
+          "year": 2020,
+          "quarter": 1
+        },
+        "order": null,
+        "limit": null,
+        "comparison": null,
+        "visualization_suitable": true
+      },
+      "failure_stage": null,
+      "failure_reason": null,
+      "generated_row_count": 11,
+      "ground_truth_row_count": 1
+    },
+    {
+      "id": "test_028",
+      "question": "What is the revenue from Canada by quarter in 2020?",
+      "category": "territory",
+      "difficulty": "medium",
+      "organization_id": 1,
+      "ground_truth_sql": "SELECT c.quarter, SUM(gl.amount) AS revenue FROM general_ledger gl JOIN chart_of_accounts coa ON gl.organization_id = coa.organization_id AND gl.account_key = coa.account_key JOIN calendar c ON gl.date = c.date JOIN territory t ON gl.organization_id = t.organization_id AND gl.territory_key = t.territory_key WHERE coa.class = 'Trading account' AND c.year = 2020 AND t.country = 'Canada' AND gl.organization_id = 1 GROUP BY c.quarter",
+      "generated_sql": "SELECT c.quarter, SUM(gl.amount) as revenue\nFROM general_ledger gl\nJOIN chart_of_accounts coa ON gl.organization_id = coa.organization_id AND gl.account_key = coa.account_key\nJOIN territory t ON gl.organization_id = t.organization_id AND gl.territory_key = t.territory_key\nJOIN calendar c ON gl.date = c.date\nWHERE coa.class = 'Trading account' AND coa.account ILIKE '%Sales%' \nAND gl.organization_id = {org_id} \nAND t.country = 'Canada' \nAND c.year = 2020\nGROUP BY c.quarter\nORDER BY c.quarter",
+      "pipeline_success": true,
+      "execution_match": true,
+      "total_time": 11.721,
+      "agent_trace": [
+        {
+          "agent": "Agent1Understanding",
+          "duration": 1.945,
+          "status": "success",
+          "details": {
+            "examples_retrieved": 4,
+            "intent_type": "aggregate_by_dimension"
+          }
+        },
+        {
+          "agent": "Agent2Schema",
+          "duration": 2.318,
+          "status": "success",
+          "details": {
+            "tables_selected": [
+              "general_ledger",
+              "chart_of_accounts",
+              "territory",
+              "calendar"
+            ],
+            "join_count": 3
+          }
+        },
+        {
+          "agent": "Agent3SQLGeneration",
+          "duration": 2.938,
+          "status": "success",
+          "details": {
+            "sql": "SELECT c.quarter, SUM(gl.amount) as revenue\nFROM general_ledger gl\nJOIN chart_of_accounts coa ON gl.organization_id = coa.organization_id AND gl.account_key = coa.account_key\nJOIN territory t ON gl.or"
+          }
+        },
+        {
+          "agent": "Agent4Validation",
+          "duration": 0.029,
+          "status": "success",
+          "details": {
+            "is_valid": true,
+            "errors": []
+          }
+        },
+        {
+          "agent": "SQLExecution",
+          "duration": 0.011661291122436523,
+          "status": "success",
+          "details": {
+            "row_count": 4,
+            "error": null
+          }
+        },
+        {
+          "agent": "Agent5Insights",
+          "duration": 4.454,
+          "status": "success",
+          "details": {
+            "rows_analyzed": 4,
+            "insights_count": 3
+          }
+        },
+        {
+          "agent": "Agent6Visualization",
+          "duration": 0.0,
+          "status": "success",
+          "details": {
+            "chart_type": "bar",
+            "data_points": 4
+          }
+        }
+      ],
+      "intent": {
+        "intent_type": "aggregate_by_dimension",
+        "metric": "revenue",
+        "aggregation": "sum",
+        "group_by": [
+          "country",
+          "quarter"
+        ],
+        "filters": {
+          "year": 2020
+        },
+        "order": null,
+        "limit": null,
+        "comparison": null,
+        "visualization_suitable": true
+      },
+      "failure_stage": null,
+      "failure_reason": null,
+      "generated_row_count": 4,
+      "ground_truth_row_count": 4
+    },
+    {
+      "id": "test_029",
+      "question": "What is the revenue from North America in 2019?",
+      "category": "territory",
+      "difficulty": "medium",
+      "organization_id": 1,
+      "ground_truth_sql": "SELECT SUM(gl.amount) AS revenue FROM general_ledger gl JOIN chart_of_accounts coa ON gl.organization_id = coa.organization_id AND gl.account_key = coa.account_key JOIN calendar c ON gl.date = c.date JOIN territory t ON gl.organization_id = t.organization_id AND gl.territory_key = t.territory_key WHERE coa.class = 'Trading account' AND c.year = 2019 AND t.region = 'North America' AND gl.organization_id = 1",
+      "generated_sql": "SELECT SUM(gl.amount) as total_revenue\nFROM general_ledger gl\nJOIN chart_of_accounts coa ON gl.organization_id = coa.organization_id AND gl.account_key = coa.account_key\nJOIN territory t ON gl.organization_id = t.organization_id AND gl.territory_key = t.territory_key\nJOIN calendar c ON gl.date = c.date\nWHERE coa.class = 'Trading account' AND coa.account ILIKE '%Sales%'\nAND t.region = 'North America'\nAND c.year = 2019\nAND gl.organization_id = {org_id}",
+      "pipeline_success": true,
+      "execution_match": true,
+      "total_time": 11.387,
+      "agent_trace": [
+        {
+          "agent": "Agent1Understanding",
+          "duration": 1.929,
+          "status": "success",
+          "details": {
+            "examples_retrieved": 4,
+            "intent_type": "aggregate_by_dimension"
+          }
+        },
+        {
+          "agent": "Agent2Schema",
+          "duration": 2.394,
+          "status": "success",
+          "details": {
+            "tables_selected": [
+              "general_ledger",
+              "chart_of_accounts",
+              "territory",
+              "calendar"
+            ],
+            "join_count": 3
+          }
+        },
+        {
+          "agent": "Agent3SQLGeneration",
+          "duration": 3.785,
+          "status": "success",
+          "details": {
+            "sql": "SELECT SUM(gl.amount) as total_revenue\nFROM general_ledger gl\nJOIN chart_of_accounts coa ON gl.organization_id = coa.organization_id AND gl.account_key = coa.account_key\nJOIN territory t ON gl.organiz"
+          }
+        },
+        {
+          "agent": "Agent4Validation",
+          "duration": 0.011,
+          "status": "success",
+          "details": {
+            "is_valid": true,
+            "errors": []
+          }
+        },
+        {
+          "agent": "SQLExecution",
+          "duration": 0.0042247772216796875,
+          "status": "success",
+          "details": {
+            "row_count": 1,
+            "error": null
+          }
+        },
+        {
+          "agent": "Agent5Insights",
+          "duration": 3.243,
+          "status": "success",
+          "details": {
+            "rows_analyzed": 1,
+            "insights_count": 3
+          }
+        },
+        {
+          "agent": "Agent6Visualization",
+          "duration": 0.0,
+          "status": "skipped",
+          "details": {
+            "reason": "Single value result - no visualization needed"
+          }
+        }
+      ],
+      "intent": {
+        "intent_type": "aggregate_by_dimension",
+        "metric": "revenue",
+        "aggregation": "sum",
+        "group_by": [
+          "region"
+        ],
+        "filters": {
+          "year": 2019
+        },
+        "order": null,
+        "limit": null,
+        "comparison": null,
+        "visualization_suitable": true
+      },
+      "failure_stage": null,
+      "failure_reason": null,
+      "generated_row_count": 1,
+      "ground_truth_row_count": 1
+    },
+    {
+      "id": "test_030",
+      "question": "What is the rent expense for 2021?",
+      "category": "expenses",
+      "difficulty": "medium",
+      "organization_id": 1,
+      "ground_truth_sql": "SELECT ABS(SUM(gl.amount)) AS rent_expense FROM general_ledger gl JOIN chart_of_accounts coa ON gl.organization_id = coa.organization_id AND gl.account_key = coa.account_key JOIN calendar c ON gl.date = c.date WHERE coa.account = 'Rent' AND c.year = 2021 AND gl.organization_id = 1",
+      "generated_sql": "SELECT ABS(SUM(gl.amount)) as rent_expense\nFROM general_ledger gl\nJOIN chart_of_accounts coa ON gl.organization_id = coa.organization_id AND gl.account_key = coa.account_key\nJOIN calendar c ON gl.date = c.date\nWHERE coa.account = 'Rent' AND gl.organization_id = {org_id} AND c.year = 2021",
+      "pipeline_success": true,
+      "execution_match": true,
+      "total_time": 9.69,
+      "agent_trace": [
+        {
+          "agent": "Agent1Understanding",
+          "duration": 1.937,
+          "status": "success",
+          "details": {
+            "examples_retrieved": 4,
+            "intent_type": "aggregate_by_dimension"
+          }
+        },
+        {
+          "agent": "Agent2Schema",
+          "duration": 2.281,
+          "status": "success",
+          "details": {
+            "tables_selected": [
+              "general_ledger",
+              "chart_of_accounts",
+              "territory",
+              "calendar"
+            ],
+            "join_count": 3
+          }
+        },
+        {
+          "agent": "Agent3SQLGeneration",
+          "duration": 2.283,
+          "status": "success",
+          "details": {
+            "sql": "SELECT ABS(SUM(gl.amount)) as rent_expense\nFROM general_ledger gl\nJOIN chart_of_accounts coa ON gl.organization_id = coa.organization_id AND gl.account_key = coa.account_key\nJOIN calendar c ON gl.date"
+          }
+        },
+        {
+          "agent": "Agent4Validation",
+          "duration": 0.007,
+          "status": "success",
+          "details": {
+            "is_valid": true,
+            "errors": []
+          }
+        },
+        {
+          "agent": "SQLExecution",
+          "duration": 0.0013320446014404297,
+          "status": "success",
+          "details": {
+            "row_count": 1,
+            "error": null
+          }
+        },
+        {
+          "agent": "Agent5Insights",
+          "duration": 3.159,
+          "status": "success",
+          "details": {
+            "rows_analyzed": 1,
+            "insights_count": 3
+          }
+        },
+        {
+          "agent": "Agent6Visualization",
+          "duration": 0.0,
+          "status": "skipped",
+          "details": {
+            "reason": "Single value result - no visualization needed"
+          }
+        }
+      ],
+      "intent": {
+        "intent_type": "aggregate_by_dimension",
+        "metric": "rent_expense",
+        "aggregation": "sum",
+        "group_by": [],
+        "filters": {
+          "year": 2021
+        },
+        "order": null,
+        "limit": null,
+        "comparison": null,
+        "visualization_suitable": true
+      },
+      "failure_stage": null,
+      "failure_reason": null,
+      "generated_row_count": 1,
+      "ground_truth_row_count": 1
+    }
+  ]
+}
