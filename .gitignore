@@ -15,6 +15,7 @@ env/
 venv/
 ENV/
 *.env
+.env/
 
 # --- Database ---
 db/*.db

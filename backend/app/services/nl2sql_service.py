@@ -5,7 +5,7 @@ Orchestrates the complete natural language to SQL pipeline.
 
 import time
 import uuid
-from typing import Dict, Any, Optional
+from typing import Dict, Any
 from app.langgraph.workflow import create_workflow
 from app.langgraph.state import QueryState
 from app.retrieval import ExampleLoader
@@ -33,16 +33,43 @@ class NL2SQLService:
         """Initialize the service (load examples, create workflow)."""
         print("Initializing NL2SQL Service...")
 
-        # Load examples into ChromaDB
         loader = ExampleLoader()
-        stats = loader.load_all_examples(force_reload=True)  # Force reload to ensure fresh examples
+        stats = loader.load_all_examples(force_reload=True)
         print(f"Example stats: {stats}")
 
-        # Create the workflow
         NL2SQLService._workflow = create_workflow()
         NL2SQLService._examples_loaded = True
 
         print("NL2SQL Service initialized successfully!")
+
+    # 🔥 NEW: SQL POST-PROCESSING
+    def _post_process_sql(self, sql: str) -> str:
+        """
+        Improve generated SQL before execution.
+        Fix common LLM mistakes.
+        """
+        if not sql:
+            return sql
+
+        sql = sql.strip()
+
+        # ✅ Ensure organization filter exists
+        if "organization_id" not in sql.lower():
+            if "where" in sql.lower():
+                sql = sql.replace("WHERE", "WHERE organization_id = {org_id} AND ")
+            else:
+                sql += " WHERE organization_id = {org_id}"
+
+        # ✅ Fix common case sensitivity issues
+        sql = sql.replace("= 'USA'", "= LOWER('usa')")
+        sql = sql.replace("= 'India'", "= LOWER('india')")
+        sql = sql.replace("= 'Canada'", "= LOWER('canada')")
+
+        # ✅ Prevent huge result sets
+        if "limit" not in sql.lower():
+            sql += " LIMIT 100"
+
+        return sql
 
     def process_query(
         self,
@@ -50,17 +77,7 @@ class NL2SQLService:
         organization_id: int,
         user_id: int
     ) -> Dict[str, Any]:
-        """
-        Process a natural language question.
 
-        Args:
-            question: The user's natural language question
-            organization_id: The user's organization ID
-            user_id: The user's ID
-
-        Returns:
-            Complete response with SQL, results, insights, and visualization
-        """
         start_time = time.time()
         query_id = str(uuid.uuid4())[:8]
 
@@ -80,10 +97,10 @@ class NL2SQLService:
                 "agent_trace": []
             }
 
-            # Step 3: Run agents through workflow (Understanding, Schema, SQL Generation, Validation)
+            # Step 3: Run workflow
             state = NL2SQLService._workflow.invoke(state, {"recursion_limit": 10})
 
-            # Step 4: Check validation result
+            # Step 4: Validate SQL
             validation_result = state.get("validation_result", {})
             if not validation_result.get("is_valid", False):
                 return self._build_error_response(
@@ -94,19 +111,27 @@ class NL2SQLService:
                     total_time=time.time() - start_time
                 )
 
-            # Step 5: Execute SQL
-            sql = state.get("sql", "")
+            # 🔥 Step 5: Post-process SQL
+            raw_sql = state.get("sql", "")
+            sql = self._post_process_sql(raw_sql)
+
+           
+
+            # Step 6: Execute SQL
             execution_result = self._execute_sql(sql, organization_id)
 
-            # Update state with execution results
+            # 🔥 FIXED RESULT STRUCTURE
+            state["results"] = {
+                "rows": execution_result.get("rows", []),
+                "columns": execution_result.get("columns", []),
+                "row_count": execution_result.get("row_count", 0)
+            }
+
             state["execution_success"] = execution_result["success"]
-            state["results"] = execution_result.get("rows", [])
-            state["result_columns"] = execution_result.get("columns", [])
-            state["row_count"] = execution_result.get("row_count", 0)
             state["execution_time"] = execution_result.get("execution_time", 0)
             state["execution_error"] = execution_result.get("error")
 
-            # Add execution to trace
+            # Add execution trace
             state["agent_trace"].append({
                 "agent": "SQLExecution",
                 "duration": execution_result.get("execution_time", 0),
@@ -117,7 +142,7 @@ class NL2SQLService:
                 }
             })
 
-            # Check execution success
+            # Handle execution failure
             if not execution_result["success"]:
                 return self._build_error_response(
                     query_id=query_id,
@@ -128,17 +153,14 @@ class NL2SQLService:
                     total_time=time.time() - start_time
                 )
 
-            # Step 6: Generate insights (Agent 5)
+            # Step 7: Insights
             from app.agents import Agent5Insights
-            agent_5 = Agent5Insights()
-            state = agent_5.execute(state)
+            state = Agent5Insights().execute(state)
 
-            # Step 7: Recommend visualization (Agent 6)
+            # Step 8: Visualization
             from app.agents import Agent6Visualization
-            agent_6 = Agent6Visualization()
-            state = agent_6.execute(state)
+            state = Agent6Visualization().execute(state)
 
-            # Step 8: Build final response
             total_time = time.time() - start_time
 
             return self._build_success_response(
@@ -157,29 +179,26 @@ class NL2SQLService:
                 total_time=time.time() - start_time
             )
 
-    def _execute_sql(
-        self,
-        sql: str,
-        organization_id: int
-    ) -> Dict[str, Any]:
-        """Execute SQL with organization_id replacement."""
+    # 🔥 IMPROVED EXECUTION FUNCTION
+    def _execute_sql(self, sql: str, organization_id: int) -> Dict[str, Any]:
         start_time = time.time()
 
         try:
-            # Replace {org_id} placeholder with actual organization_id
             executed_sql = sql.replace("{org_id}", str(organization_id))
 
-            # Execute using QueryService - returns tuple (columns, rows, row_count, exec_time)
-            columns, rows, row_count, _ = QueryService.execute_sql(executed_sql, organization_id)
+            # 🚨 Prevent dangerous SQL
+            forbidden = ["DROP", "DELETE", "UPDATE", "INSERT"]
+            if any(word in executed_sql.upper() for word in forbidden):
+                raise Exception("Unsafe SQL detected")
 
-            execution_time = time.time() - start_time
+            columns, rows, row_count, _ = QueryService.execute_sql(executed_sql, organization_id)
 
             return {
                 "success": True,
                 "columns": columns,
                 "rows": rows,
                 "row_count": row_count,
-                "execution_time": execution_time,
+                "execution_time": time.time() - start_time,
                 "executed_sql": executed_sql
             }
 
@@ -190,14 +209,7 @@ class NL2SQLService:
                 "execution_time": time.time() - start_time
             }
 
-    def _build_success_response(
-        self,
-        query_id: str,
-        question: str,
-        state: QueryState,
-        total_time: float
-    ) -> Dict[str, Any]:
-        """Build successful response."""
+    def _build_success_response(self, query_id, question, state, total_time):
         return {
             "success": True,
             "query_id": query_id,
@@ -206,11 +218,7 @@ class NL2SQLService:
                 "query": state.get("sql", ""),
                 "execution_time": state.get("execution_time", 0)
             },
-            "results": {
-                "columns": state.get("result_columns", []),
-                "rows": state.get("results", []),
-                "row_count": state.get("row_count", 0)
-            },
+            "results": state.get("results", {}),  # 🔥 FIXED
             "insights": state.get("insights", {}),
             "visualization": state.get("visualization", {}),
             "intent": state.get("intent", {}),
@@ -218,16 +226,7 @@ class NL2SQLService:
             "total_time": round(total_time, 3)
         }
 
-    def _build_error_response(
-        self,
-        query_id: str,
-        question: str,
-        error: str,
-        agent_trace: list = None,
-        total_time: float = 0,
-        sql: str = None
-    ) -> Dict[str, Any]:
-        """Build error response."""
+    def _build_error_response(self, query_id, question, error, agent_trace=None, total_time=0, sql=None):
         response = {
             "success": False,
             "query_id": query_id,
@@ -243,5 +242,5 @@ class NL2SQLService:
         return response
 
 
-# Singleton instance
+# Singleton
 nl2sql_service = NL2SQLService()

@@ -1,0 +1,211 @@
+{
+  "total_pipeline": {
+    "all_queries": {
+      "mean": 9.005,
+      "median": 8.316,
+      "p95": 13.517,
+      "min": 5.564,
+      "max": 20.023,
+      "count": 90
+    },
+    "successful_only": {
+      "mean": 8.932,
+      "median": 8.28,
+      "p95": 13.517,
+      "min": 5.564,
+      "max": 20.023,
+      "count": 86
+    },
+    "failed_only": {
+      "mean": 10.569,
+      "median": 10.832,
+      "p95": 13.153,
+      "min": 7.456,
+      "max": 13.153,
+      "count": 4
+    }
+  },
+  "per_agent": {
+    "Agent1Understanding": {
+      "mean": 2.632,
+      "median": 2.4,
+      "p95": 4.014,
+      "min": 1.626,
+      "max": 9.23,
+      "count": 90
+    },
+    "Agent2Schema": {
+      "mean": 2.75,
+      "median": 2.537,
+      "p95": 4.717,
+      "min": 1.347,
+      "max": 7.125,
+      "count": 90
+    },
+    "Agent3SQLGeneration": {
+      "mean": 3.573,
+      "median": 3.132,
+      "p95": 5.906,
+      "min": 1.408,
+      "max": 12.824,
+      "count": 90
+    },
+    "Agent4Validation": {
+      "mean": 0.013,
+      "median": 0.011,
+      "p95": 0.026,
+      "min": 0.004,
+      "max": 0.033,
+      "count": 90
+    },
+    "SQLExecution": {
+      "mean": 0.011,
+      "median": 0.008,
+      "p95": 0.026,
+      "min": 0.001,
+      "max": 0.056,
+      "count": 90
+    },
+    "Agent5Insights": {
+      "mean": 0.0,
+      "median": 0.0,
+      "p95": 0.0,
+      "min": 0.0,
+      "max": 0.0,
+      "count": 86
+    },
+    "Agent6Visualization": {
+      "mean": 0.0,
+      "median": 0.0,
+      "p95": 0.0,
+      "min": 0.0,
+      "max": 0.0,
+      "count": 86
+    }
+  },
+  "agent_contribution_pct_of_total": {
+    "Agent1Understanding": 29.2,
+    "Agent2Schema": 30.5,
+    "Agent3SQLGeneration": 39.7,
+    "Agent4Validation": 0.1,
+    "SQLExecution": 0.1,
+    "Agent5Insights": 0.0,
+    "Agent6Visualization": 0.0
+  },
+  "per_category": {
+    "revenue": {
+      "mean": 8.214,
+      "median": 7.879,
+      "p95": 11.344,
+      "min": 6.937,
+      "max": 11.344,
+      "count": 11
+    },
+    "expenses": {
+      "mean": 7.761,
+      "median": 7.525,
+      "p95": 9.79,
+      "min": 6.751,
+      "max": 9.79,
+      "count": 7
+    },
+    "profit": {
+      "mean": 7.752,
+      "median": 7.752,
+      "p95": 7.752,
+      "min": 7.752,
+      "max": 7.752,
+      "count": 1
+    },
+    "transactions": {
+      "mean": 8.216,
+      "median": 8.216,
+      "p95": 10.078,
+      "min": 6.354,
+      "max": 10.078,
+      "count": 2
+    },
+    "territory": {
+      "mean": 8.237,
+      "median": 7.888,
+      "p95": 10.591,
+      "min": 6.743,
+      "max": 10.591,
+      "count": 9
+    },
+    "time_series": {
+      "mean": 8.987,
+      "median": 8.53,
+      "p95": 14.847,
+      "min": 6.87,
+      "max": 14.847,
+      "count": 15
+    },
+    "ranking": {
+      "mean": 9.567,
+      "median": 9.563,
+      "p95": 13.517,
+      "min": 7.107,
+      "max": 13.517,
+      "count": 10
+    },
+    "yoy_comparison": {
+      "mean": 13.739,
+      "median": 12.031,
+      "p95": 20.023,
+      "min": 10.719,
+      "max": 20.023,
+      "count": 5
+    },
+    "multi_filter": {
+      "mean": 10.182,
+      "median": 9.274,
+      "p95": 15.197,
+      "min": 7.989,
+      "max": 15.197,
+      "count": 10
+    },
+    "edge_case": {
+      "mean": 8.12,
+      "median": 7.801,
+      "p95": 10.532,
+      "min": 5.564,
+      "max": 10.532,
+      "count": 10
+    },
+    "vandervort_specific": {
+      "mean": 8.524,
+      "median": 8.189,
+      "p95": 10.025,
+      "min": 7.243,
+      "max": 10.025,
+      "count": 10
+    }
+  },
+  "per_difficulty": {
+    "easy": {
+      "mean": 9.081,
+      "median": 9.23,
+      "p95": 11.344,
+      "min": 7.447,
+      "max": 11.344,
+      "count": 10
+    },
+    "hard": {
+      "mean": 9.853,
+      "median": 9.593,
+      "p95": 20.023,
+      "min": 5.564,
+      "max": 20.023,
+      "count": 16
+    },
+    "medium": {
+      "mean": 8.781,
+      "median": 8.218,
+      "p95": 13.153,
+      "min": 6.354,
+      "max": 15.197,
+      "count": 64
+    }
+  }
+}

@@ -1,0 +1,242 @@
+[
+  {
+    "id": "test_001",
+    "organization_id": 1,
+    "category": "revenue",
+    "difficulty": "easy",
+    "question": "What is the total revenue for 2020?",
+    "ground_truth_sql": "SELECT SUM(gl.amount) AS total_revenue FROM general_ledger gl JOIN chart_of_accounts coa ON gl.organization_id = coa.organization_id AND gl.account_key = coa.account_key JOIN calendar c ON gl.date = c.date WHERE coa.class = 'Trading account' AND c.year = 2020 AND gl.organization_id = 1"
+  },
+  {
+    "id": "test_002",
+    "organization_id": 1,
+    "category": "revenue",
+    "difficulty": "easy",
+    "question": "What is the total revenue for 2019?",
+    "ground_truth_sql": "SELECT SUM(gl.amount) AS total_revenue FROM general_ledger gl JOIN chart_of_accounts coa ON gl.organization_id = coa.organization_id AND gl.account_key = coa.account_key JOIN calendar c ON gl.date = c.date WHERE coa.class = 'Trading account' AND c.year = 2019 AND gl.organization_id = 1"
+  },
+  {
+    "id": "test_003",
+    "organization_id": 1,
+    "category": "revenue",
+    "difficulty": "easy",
+    "question": "What is the total revenue for 2021?",
+    "ground_truth_sql": "SELECT SUM(gl.amount) AS total_revenue FROM general_ledger gl JOIN chart_of_accounts coa ON gl.organization_id = coa.organization_id AND gl.account_key = coa.account_key JOIN calendar c ON gl.date = c.date WHERE coa.class = 'Trading account' AND c.year = 2021 AND gl.organization_id = 1"
+  },
+  {
+    "id": "test_004",
+    "organization_id": 1,
+    "category": "expenses",
+    "difficulty": "easy",
+    "question": "What are the total operating expenses for 2020?",
+    "ground_truth_sql": "SELECT ABS(SUM(gl.amount)) AS total_expenses FROM general_ledger gl JOIN chart_of_accounts coa ON gl.organization_id = coa.organization_id AND gl.account_key = coa.account_key JOIN calendar c ON gl.date = c.date WHERE coa.class = 'Operating account' AND c.year = 2020 AND gl.organization_id = 1"
+  },
+  {
+    "id": "test_005",
+    "organization_id": 1,
+    "category": "revenue",
+    "difficulty": "easy",
+    "question": "What is the total cost of sales for 2020?",
+    "ground_truth_sql": "SELECT ABS(SUM(gl.amount)) AS total_cost_of_sales FROM general_ledger gl JOIN chart_of_accounts coa ON gl.organization_id = coa.organization_id AND gl.account_key = coa.account_key JOIN calendar c ON gl.date = c.date WHERE coa.class = 'Trading account' AND c.year = 2020 AND gl.organization_id = 1"
+  },
+  {
+    "id": "test_006",
+    "organization_id": 1,
+    "category": "profit",
+    "difficulty": "hard",
+    "question": "What is the net profit for 2020?",
+    "ground_truth_sql": "SELECT SUM(CASE WHEN coa.class = 'Trading account' THEN gl.amount ELSE 0 END) + SUM(CASE WHEN coa.class != 'Trading account' THEN gl.amount ELSE 0 END) AS net_profit FROM general_ledger gl JOIN chart_of_accounts coa ON gl.organization_id = coa.organization_id AND gl.account_key = coa.account_key JOIN calendar c ON gl.date = c.date WHERE c.year = 2020 AND gl.organization_id = 1"
+  },
+  {
+    "id": "test_007",
+    "organization_id": 1,
+    "category": "transactions",
+    "difficulty": "easy",
+    "question": "How many transactions were recorded in 2020?",
+    "ground_truth_sql": "SELECT COUNT(*) AS total_transactions FROM general_ledger gl JOIN calendar c ON gl.date = c.date WHERE c.year = 2020 AND gl.organization_id = 1"
+  },
+  {
+    "id": "test_008",
+    "organization_id": 1,
+    "category": "transactions",
+    "difficulty": "medium",
+    "question": "What is the average transaction amount in 2020?",
+    "ground_truth_sql": "SELECT AVG(gl.amount) AS avg_amount FROM general_ledger gl JOIN calendar c ON gl.date = c.date WHERE c.year = 2020 AND gl.organization_id = 1"
+  },
+  {
+    "id": "test_009",
+    "organization_id": 1,
+    "category": "revenue",
+    "difficulty": "medium",
+    "question": "What is the total revenue for Q1 2020?",
+    "ground_truth_sql": "SELECT SUM(gl.amount) AS total_revenue FROM general_ledger gl JOIN chart_of_accounts coa ON gl.organization_id = coa.organization_id AND gl.account_key = coa.account_key JOIN calendar c ON gl.date = c.date WHERE coa.class = 'Trading account' AND c.year = 2020 AND c.quarter = 'Qtr 1' AND gl.organization_id = 1"
+  },
+  {
+    "id": "test_010",
+    "organization_id": 1,
+    "category": "expenses",
+    "difficulty": "medium",
+    "question": "What are the operating expenses for Q2 2021?",
+    "ground_truth_sql": "SELECT ABS(SUM(gl.amount)) AS total_expenses FROM general_ledger gl JOIN chart_of_accounts coa ON gl.organization_id = coa.organization_id AND gl.account_key = coa.account_key JOIN calendar c ON gl.date = c.date WHERE coa.class = 'Operating account' AND c.year = 2021 AND c.quarter = 'Qtr 2' AND gl.organization_id = 1"
+  },
+  {
+    "id": "test_011",
+    "organization_id": 1,
+    "category": "territory",
+    "difficulty": "medium",
+    "question": "What is the revenue by country for 2020?",
+    "ground_truth_sql": "SELECT t.country, SUM(gl.amount) AS revenue FROM general_ledger gl JOIN chart_of_accounts coa ON gl.organization_id = coa.organization_id AND gl.account_key = coa.account_key JOIN calendar c ON gl.date = c.date JOIN territory t ON gl.organization_id = t.organization_id AND gl.territory_key = t.territory_key WHERE coa.class = 'Trading account' AND c.year = 2020 AND gl.organization_id = 1 GROUP BY t.country"
+  },
+  {
+    "id": "test_012",
+    "organization_id": 1,
+    "category": "territory",
+    "difficulty": "medium",
+    "question": "What is the revenue by region for 2021?",
+    "ground_truth_sql": "SELECT t.region, SUM(gl.amount) AS revenue FROM general_ledger gl JOIN chart_of_accounts coa ON gl.organization_id = coa.organization_id AND gl.account_key = coa.account_key JOIN calendar c ON gl.date = c.date JOIN territory t ON gl.organization_id = t.organization_id AND gl.territory_key = t.territory_key WHERE coa.class = 'Trading account' AND c.year = 2021 AND gl.organization_id = 1 GROUP BY t.region"
+  },
+  {
+    "id": "test_013",
+    "organization_id": 1,
+    "category": "expenses",
+    "difficulty": "medium",
+    "question": "What are the operating expenses by account type for 2020?",
+    "ground_truth_sql": "SELECT coa.account, ABS(SUM(gl.amount)) AS expenses FROM general_ledger gl JOIN chart_of_accounts coa ON gl.organization_id = coa.organization_id AND gl.account_key = coa.account_key JOIN calendar c ON gl.date = c.date WHERE coa.class = 'Operating account' AND c.year = 2020 AND gl.organization_id = 1 GROUP BY coa.account"
+  },
+  {
+    "id": "test_014",
+    "organization_id": 1,
+    "category": "revenue",
+    "difficulty": "medium",
+    "question": "What is the revenue by quarter for 2020?",
+    "ground_truth_sql": "SELECT c.quarter, SUM(gl.amount) AS revenue FROM general_ledger gl JOIN chart_of_accounts coa ON gl.organization_id = coa.organization_id AND gl.account_key = coa.account_key JOIN calendar c ON gl.date = c.date WHERE coa.class = 'Trading account' AND c.year = 2020 AND gl.organization_id = 1 GROUP BY c.quarter"
+  },
+  {
+    "id": "test_015",
+    "organization_id": 1,
+    "category": "revenue",
+    "difficulty": "medium",
+    "question": "What is the revenue by month for 2020?",
+    "ground_truth_sql": "SELECT c.month, SUM(gl.amount) AS revenue FROM general_ledger gl JOIN chart_of_accounts coa ON gl.organization_id = coa.organization_id AND gl.account_key = coa.account_key JOIN calendar c ON gl.date = c.date WHERE coa.class = 'Trading account' AND c.year = 2020 AND gl.organization_id = 1 GROUP BY c.month ORDER BY MIN(gl.date)"
+  },
+  {
+    "id": "test_016",
+    "organization_id": 1,
+    "category": "expenses",
+    "difficulty": "medium",
+    "question": "What are the operating expenses by account for 2019?",
+    "ground_truth_sql": "SELECT coa.account, ABS(SUM(gl.amount)) AS expenses FROM general_ledger gl JOIN chart_of_accounts coa ON gl.organization_id = coa.organization_id AND gl.account_key = coa.account_key JOIN calendar c ON gl.date = c.date WHERE coa.class = 'Operating account' AND c.year = 2019 AND gl.organization_id = 1 GROUP BY coa.account"
+  },
+  {
+    "id": "test_017",
+    "organization_id": 1,
+    "category": "territory",
+    "difficulty": "medium",
+    "question": "What is the revenue by country for 2019?",
+    "ground_truth_sql": "SELECT t.country, SUM(gl.amount) AS revenue FROM general_ledger gl JOIN chart_of_accounts coa ON gl.organization_id = coa.organization_id AND gl.account_key = coa.account_key JOIN calendar c ON gl.date = c.date JOIN territory t ON gl.organization_id = t.organization_id AND gl.territory_key = t.territory_key WHERE coa.class = 'Trading account' AND c.year = 2019 AND gl.organization_id = 1 GROUP BY t.country"
+  },
+  {
+    "id": "test_018",
+    "organization_id": 1,
+    "category": "revenue",
+    "difficulty": "medium",
+    "question": "What are the cost of sales by account for 2020?",
+    "ground_truth_sql": "SELECT coa.account, ABS(SUM(gl.amount)) AS cost_of_sales FROM general_ledger gl JOIN chart_of_accounts coa ON gl.organization_id = coa.organization_id AND gl.account_key = coa.account_key JOIN calendar c ON gl.date = c.date WHERE coa.class = 'Trading account' AND c.year = 2020 AND gl.organization_id = 1 GROUP BY coa.account"
+  },
+  {
+    "id": "test_019",
+    "organization_id": 1,
+    "category": "revenue",
+    "difficulty": "medium",
+    "question": "What is the revenue by quarter for 2021?",
+    "ground_truth_sql": "SELECT c.quarter, SUM(gl.amount) AS revenue FROM general_ledger gl JOIN chart_of_accounts coa ON gl.organization_id = coa.organization_id AND gl.account_key = coa.account_key JOIN calendar c ON gl.date = c.date WHERE coa.class = 'Trading account' AND c.year = 2021 AND gl.organization_id = 1 GROUP BY c.quarter"
+  },
+  {
+    "id": "test_020",
+    "organization_id": 1,
+    "category": "territory",
+    "difficulty": "medium",
+    "question": "What is the revenue by region for 2020?",
+    "ground_truth_sql": "SELECT t.region, SUM(gl.amount) AS revenue FROM general_ledger gl JOIN chart_of_accounts coa ON gl.organization_id = coa.organization_id AND gl.account_key = coa.account_key JOIN calendar c ON gl.date = c.date JOIN territory t ON gl.organization_id = t.organization_id AND gl.territory_key = t.territory_key WHERE coa.class = 'Trading account' AND c.year = 2020 AND gl.organization_id = 1 GROUP BY t.region"
+  },
+  {
+    "id": "test_021",
+    "organization_id": 1,
+    "category": "territory",
+    "difficulty": "medium",
+    "question": "What is the revenue from USA in 2020?",
+    "ground_truth_sql": "SELECT SUM(gl.amount) AS revenue FROM general_ledger gl JOIN chart_of_accounts coa ON gl.organization_id = coa.organization_id AND gl.account_key = coa.account_key JOIN calendar c ON gl.date = c.date JOIN territory t ON gl.organization_id = t.organization_id AND gl.territory_key = t.territory_key WHERE coa.class = 'Trading account' AND c.year = 2020 AND t.country = 'USA' AND gl.organization_id = 1"
+  },
+  {
+    "id": "test_022",
+    "organization_id": 1,
+    "category": "territory",
+    "difficulty": "medium",
+    "question": "What is the revenue from North America in 2020?",
+    "ground_truth_sql": "SELECT SUM(gl.amount) AS revenue FROM general_ledger gl JOIN chart_of_accounts coa ON gl.organization_id = coa.organization_id AND gl.account_key = coa.account_key JOIN calendar c ON gl.date = c.date JOIN territory t ON gl.organization_id = t.organization_id AND gl.territory_key = t.territory_key WHERE coa.class = 'Trading account' AND c.year = 2020 AND t.region = 'North America' AND gl.organization_id = 1"
+  },
+  {
+    "id": "test_023",
+    "organization_id": 1,
+    "category": "territory",
+    "difficulty": "medium",
+    "question": "What is the revenue from USA in 2021?",
+    "ground_truth_sql": "SELECT SUM(gl.amount) AS revenue FROM general_ledger gl JOIN chart_of_accounts coa ON gl.organization_id = coa.organization_id AND gl.account_key = coa.account_key JOIN calendar c ON gl.date = c.date JOIN territory t ON gl.organization_id = t.organization_id AND gl.territory_key = t.territory_key WHERE coa.class = 'Trading account' AND c.year = 2021 AND t.country = 'USA' AND gl.organization_id = 1"
+  },
+  {
+    "id": "test_024",
+    "organization_id": 1,
+    "category": "expenses",
+    "difficulty": "medium",
+    "question": "What are the staff costs in 2020?",
+    "ground_truth_sql": "SELECT ABS(SUM(gl.amount)) AS staff_costs FROM general_ledger gl JOIN chart_of_accounts coa ON gl.organization_id = coa.organization_id AND gl.account_key = coa.account_key JOIN calendar c ON gl.date = c.date WHERE coa.account = 'Staff Costs' AND c.year = 2020 AND gl.organization_id = 1"
+  },
+  {
+    "id": "test_025",
+    "organization_id": 1,
+    "category": "revenue",
+    "difficulty": "medium",
+    "question": "What is the revenue in Q3 2020?",
+    "ground_truth_sql": "SELECT SUM(gl.amount) AS revenue FROM general_ledger gl JOIN chart_of_accounts coa ON gl.organization_id = coa.organization_id AND gl.account_key = coa.account_key JOIN calendar c ON gl.date = c.date WHERE coa.class = 'Trading account' AND c.year = 2020 AND c.quarter = 'Qtr 3' AND gl.organization_id = 1"
+  },
+  {
+    "id": "test_026",
+    "organization_id": 1,
+    "category": "revenue",
+    "difficulty": "medium",
+    "question": "What is the revenue in Q4 2021?",
+    "ground_truth_sql": "SELECT SUM(gl.amount) AS revenue FROM general_ledger gl JOIN chart_of_accounts coa ON gl.organization_id = coa.organization_id AND gl.account_key = coa.account_key JOIN calendar c ON gl.date = c.date WHERE coa.class = 'Trading account' AND c.year = 2021 AND c.quarter = 'Qtr 4' AND gl.organization_id = 1"
+  },
+  {
+    "id": "test_027",
+    "organization_id": 1,
+    "category": "expenses",
+    "difficulty": "medium",
+    "question": "What are the operating expenses in Q1 2020?",
+    "ground_truth_sql": "SELECT ABS(SUM(gl.amount)) AS expenses FROM general_ledger gl JOIN chart_of_accounts coa ON gl.organization_id = coa.organization_id AND gl.account_key = coa.account_key JOIN calendar c ON gl.date = c.date WHERE coa.class = 'Operating account' AND c.year = 2020 AND c.quarter = 'Qtr 1' AND gl.organization_id = 1"
+  },
+  {
+    "id": "test_028",
+    "organization_id": 1,
+    "category": "territory",
+    "difficulty": "medium",
+    "question": "What is the revenue from Canada by quarter in 2020?",
+    "ground_truth_sql": "SELECT c.quarter, SUM(gl.amount) AS revenue FROM general_ledger gl JOIN chart_of_accounts coa ON gl.organization_id = coa.organization_id AND gl.account_key = coa.account_key JOIN calendar c ON gl.date = c.date JOIN territory t ON gl.organization_id = t.organization_id AND gl.territory_key = t.territory_key WHERE coa.class = 'Trading account' AND c.year = 2020 AND t.country = 'Canada' AND gl.organization_id = 1 GROUP BY c.quarter"
+  },
+  {
+    "id": "test_029",
+    "organization_id": 1,
+    "category": "territory",
+    "difficulty": "medium",
+    "question": "What is the revenue from North America in 2019?",
+    "ground_truth_sql": "SELECT SUM(gl.amount) AS revenue FROM general_ledger gl JOIN chart_of_accounts coa ON gl.organization_id = coa.organization_id AND gl.account_key = coa.account_key JOIN calendar c ON gl.date = c.date JOIN territory t ON gl.organization_id = t.organization_id AND gl.territory_key = t.territory_key WHERE coa.class = 'Trading account' AND c.year = 2019 AND t.region = 'North America' AND gl.organization_id = 1"
+  },
+  {
+    "id": "test_030",
+    "organization_id": 1,
+    "category": "expenses",
+    "difficulty": "medium",
+    "question": "What is the rent expense for 2021?",
+    "ground_truth_sql": "SELECT ABS(SUM(gl.amount)) AS rent_expense FROM general_ledger gl JOIN chart_of_accounts coa ON gl.organization_id = coa.organization_id AND gl.account_key = coa.account_key JOIN calendar c ON gl.date = c.date WHERE coa.account = 'Rent' AND c.year = 2021 AND gl.organization_id = 1"
+  }
+]
