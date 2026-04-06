@@ -1,0 +1,510 @@
+[
+  {
+    "id": "test_031",
+    "member": "B",
+    "organization_id": 1,
+    "organization": "kuvalis",
+    "category": "time_series",
+    "difficulty": "medium",
+    "question": "What is the monthly revenue trend for 2020?",
+    "ground_truth_sql": "SELECT c.year, c.month, SUM(gl.amount) as monthly_revenue FROM general_ledger gl JOIN chart_of_accounts coa ON gl.organization_id = coa.organization_id AND gl.account_key = coa.account_key JOIN calendar c ON gl.date = c.date WHERE coa.class = 'Trading account' AND c.year = 2020 AND gl.organization_id = 1 GROUP BY c.year, c.month ORDER BY c.year, CASE c.month WHEN 'Jan' THEN 1 WHEN 'Feb' THEN 2 WHEN 'Mar' THEN 3 WHEN 'Apr' THEN 4 WHEN 'May' THEN 5 WHEN 'Jun' THEN 6 WHEN 'Jul' THEN 7 WHEN 'Aug' THEN 8 WHEN 'Sep' THEN 9 WHEN 'Oct' THEN 10 WHEN 'Nov' THEN 11 WHEN 'Dec' THEN 12 END",
+    "expected_columns": [
+      "year",
+      "month",
+      "monthly_revenue"
+    ],
+    "expected_intent_type": "time_series",
+    "notes": "Returns 12 rows"
+  },
+  {
+    "id": "test_032",
+    "member": "B",
+    "organization_id": 1,
+    "organization": "kuvalis",
+    "category": "time_series",
+    "difficulty": "medium",
+    "question": "What is the quarterly revenue trend for 2020?",
+    "ground_truth_sql": "SELECT c.year, c.quarter, SUM(gl.amount) as quarterly_revenue FROM general_ledger gl JOIN chart_of_accounts coa ON gl.organization_id = coa.organization_id AND gl.account_key = coa.account_key JOIN calendar c ON gl.date = c.date WHERE coa.class = 'Trading account' AND c.year = 2020 AND gl.organization_id = 1 GROUP BY c.year, c.quarter ORDER BY c.year, CASE c.quarter WHEN 'Qtr 1' THEN 1 WHEN 'Qtr 2' THEN 2 WHEN 'Qtr 3' THEN 3 WHEN 'Qtr 4' THEN 4 END",
+    "expected_columns": [
+      "year",
+      "quarter",
+      "quarterly_revenue"
+    ],
+    "expected_intent_type": "time_series",
+    "notes": "Returns 4 rows (Qtr 1 to Qtr 4)"
+  },
+  {
+    "id": "test_033",
+    "member": "B",
+    "organization_id": 1,
+    "organization": "kuvalis",
+    "category": "time_series",
+    "difficulty": "medium",
+    "question": "What is the quarterly revenue trend for 2019?",
+    "ground_truth_sql": "SELECT c.year, c.quarter, SUM(gl.amount) as quarterly_revenue FROM general_ledger gl JOIN chart_of_accounts coa ON gl.organization_id = coa.organization_id AND gl.account_key = coa.account_key JOIN calendar c ON gl.date = c.date WHERE coa.class = 'Trading account' AND c.year = 2019 AND gl.organization_id = 1 GROUP BY c.year, c.quarter ORDER BY c.year, CASE c.quarter WHEN 'Qtr 1' THEN 1 WHEN 'Qtr 2' THEN 2 WHEN 'Qtr 3' THEN 3 WHEN 'Qtr 4' THEN 4 END",
+    "expected_columns": [
+      "year",
+      "quarter",
+      "quarterly_revenue"
+    ],
+    "expected_intent_type": "time_series",
+    "notes": "Returns 4 rows"
+  },
+  {
+    "id": "test_034",
+    "member": "B",
+    "organization_id": 1,
+    "organization": "kuvalis",
+    "category": "time_series",
+    "difficulty": "medium",
+    "question": "What is the monthly operating expense trend for 2020?",
+    "ground_truth_sql": "SELECT c.year, c.month, ABS(SUM(gl.amount)) as monthly_expenses FROM general_ledger gl JOIN chart_of_accounts coa ON gl.organization_id = coa.organization_id AND gl.account_key = coa.account_key JOIN calendar c ON gl.date = c.date WHERE coa.class = 'Operating account' AND c.year = 2020 AND gl.organization_id = 1 GROUP BY c.year, c.month ORDER BY c.year, MIN(c.date)",
+    "expected_columns": [
+      "year",
+      "month",
+      "monthly_expenses"
+    ],
+    "expected_intent_type": "time_series",
+    "notes": "Returns 12 rows, expenses converted to positive using ABS()"
+  },
+  {
+    "id": "test_035",
+    "member": "B",
+    "organization_id": 1,
+    "organization": "kuvalis",
+    "category": "time_series",
+    "difficulty": "medium",
+    "question": "What is the quarterly expense trend for 2020?",
+    "ground_truth_sql": "SELECT c.year, c.quarter, ABS(SUM(gl.amount)) as quarterly_expenses FROM general_ledger gl JOIN chart_of_accounts coa ON gl.organization_id = coa.organization_id AND gl.account_key = coa.account_key JOIN calendar c ON gl.date = c.date WHERE coa.class = 'Operating account' AND c.year = 2020 AND gl.organization_id = 1 GROUP BY c.year, c.quarter ORDER BY c.year, MIN(c.date)",
+    "expected_columns": [
+      "year",
+      "quarter",
+      "quarterly_expenses"
+    ],
+    "expected_intent_type": "time_series",
+    "notes": "Returns 4 rows (Qtr 1–4), expenses converted to positive using ABS()"
+  },
+  {
+    "id": "test_036",
+    "member": "B",
+    "organization_id": 1,
+    "organization": "kuvalis",
+    "category": "time_series",
+    "difficulty": "medium",
+    "question": "What is the revenue by quarter across all years?",
+    "ground_truth_sql": "SELECT c.year, c.quarter, SUM(gl.amount) as quarterly_revenue FROM general_ledger gl JOIN chart_of_accounts coa ON gl.organization_id = coa.organization_id AND gl.account_key = coa.account_key JOIN calendar c ON gl.date = c.date WHERE coa.class = 'Trading account' AND gl.organization_id = 1 GROUP BY c.year, c.quarter ORDER BY c.year, MIN(c.date)",
+    "expected_columns": [
+      "year",
+      "quarter",
+      "quarterly_revenue"
+    ],
+    "expected_intent_type": "time_series",
+    "notes": "Returns 12 rows (3 years × 4 quarters)"
+  },
+  {
+    "id": "test_037",
+    "member": "B",
+    "organization_id": 1,
+    "organization": "kuvalis",
+    "category": "time_series",
+    "difficulty": "medium",
+    "question": "What is the monthly revenue for Q1 2020?",
+    "ground_truth_sql": "SELECT c.year, c.month, SUM(gl.amount) as monthly_revenue FROM general_ledger gl JOIN chart_of_accounts coa ON gl.organization_id = coa.organization_id AND gl.account_key = coa.account_key JOIN calendar c ON gl.date = c.date WHERE coa.class = 'Trading account' AND c.year = 2020 AND c.quarter = 'Qtr 1' AND gl.organization_id = 1 GROUP BY c.year, c.month ORDER BY c.year, MIN(c.date)",
+    "expected_columns": [
+      "year",
+      "month",
+      "monthly_revenue"
+    ],
+    "expected_intent_type": "time_series",
+    "notes": "Returns 3 rows for Q1 months (Jan–Mar)"
+  },
+  {
+    "id": "test_038",
+    "member": "B",
+    "organization_id": 1,
+    "organization": "kuvalis",
+    "category": "time_series",
+    "difficulty": "medium",
+    "question": "What is the monthly revenue for Q2 2020?",
+    "ground_truth_sql": "SELECT c.year, c.month, SUM(gl.amount) as monthly_revenue FROM general_ledger gl JOIN chart_of_accounts coa ON gl.organization_id = coa.organization_id AND gl.account_key = coa.account_key JOIN calendar c ON gl.date = c.date WHERE coa.class = 'Trading account' AND c.year = 2020 AND c.quarter = 'Qtr 2' AND gl.organization_id = 1 GROUP BY c.year, c.month ORDER BY c.year, MIN(c.date)",
+    "expected_columns": [
+      "year",
+      "month",
+      "monthly_revenue"
+    ],
+    "expected_intent_type": "time_series",
+    "notes": "Returns 3 rows for Q2 months (Apr–Jun)"
+  },
+  {
+    "id": "test_039",
+    "member": "B",
+    "organization_id": 2,
+    "organization": "vandervort",
+    "category": "time_series",
+    "difficulty": "medium",
+    "question": "What is the monthly revenue trend for 2020?",
+    "ground_truth_sql": "SELECT c.year, c.month, ABS(SUM(gl.amount)) as monthly_revenue FROM general_ledger gl JOIN chart_of_accounts coa ON gl.organization_id = coa.organization_id AND gl.account_key = coa.account_key JOIN calendar c ON gl.date = c.date WHERE coa.class = 'Revenue' AND c.year = 2020 AND gl.organization_id = 2 GROUP BY c.year, c.month ORDER BY c.year, MIN(c.date)",
+    "expected_columns": [
+      "year",
+      "month",
+      "monthly_revenue"
+    ],
+    "expected_intent_type": "time_series",
+    "notes": "Returns 12 rows, revenue converted to positive using ABS()"
+  },
+  {
+    "id": "test_040",
+    "member": "B",
+    "organization_id": 2,
+    "organization": "vandervort",
+    "category": "time_series",
+    "difficulty": "medium",
+    "question": "What is the quarterly revenue trend for 2020?",
+    "ground_truth_sql": "SELECT c.year, c.quarter, ABS(SUM(gl.amount)) as quarterly_revenue FROM general_ledger gl JOIN chart_of_accounts coa ON gl.organization_id = coa.organization_id AND gl.account_key = coa.account_key JOIN calendar c ON gl.date = c.date WHERE coa.class = 'Revenue' AND c.year = 2020 AND gl.organization_id = 2 GROUP BY c.year, c.quarter ORDER BY c.year, MIN(c.date)",
+    "expected_columns": [
+      "year",
+      "quarter",
+      "quarterly_revenue"
+    ],
+    "expected_intent_type": "time_series",
+    "notes": "Returns 4 rows (Qtr 1–4), revenue converted to positive using ABS()"
+  },
+  {
+    "id": "test_041",
+    "member": "B",
+    "organization_id": 2,
+    "organization": "vandervort",
+    "category": "time_series",
+    "difficulty": "medium",
+    "question": "What is the quarterly revenue trend for 2019?",
+    "ground_truth_sql": "SELECT c.year, c.quarter, ABS(SUM(gl.amount)) as quarterly_revenue FROM general_ledger gl JOIN chart_of_accounts coa ON gl.organization_id = coa.organization_id AND gl.account_key = coa.account_key JOIN calendar c ON gl.date = c.date WHERE coa.class = 'Revenue' AND c.year = 2019 AND gl.organization_id = 2 GROUP BY c.year, c.quarter ORDER BY c.year, MIN(c.date)",
+    "expected_columns": [
+      "year",
+      "quarter",
+      "quarterly_revenue"
+    ],
+    "expected_intent_type": "time_series",
+    "notes": "Returns 4 rows (Qtr 1–4), revenue converted to positive using ABS()"
+  },
+  {
+    "id": "test_042",
+    "member": "B",
+    "organization_id": 2,
+    "organization": "vandervort",
+    "category": "time_series",
+    "difficulty": "medium",
+    "question": "What is the monthly operating expense trend for 2020?",
+    "ground_truth_sql": "SELECT c.year, c.month, ABS(SUM(gl.amount)) as monthly_expenses FROM general_ledger gl JOIN chart_of_accounts coa ON gl.organization_id = coa.organization_id AND gl.account_key = coa.account_key JOIN calendar c ON gl.date = c.date WHERE coa.class = 'Expenses' AND c.year = 2020 AND gl.organization_id = 2 GROUP BY c.year, c.month ORDER BY c.year, MIN(c.date)",
+    "expected_columns": [
+      "year",
+      "month",
+      "monthly_expenses"
+    ],
+    "expected_intent_type": "time_series",
+    "notes": "Returns 12 rows, expenses converted to positive using ABS()"
+  },
+  {
+    "id": "test_043",
+    "member": "B",
+    "organization_id": 2,
+    "organization": "vandervort",
+    "category": "time_series",
+    "difficulty": "medium",
+    "question": "What is the quarterly revenue across all years for Vandervort?",
+    "ground_truth_sql": "SELECT c.year, c.quarter, ABS(SUM(gl.amount)) as quarterly_revenue FROM general_ledger gl JOIN chart_of_accounts coa ON gl.organization_id = coa.organization_id AND gl.account_key = coa.account_key JOIN calendar c ON gl.date = c.date WHERE coa.class = 'Trading account' AND gl.organization_id = 2 GROUP BY c.year, c.quarter ORDER BY c.year, c.quarter",
+    "expected_columns": [
+      "year",
+      "quarter",
+      "quarterly_revenue"
+    ],
+    "expected_intent_type": "time_series",
+    "notes": "12 rows (2019–2021)"
+  },
+  {
+    "id": "test_044",
+    "member": "B",
+    "organization_id": 2,
+    "organization": "vandervort",
+    "category": "time_series",
+    "difficulty": "medium",
+    "question": "What is the monthly revenue for Q1 2021?",
+    "ground_truth_sql": "SELECT c.year, c.month, ABS(SUM(gl.amount)) as monthly_revenue FROM general_ledger gl JOIN chart_of_accounts coa ON gl.organization_id = coa.organization_id AND gl.account_key = coa.account_key JOIN calendar c ON gl.date = c.date WHERE coa.class = 'Revenue' AND c.year = 2021 AND c.quarter = 'Qtr 1' AND gl.organization_id = 2 GROUP BY c.year, c.month ORDER BY MIN(c.date)",
+    "expected_columns": [
+      "year",
+      "month",
+      "monthly_revenue"
+    ],
+    "expected_intent_type": "time_series",
+    "notes": "3 rows (Jan–Mar), ABS used because revenue stored negative"
+  },
+  {
+    "id": "test_045",
+    "member": "B",
+    "organization_id": 2,
+    "organization": "vandervort",
+    "category": "time_series",
+    "difficulty": "medium",
+    "question": "What is the revenue by quarter and region for 2020?",
+    "ground_truth_sql": "SELECT c.year, c.quarter, t.region, SUM(gl.amount) as revenue FROM general_ledger gl JOIN chart_of_accounts coa ON gl.organization_id = coa.organization_id AND gl.account_key = coa.account_key JOIN calendar c ON gl.date = c.date JOIN territory t ON gl.organization_id = t.organization_id AND gl.territory_key = t.territory_key WHERE coa.class = 'Revenue' AND c.year = 2020 AND gl.organization_id = 2 GROUP BY c.year, c.quarter, t.region ORDER BY c.year, c.quarter, t.region",
+    "expected_columns": [
+      "year",
+      "quarter",
+      "region",
+      "revenue"
+    ],
+    "expected_intent_type": "time_series",
+    "notes": "Returns 16 rows (4 quarters × 4 regions)"
+  },
+  {
+    "id": "test_046",
+    "member": "B",
+    "organization_id": 1,
+    "organization": "kuvalis",
+    "category": "ranking",
+    "difficulty": "medium",
+    "question": "Which countries have the highest revenue in 2020?",
+    "ground_truth_sql": "SELECT t.country, SUM(gl.amount) as total_revenue FROM general_ledger gl JOIN chart_of_accounts coa ON gl.organization_id = coa.organization_id AND gl.account_key = coa.account_key JOIN territory t ON gl.organization_id = t.organization_id AND gl.territory_key = t.territory_key JOIN calendar c ON gl.date = c.date WHERE coa.class = 'Trading account' AND c.year = 2020 AND gl.organization_id = 1 GROUP BY t.country ORDER BY total_revenue DESC",
+    "expected_columns": [
+      "country",
+      "total_revenue"
+    ],
+    "expected_intent_type": "ranking_query",
+    "notes": "Returns all countries ranked by revenue for 2020 (no LIMIT applied)"
+  },
+  {
+    "id": "test_047",
+    "member": "B",
+    "organization_id": 1,
+    "organization": "kuvalis",
+    "category": "ranking",
+    "difficulty": "medium",
+    "question": "What are the biggest operating expense accounts in 2020?",
+    "ground_truth_sql": "SELECT coa.account, ABS(SUM(gl.amount)) as total_expense FROM general_ledger gl JOIN chart_of_accounts coa ON gl.organization_id = coa.organization_id AND gl.account_key = coa.account_key JOIN calendar c ON gl.date = c.date WHERE coa.class = 'Operating account' AND c.year = 2020 AND gl.organization_id = 1 GROUP BY coa.account ORDER BY total_expense DESC",
+    "expected_columns": [
+      "account",
+      "total_expense"
+    ],
+    "expected_intent_type": "ranking_query",
+    "notes": "Returns all operating expense accounts ranked by total expense for 2020"
+  },
+  {
+    "id": "test_048",
+    "member": "B",
+    "organization_id": 2,
+    "organization": "vandervort",
+    "category": "ranking",
+    "difficulty": "medium",
+    "question": "Which countries have the highest revenue in 2020?",
+    "ground_truth_sql": "SELECT t.country, ABS(SUM(gl.amount)) as total_revenue FROM general_ledger gl JOIN chart_of_accounts coa ON gl.organization_id = coa.organization_id AND gl.account_key = coa.account_key JOIN territory t ON gl.organization_id = t.organization_id AND gl.territory_key = t.territory_key JOIN calendar c ON gl.date = c.date WHERE coa.class = 'Revenue' AND c.year = 2020 AND gl.organization_id = 2 GROUP BY t.country ORDER BY total_revenue DESC",
+    "expected_columns": [
+      "country",
+      "total_revenue"
+    ],
+    "expected_intent_type": "ranking_query",
+    "notes": "Returns all countries ranked by revenue for Vandervort in 2020 (values converted to positive)"
+  },
+  {
+    "id": "test_049",
+    "member": "B",
+    "organization_id": 1,
+    "organization": "kuvalis",
+    "category": "ranking",
+    "difficulty": "medium",
+    "question": "What are the biggest expense accounts in 2021?",
+    "ground_truth_sql": "SELECT coa.account, ABS(SUM(gl.amount)) as total_expense FROM general_ledger gl JOIN chart_of_accounts coa ON gl.organization_id = coa.organization_id AND gl.account_key = coa.account_key JOIN calendar c ON gl.date = c.date WHERE coa.class = 'Operating account' AND c.year = 2021 AND gl.organization_id = 1 GROUP BY coa.account ORDER BY total_expense DESC",
+    "expected_columns": [
+      "account",
+      "total_expense"
+    ],
+    "expected_intent_type": "ranking_query",
+    "notes": "Returns 0 rows because Kuvalis has no data for 2021"
+  },
+  {
+    "id": "test_050",
+    "member": "B",
+    "organization_id": 1,
+    "organization": "kuvalis",
+    "category": "ranking",
+    "difficulty": "medium",
+    "question": "What are all countries ranked by revenue in 2019?",
+    "ground_truth_sql": "SELECT t.country, SUM(gl.amount) as total_revenue FROM general_ledger gl JOIN chart_of_accounts coa ON gl.organization_id = coa.organization_id AND gl.account_key = coa.account_key JOIN territory t ON gl.organization_id = t.organization_id AND gl.territory_key = t.territory_key JOIN calendar c ON gl.date = c.date WHERE coa.class = 'Trading account' AND c.year = 2019 AND gl.organization_id = 1 GROUP BY t.country ORDER BY total_revenue DESC",
+    "expected_columns": [
+      "country",
+      "total_revenue"
+    ],
+    "expected_intent_type": "ranking_query",
+    "notes": "Returns all countries ranked by revenue for 2019"
+  },
+  {
+    "id": "test_051",
+    "member": "B",
+    "organization_id": 2,
+    "organization": "vandervort",
+    "category": "ranking",
+    "difficulty": "medium",
+    "question": "Which regions have the highest revenue in 2021?",
+    "ground_truth_sql": "SELECT t.region, ABS(SUM(gl.amount)) as total_revenue FROM general_ledger gl JOIN chart_of_accounts coa ON gl.organization_id = coa.organization_id AND gl.account_key = coa.account_key JOIN territory t ON gl.organization_id = t.organization_id AND gl.territory_key = t.territory_key JOIN calendar c ON gl.date = c.date WHERE coa.class = 'Revenue' AND c.year = 2021 AND gl.organization_id = 2 GROUP BY t.region ORDER BY total_revenue DESC",
+    "expected_columns": [
+      "region",
+      "total_revenue"
+    ],
+    "expected_intent_type": "ranking_query",
+    "notes": "Returns all regions ranked by revenue for Vandervort in 2021"
+  },
+  {
+    "id": "test_052",
+    "member": "B",
+    "organization_id": 1,
+    "organization": "kuvalis",
+    "category": "ranking",
+    "difficulty": "medium",
+    "question": "What is the highest revenue month in 2020?",
+    "ground_truth_sql": "SELECT c.year, c.month, SUM(gl.amount) as monthly_revenue FROM general_ledger gl JOIN chart_of_accounts coa ON gl.organization_id = coa.organization_id AND gl.account_key = coa.account_key JOIN calendar c ON gl.date = c.date WHERE coa.class = 'Trading account' AND c.year = 2020 AND gl.organization_id = 1 GROUP BY c.year, c.month ORDER BY monthly_revenue DESC",
+    "expected_columns": [
+      "year",
+      "month",
+      "monthly_revenue"
+    ],
+    "expected_intent_type": "ranking_query",
+    "notes": "Returns all months ranked by revenue for 2020, highest first"
+  },
+  {
+    "id": "test_053",
+    "member": "B",
+    "organization_id": 2,
+    "organization": "vandervort",
+    "category": "ranking",
+    "difficulty": "medium",
+    "question": "Which accounts have the most expenses in 2020?",
+    "ground_truth_sql": "SELECT coa.account, ABS(SUM(gl.amount)) as total_expense FROM general_ledger gl JOIN chart_of_accounts coa ON gl.organization_id = coa.organization_id AND gl.account_key = coa.account_key JOIN calendar c ON gl.date = c.date WHERE coa.class IN ('Operating', 'Expenses') AND c.year = 2020 AND gl.organization_id = 2 GROUP BY coa.account ORDER BY total_expense DESC",
+    "expected_columns": [
+      "account",
+      "total_expense"
+    ],
+    "expected_intent_type": "ranking_query",
+    "notes": "Returns all expense accounts ranked by total expense for Vandervort in 2020"
+  },
+  {
+    "id": "test_054",
+    "member": "B",
+    "organization_id": 2,
+    "organization": "vandervort",
+    "category": "ranking",
+    "difficulty": "medium",
+    "question": "What are all countries ranked by transaction count in 2020?",
+    "ground_truth_sql": "SELECT t.country, COUNT(*) as transaction_count FROM general_ledger gl JOIN territory t ON gl.organization_id = t.organization_id AND gl.territory_key = t.territory_key JOIN calendar c ON gl.date = c.date WHERE c.year = 2020 AND gl.organization_id = 2 GROUP BY t.country ORDER BY transaction_count DESC",
+    "expected_columns": [
+      "country",
+      "transaction_count"
+    ],
+    "expected_intent_type": "ranking_query",
+    "notes": "Returns all countries ranked by number of transactions for Vandervort in 2020"
+  },
+  {
+    "id": "test_055",
+    "member": "B",
+    "organization_id": 1,
+    "organization": "kuvalis",
+    "category": "ranking",
+    "difficulty": "medium",
+    "question": "What are the top expense accounts ranked by cost in 2019?",
+    "ground_truth_sql": "SELECT coa.account, ABS(SUM(gl.amount)) as total_expense FROM general_ledger gl JOIN chart_of_accounts coa ON gl.organization_id = coa.organization_id AND gl.account_key = coa.account_key JOIN calendar c ON gl.date = c.date WHERE coa.class = 'Operating account' AND c.year = 2019 AND gl.organization_id = 1 GROUP BY coa.account ORDER BY total_expense DESC",
+    "expected_columns": [
+      "account",
+      "total_expense"
+    ],
+    "expected_intent_type": "ranking_query",
+    "notes": "Returns all expense accounts ranked by cost for Kuvalis in 2019"
+  },
+  {
+    "id": "test_056",
+    "member": "B",
+    "organization_id": 1,
+    "organization": "kuvalis",
+    "category": "yoy_comparison",
+    "difficulty": "hard",
+    "question": "How did revenue change from 2019 to 2020?",
+    "ground_truth_sql": "SELECT SUM(CASE WHEN c.year = 2020 THEN gl.amount ELSE 0 END) as revenue_2020, SUM(CASE WHEN c.year = 2019 THEN gl.amount ELSE 0 END) as revenue_2019, SUM(CASE WHEN c.year = 2020 THEN gl.amount ELSE 0 END) - SUM(CASE WHEN c.year = 2019 THEN gl.amount ELSE 0 END) as absolute_change, ROUND((SUM(CASE WHEN c.year = 2020 THEN gl.amount ELSE 0 END) - SUM(CASE WHEN c.year = 2019 THEN gl.amount ELSE 0 END)) * 100.0 / NULLIF(SUM(CASE WHEN c.year = 2019 THEN gl.amount ELSE 0 END), 0), 2) as percent_change FROM general_ledger gl JOIN chart_of_accounts coa ON gl.organization_id = coa.organization_id AND gl.account_key = coa.account_key JOIN calendar c ON gl.date = c.date WHERE coa.class = 'Trading account' AND c.year IN (2019, 2020) AND gl.organization_id = 1",
+    "expected_columns": [
+      "revenue_2020",
+      "revenue_2019",
+      "absolute_change",
+      "percent_change"
+    ],
+    "expected_intent_type": "year_over_year_comparison",
+    "notes": "Single row comparing total revenue between 2019 and 2020 for Kuvalis"
+  },
+  {
+    "id": "test_057",
+    "member": "B",
+    "organization_id": 1,
+    "organization": "kuvalis",
+    "category": "yoy_comparison",
+    "difficulty": "hard",
+    "question": "Compare total revenue between 2021 and 2020.",
+    "ground_truth_sql": "SELECT SUM(CASE WHEN c.year = 2021 THEN gl.amount ELSE 0 END) as revenue_2021, SUM(CASE WHEN c.year = 2020 THEN gl.amount ELSE 0 END) as revenue_2020, SUM(CASE WHEN c.year = 2021 THEN gl.amount ELSE 0 END) - SUM(CASE WHEN c.year = 2020 THEN gl.amount ELSE 0 END) as absolute_change, ROUND((SUM(CASE WHEN c.year = 2021 THEN gl.amount ELSE 0 END) - SUM(CASE WHEN c.year = 2020 THEN gl.amount ELSE 0 END)) * 100.0 / NULLIF(SUM(CASE WHEN c.year = 2020 THEN gl.amount ELSE 0 END), 0), 2) as percent_change FROM general_ledger gl JOIN chart_of_accounts coa ON gl.organization_id = coa.organization_id AND gl.account_key = coa.account_key JOIN calendar c ON gl.date = c.date WHERE coa.class = 'Trading account' AND c.year IN (2020, 2021) AND gl.organization_id = 1",
+    "expected_columns": [
+      "revenue_2021",
+      "revenue_2020",
+      "absolute_change",
+      "percent_change"
+    ],
+    "expected_intent_type": "year_over_year_comparison",
+    "notes": "Revenue for 2021 may be zero if no trading account entries exist"
+  },
+  {
+    "id": "test_058",
+    "member": "B",
+    "organization_id": 1,
+    "organization": "kuvalis",
+    "category": "yoy_comparison",
+    "difficulty": "hard",
+    "question": "How did Q1 2020 revenue compare to Q1 2019?",
+    "ground_truth_sql": "SELECT SUM(CASE WHEN c.year = 2020 THEN gl.amount ELSE 0 END) as revenue_2020, SUM(CASE WHEN c.year = 2019 THEN gl.amount ELSE 0 END) as revenue_2019, SUM(CASE WHEN c.year = 2020 THEN gl.amount ELSE 0 END) - SUM(CASE WHEN c.year = 2019 THEN gl.amount ELSE 0 END) as absolute_change, ROUND((SUM(CASE WHEN c.year = 2020 THEN gl.amount ELSE 0 END) - SUM(CASE WHEN c.year = 2019 THEN gl.amount ELSE 0 END)) * 100.0 / NULLIF(SUM(CASE WHEN c.year = 2019 THEN gl.amount ELSE 0 END), 0), 2) as percent_change FROM general_ledger gl JOIN chart_of_accounts coa ON gl.organization_id = coa.organization_id AND gl.account_key = coa.account_key JOIN calendar c ON gl.date = c.date WHERE coa.class = 'Trading account' AND c.year IN (2019, 2020) AND c.quarter = 'Qtr 1' AND gl.organization_id = 1",
+    "expected_columns": [
+      "revenue_2020",
+      "revenue_2019",
+      "absolute_change",
+      "percent_change"
+    ],
+    "expected_intent_type": "year_over_year_comparison",
+    "notes": "Single row comparing Q1 revenue between 2019 and 2020 for Kuvalis"
+  },
+  {
+    "id": "test_059",
+    "member": "B",
+    "organization_id": 2,
+    "organization": "vandervort",
+    "category": "yoy_comparison",
+    "difficulty": "hard",
+    "question": "How did total revenue in 2020 compare to 2019 for Vandervort by country?",
+    "ground_truth_sql": "SELECT t.country, ABS(SUM(CASE WHEN c.year = 2020 THEN gl.amount ELSE 0 END)) as revenue_2020, ABS(SUM(CASE WHEN c.year = 2019 THEN gl.amount ELSE 0 END)) as revenue_2019, ABS(SUM(CASE WHEN c.year = 2020 THEN gl.amount ELSE 0 END)) - ABS(SUM(CASE WHEN c.year = 2019 THEN gl.amount ELSE 0 END)) as absolute_change, ROUND((ABS(SUM(CASE WHEN c.year = 2020 THEN gl.amount ELSE 0 END)) - ABS(SUM(CASE WHEN c.year = 2019 THEN gl.amount ELSE 0 END))) * 100.0 / NULLIF(ABS(SUM(CASE WHEN c.year = 2019 THEN gl.amount ELSE 0 END)), 0), 2) as percent_change FROM general_ledger gl JOIN chart_of_accounts coa ON gl.organization_id = coa.organization_id AND gl.account_key = coa.account_key JOIN calendar c ON gl.date = c.date JOIN territory t ON gl.organization_id = t.organization_id AND gl.territory_key = t.territory_key WHERE coa.class = 'Revenue' AND c.year IN (2019, 2020) AND gl.organization_id = 2 GROUP BY t.country ORDER BY t.country",
+    "expected_columns": [
+      "country",
+      "revenue_2020",
+      "revenue_2019",
+      "absolute_change",
+      "percent_change"
+    ],
+    "expected_intent_type": "year_over_year_comparison",
+    "notes": "Shows total revenue by country for Vandervort comparing 2019 vs 2020"
+  },
+  {
+    "id": "test_060",
+    "member": "B",
+    "organization_id": 2,
+    "organization": "vandervort",
+    "category": "yoy_comparison",
+    "difficulty": "hard",
+    "question": "How did total expenses in 2021 compare to 2020 for Vandervort?",
+    "ground_truth_sql": "SELECT t.country, ABS(SUM(CASE WHEN c.year = 2021 THEN gl.amount ELSE 0 END)) AS expenses_2021, ABS(SUM(CASE WHEN c.year = 2020 THEN gl.amount ELSE 0 END)) AS expenses_2020, ABS(SUM(CASE WHEN c.year = 2021 THEN gl.amount ELSE 0 END)) - ABS(SUM(CASE WHEN c.year = 2020 THEN gl.amount ELSE 0 END)) AS absolute_change, ROUND((ABS(SUM(CASE WHEN c.year = 2021 THEN gl.amount ELSE 0 END)) - ABS(SUM(CASE WHEN c.year = 2020 THEN gl.amount ELSE 0 END))) * 100.0 / NULLIF(ABS(SUM(CASE WHEN c.year = 2020 THEN gl.amount ELSE 0 END)), 0), 2) AS percent_change FROM general_ledger gl JOIN chart_of_accounts coa ON gl.organization_id = coa.organization_id AND gl.account_key = coa.account_key JOIN calendar c ON gl.date = c.date JOIN territory t ON gl.organization_id = t.organization_id AND gl.territory_key = t.territory_key WHERE coa.class IN ('Expenses', 'Operating') AND c.year IN (2020, 2021) AND gl.organization_id = 2 GROUP BY t.country ORDER BY t.country",
+    "expected_columns": [
+      "expenses_2021",
+      "expenses_2020",
+      "absolute_change",
+      "percent_change"
+    ],
+    "expected_intent_type": "year_over_year_comparison",
+    "notes": "Single row comparing total expenses between 2020 and 2021 for Vandervort"
+  }
+]

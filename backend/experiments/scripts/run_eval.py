@@ -295,7 +295,7 @@ def run_evaluation(test_set_path: str, output_path: str, variant_name: str = "ba
 
 if __name__ == "__main__":
     run_evaluation(
-        test_set_path="experiments/test_set/member_a_questions.json",
+        test_set_path="experiments/test_set/full_test_set.json",
         output_path="experiments/results/exp1_accuracy/baseline_results.json",
         variant_name="baseline_full_pipeline"
     )
